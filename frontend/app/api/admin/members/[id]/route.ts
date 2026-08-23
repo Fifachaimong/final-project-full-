@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import pool from "@/lib/db"
 import bcrypt from "bcryptjs"
+import type { ResultSetHeader, RowDataPacket } from "mysql2"
 
 // GET single member
 export async function GET(
@@ -9,14 +10,14 @@ export async function GET(
 ) {
   const { id } = await params
   try {
-    const result = await pool.query(
-      `SELECT id, name, lastname, email, role_id, created_at FROM users WHERE id = $1`,
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT id, firstname, lastname, email, role, created_at FROM users WHERE id = ?`,
       [id]
     )
-    if (result.rows.length === 0) {
+    if (rows.length === 0) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 })
     }
-    return NextResponse.json(result.rows[0])
+    return NextResponse.json(rows[0])
   } catch (err) {
     console.error("[v0] GET /api/admin/members/[id] error:", err)
     return NextResponse.json({ error: "Failed to fetch member" }, { status: 500 })
@@ -31,45 +32,48 @@ export async function PATCH(
   const { id } = await params
   try {
     const body = await req.json()
-    const { name, lastname, email, password, role_id } = body
+    const { firstname, lastname, email, password, role } = body
 
     // Build dynamic query
     const fields: string[] = []
     const values: unknown[] = []
-    let idx = 1
 
-    if (name !== undefined) { fields.push(`name = $${idx++}`); values.push(name) }
-    if (lastname !== undefined) { fields.push(`lastname = $${idx++}`); values.push(lastname) }
-    if (email !== undefined) { fields.push(`email = $${idx++}`); values.push(email) }
+    if (firstname !== undefined) { fields.push(`firstname = ?`); values.push(firstname) }
+    if (lastname !== undefined) { fields.push(`lastname = ?`); values.push(lastname) }
+    if (email !== undefined) { fields.push(`email = ?`); values.push(email) }
     if (password) {
       const hashed = await bcrypt.hash(password, 10)
-      fields.push(`password = $${idx++}`)
+      fields.push(`password = ?`)
       values.push(hashed)
     }
-    if (role_id !== undefined) { fields.push(`role_id = $${idx++}`); values.push(role_id) }
+    if (role !== undefined) { fields.push(`role = ?`); values.push(role) }
 
     if (fields.length === 0) {
       return NextResponse.json({ error: "No fields to update" }, { status: 400 })
     }
 
     values.push(id)
-    const result = await pool.query(
-      `UPDATE users SET ${fields.join(", ")} WHERE id = $${idx}
-       RETURNING id, name, lastname, email, role_id, created_at`,
+    const [result] = await pool.query<ResultSetHeader>(
+      `UPDATE users SET ${fields.join(", ")} WHERE id = ?`,
       values
     )
 
-    if (result.rows.length === 0) {
+    if (result.affectedRows === 0) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 })
     }
-    return NextResponse.json(result.rows[0])
+
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT id, firstname, lastname, email, role, created_at FROM users WHERE id = ?`,
+      [id]
+    )
+    return NextResponse.json(rows[0])
   } catch (err: unknown) {
     console.error("[v0] PATCH /api/admin/members/[id] error:", err)
     if (
       typeof err === "object" &&
       err !== null &&
       "code" in err &&
-      (err as { code: string }).code === "23505"
+      (err as { code: string }).code === "ER_DUP_ENTRY"
     ) {
       return NextResponse.json({ error: "Email already exists" }, { status: 409 })
     }
@@ -84,11 +88,11 @@ export async function DELETE(
 ) {
   const { id } = await params
   try {
-    const result = await pool.query(
-      `DELETE FROM users WHERE id = $1 RETURNING id`,
+    const [result] = await pool.query<ResultSetHeader>(
+      `DELETE FROM users WHERE id = ?`,
       [id]
     )
-    if (result.rows.length === 0) {
+    if (result.affectedRows === 0) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 })
     }
     return NextResponse.json({ success: true })

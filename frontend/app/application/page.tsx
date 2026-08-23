@@ -26,21 +26,21 @@ import { Navbar } from "@/components/navbar"
 
 interface Member {
   id: number
-  name: string
+  firstname: string
   lastname: string | null
   email: string
-  role_id: number
+  role: string
   created_at: string
 }
 
-type SortKey = "id" | "name" | "email" | "role_id" | "created_at"
+type SortKey = "id" | "firstname" | "email" | "role" | "created_at"
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const ROLES: Record<number, { label: string; className: string }> = {
-  1: { label: "Admin", className: "bg-violet-500/15 text-violet-400 border-violet-500/30" },
-  2: { label: "HR", className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
-  3: { label: "Applicant", className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
+const ROLES: Record<string, { label: string; className: string }> = {
+  admin: { label: "Admin", className: "bg-violet-500/15 text-violet-400 border-violet-500/30" },
+  hr: { label: "HR", className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
+  applicant: { label: "Applicant", className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
 }
 
 const fetcher = async (url: string) => {
@@ -101,21 +101,21 @@ function MemberForm({
   onSaved: () => void
 }) {
   const isEdit = !!member
-  const [form, setForm] = useState({ name: "", lastname: "", email: "", password: "", role_id: 3 })
+  const [form, setForm] = useState({ firstname: "", lastname: "", email: "", password: "", role: "applicant" })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
   useEffect(() => {
     if (member) {
-      setForm({ name: member.name, lastname: member.lastname ?? "", email: member.email, password: "", role_id: member.role_id })
+      setForm({ firstname: member.firstname, lastname: member.lastname ?? "", email: member.email, password: "", role: member.role })
     } else {
-      setForm({ name: "", lastname: "", email: "", password: "", role_id: 3 })
+      setForm({ firstname: "", lastname: "", email: "", password: "", role: "applicant" })
     }
   }, [member])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setForm((prev) => ({ ...prev, [name]: name === "role_id" ? Number(value) : value }))
+    setForm((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -123,10 +123,10 @@ function MemberForm({
     setLoading(true)
     setError("")
     const payload: Record<string, unknown> = {
-      name: form.name,
+      firstname: form.firstname,
       lastname: form.lastname || null,
       email: form.email,
-      role_id: form.role_id,
+      role: form.role,
     }
     if (form.password) payload.password = form.password
     try {
@@ -159,7 +159,7 @@ function MemberForm({
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
-            <InputField label="First name" name="name" value={form.name} onChange={handleChange} required placeholder="John" />
+            <InputField label="First name" name="firstname" value={form.firstname} onChange={handleChange} required placeholder="John" />
             <InputField label="Last name" name="lastname" value={form.lastname} onChange={handleChange} placeholder="Doe" />
           </div>
 
@@ -181,8 +181,8 @@ function MemberForm({
               Role <span className="text-destructive">*</span>
             </label>
             <select
-              name="role_id"
-              value={form.role_id}
+              name="role"
+              value={form.role}
               onChange={handleChange}
               className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
             >
@@ -221,11 +221,11 @@ function MemberDetail({
   onClose: () => void
   onEdit: () => void
 }) {
-  const role = ROLES[member.role_id] ?? { label: `Role ${member.role_id}`, className: "bg-muted text-muted-foreground border-border" }
+  const role = ROLES[member.role] ?? { label: `Role ${member.role}`, className: "bg-muted text-muted-foreground border-border" }
   const createdAt = new Date(member.created_at).toLocaleString("th-TH", {
     year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
   })
-  const initials = [member.name[0], member.lastname?.[0]].filter(Boolean).join("").toUpperCase()
+  const initials = [member.firstname[0], member.lastname?.[0]].filter(Boolean).join("").toUpperCase()
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -240,7 +240,7 @@ function MemberDetail({
           </div>
           <div className="text-center">
             <p className="text-lg font-semibold text-card-foreground">
-              {member.name} {member.lastname ?? ""}
+              {member.firstname} {member.lastname ?? ""}
             </p>
             <span className={`mt-1 inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${role.className}`}>
               {role.label}
@@ -317,7 +317,7 @@ export default function AdminMembersPage() {
   const { data: members, isLoading, error: fetchError, mutate } = useSWR<Member[]>("/api/admin/members", fetcher)
 
   const [search, setSearch] = useState("")
-  const [roleFilter, setRoleFilter] = useState<number | "all">("all")
+  const [roleFilter, setRoleFilter] = useState<string | "all">("all")
   const [sortKey, setSortKey] = useState<SortKey>("id")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
 
@@ -342,10 +342,10 @@ export default function AdminMembersPage() {
     .filter((m) => {
       const q = search.toLowerCase()
       const matchSearch =
-        m.name.toLowerCase().includes(q) ||
+        m.firstname.toLowerCase().includes(q) ||
         (m.lastname ?? "").toLowerCase().includes(q) ||
         m.email.toLowerCase().includes(q)
-      const matchRole = roleFilter === "all" || m.role_id === roleFilter
+      const matchRole = roleFilter === "all" || m.role === roleFilter
       return matchSearch && matchRole
     })
     .sort((a, b) => {
@@ -383,9 +383,9 @@ export default function AdminMembersPage() {
     )
 
   const roleCounts = Object.entries(ROLES).map(([id, r]) => ({
-    id: Number(id),
+    id,
     label: r.label,
-    count: memberList.filter((m) => m.role_id === Number(id)).length,
+    count: memberList.filter((m) => m.role === id).length,
   }))
 
   return (
@@ -466,7 +466,7 @@ export default function AdminMembersPage() {
           {fetchError && (
             <div className="mb-4 flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               <AlertTriangle className="h-4 w-4 shrink-0" />
-              <span>{fetchError.message}. Please check your DATABASE_URL environment variable.</span>
+              <span>{fetchError.message}. Please check your database connection environment variables.</span>
             </div>
           )}
 
@@ -479,9 +479,9 @@ export default function AdminMembersPage() {
                     {(
                       [
                         { key: "id", label: "ID", w: "w-16" },
-                        { key: "name", label: "Name" },
+                        { key: "firstname", label: "Name" },
                         { key: "email", label: "Email" },
-                        { key: "role_id", label: "Role", w: "w-28" },
+                        { key: "role", label: "Role", w: "w-28" },
                         { key: "created_at", label: "Created", w: "w-44" },
                       ] as { key: SortKey; label: string; w?: string }[]
                     ).map(({ key, label, w }) => (
@@ -520,7 +520,7 @@ export default function AdminMembersPage() {
                     </tr>
                   ) : (
                     filtered.map((member) => {
-                      const role = ROLES[member.role_id]
+                      const role = ROLES[member.role]
                       return (
                         <tr
                           key={member.id}
@@ -530,10 +530,10 @@ export default function AdminMembersPage() {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2.5">
                               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                                {member.name[0].toUpperCase()}
+                                {member.firstname[0].toUpperCase()}
                               </div>
                               <p className="font-medium text-foreground">
-                                {member.name} {member.lastname ?? ""}
+                                {member.firstname} {member.lastname ?? ""}
                               </p>
                             </div>
                           </td>
@@ -544,7 +544,7 @@ export default function AdminMembersPage() {
                                 role?.className ?? "bg-muted text-muted-foreground border-border"
                               }`}
                             >
-                              {role?.label ?? `Role ${member.role_id}`}
+                              {role?.label ?? `Role ${member.role}`}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-xs text-muted-foreground">
@@ -612,7 +612,7 @@ export default function AdminMembersPage() {
       )}
       {deleteMember && (
         <DeleteConfirm
-          name={`${deleteMember.name} ${deleteMember.lastname ?? ""}`.trim()}
+          name={`${deleteMember.firstname} ${deleteMember.lastname ?? ""}`.trim()}
           onConfirm={handleDelete}
           onCancel={() => setDeleteMember(null)}
           loading={deleteLoading}
