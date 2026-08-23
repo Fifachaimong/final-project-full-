@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useState, useRef } from "react"
 import { Plus, User, Phone, Mail, Check, X } from "lucide-react"
 import { Navbar } from "@/components/navbar"
+import { updateProfile } from "@/app/actions/profile"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -433,51 +434,21 @@ export default function ProfileEditPage({
 
   const handleConfirm = async () => {
     try {
-      /*
-       * ใช้ FormData เพราะเราต้องส่งทั้ง
-       *
-       * firstname
-       * lastname
-       * phone
-       * icon (File)
-       *
-       * ไป Backend
-       */
-      const formData = new FormData()
+      const response = await updateProfile({
+        firstname: String(draft.firstName ?? ""),
+        lastname: String(draft.surname ?? ""),
+        phone: String(draft.phone ?? "").replace(/\D/g, ""),
+      })
 
-      formData.append("firstname", draft.firstName)
-      formData.append("lastname", draft.surname)
-      formData.append("phone", draft.phone)
-
-      // ถ้ามีการเลือกรูปใหม่เท่านั้นถึงจะส่ง
-      if (draft.avatarFile) {
-        formData.append("icon", draft.avatarFile)
+      if (!response) {
+        throw new Error("บันทึกไม่สำเร็จ")
       }
 
-      const response = await fetch(
-        "http://localhost:5000/auth/profile",
-        {
-          method: "PUT",
-          credentials: "include",
-          body: formData,
-        }
-      )
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(
-          result.message || "บันทึกไม่สำเร็จ"
-        )
-      }
-
-      /*
-       * Backend บันทึกเรียบร้อยแล้ว
-       */
       router.refresh()
 
       setSaved({
         ...draft,
+        phone: String(draft.phone ?? "").replace(/\D/g, ""),
         avatarFile: null,
       })
 
@@ -488,7 +459,10 @@ export default function ProfileEditPage({
         "success"
       )
     } catch (err) {
-      console.error(err)
+      console.error(
+        "[browser] Update profile error:",
+        err
+      )
 
       showToast(
         "บันทึกไม่สำเร็จ",

@@ -132,10 +132,16 @@ function MemberForm({
     const payload: Record<string, unknown> = {
       firstname: form.firstname,
       lastname: form.lastname || null,
-      email: form.email,
       role: form.role,
     }
-    if (form.password) payload.password = form.password
+
+    if (!isEdit) {
+      payload.email = form.email
+    }
+
+    if (form.password) {
+      payload.password = form.password
+    }
     try {
       const res = await fetch(isEdit ? `/api/admin/members/${member!.id}` : "/api/admin/members", {
         method: isEdit ? "PUT" : "POST",
@@ -170,7 +176,16 @@ function MemberForm({
             <InputField label="Last name" name="lastname" value={form.lastname} onChange={handleChange} placeholder="Doe" />
           </div>
 
-          <InputField label="Email" name="email" type="email" value={form.email} onChange={handleChange} required placeholder="john@example.com" />
+          <InputField
+            label="Email"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            readOnly={isEdit}
+            placeholder="john@example.com"
+          />
 
           <InputField
             label="Password"
@@ -367,14 +382,30 @@ export default function AdminMembersPage() {
       return 0
     })
 
-  const handleDelete = useCallback(async () => {
-    if (!deleteMember) return
-    setDeleteLoading(true)
-    await fetch(`/api/admin/members/${deleteMember.id}`, { method: "DELETE" })
-    setDeleteLoading(false)
-    setDeleteMember(null)
-    mutate()
-  }, [deleteMember, mutate])
+    const handleDelete = useCallback(async () => {
+      if (!deleteMember) return
+
+      setDeleteLoading(true)
+
+      try {
+        const res = await fetch(`/api/admin/members/${deleteMember.id}`, {
+          method: "DELETE",
+        })
+
+        const data = await res.json()
+
+        if (!res.ok) {
+          throw new Error(data.message ?? data.error ?? "Failed to delete member")
+        }
+
+        setDeleteMember(null)
+        mutate()
+      } catch (error) {
+        console.error("Delete member error:", error)
+      } finally {
+        setDeleteLoading(false)
+      }
+    }, [deleteMember, mutate])
 
   const handleSaved = useCallback(() => {
     setShowForm(false)
