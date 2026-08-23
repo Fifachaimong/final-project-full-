@@ -9,7 +9,7 @@ const routes = express.Router()
 
 routes.post('/register', ValidateBody(registerSchema), Register)
 routes.post('/login', ValidateBody(loginSchema), Login)
-routes.put('/profile', authMiddleware, ValidateBody(editMyProfileSchema), EditMyProfile)
+routes.put('/profile', authMiddleware, upload.single('icon'), ValidateBody(editMyProfileSchema), EditMyProfile)
 routes.get('/posts', GetPost)
 routes.get('/profile', authMiddleware, GetMyProfile)
 routes.get('/result', authMiddleware, GetMyApplicationResult)

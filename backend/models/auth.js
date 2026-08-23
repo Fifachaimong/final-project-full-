@@ -16,10 +16,34 @@ export const GetUserByID = async(id) => {
     return result
 }
 
-export const GetPostModel = async() => {
-    const [result] = await db.query(
-        'SELECT posts.title, posts.owner_id, posts.faculty, posts.description, posts.deadline, users.firstname, users.lastname FROM posts JOIN users ON posts.owner_id = users.id'
-    )
+export const GetPostModel = async(setoff, limit, search, filter) => {
+    let query = `
+        SELECT posts.title, posts.owner_id, posts.faculty, posts.description, posts.deadline, 
+        users.firstname as owner_firstname, users.lastname as owner_lastname, posts.posts_status
+        FROM posts
+        JOIN users ON posts.owner_id = users.id
+    `
+    let value = []
+    let condition = []
+
+    if (search !== null) {
+        condition.push('posts.title LIKE ?')
+        value.push(`%${search}%`)
+    }
+
+    if (filter !== null) {
+        condition.push('posts.status = ?')
+        value.push(filter)
+    }
+
+    if (condition.length > 0) {
+        query += ' WHERE ' + condition.join(' AND ')
+    }
+
+    query += ' LIMIT ? OFFSET ?'
+    value.push(limit, setoff)
+    
+    const [result] = await db.query(query, value)
 
     return result
 }
@@ -56,14 +80,14 @@ export const CreateResume = async (memberId, resumeUrl, transcriptUrl, aiScore, 
     return result;
 }
 
-export const EditMyProfileModel = async (id, data) => {
+export const EditMyProfileModel = async (id, data, icon) => {
     const { firstname, lastname, phone } = data
     const [result] = await db.query(`
         UPDATE users 
         SET firstname = COALESCE(?, firstname), lastname = COALESCE(?, lastname), 
-            phone = COALESCE(?, phone)
+            phone = COALESCE(?, phone), icon = COALESCE(?, icon)
         WHERE id = ?
-        `,[ firstname, lastname, phone, id ]
+        `,[ firstname, lastname, phone, icon, id ]
     )
 
     return result

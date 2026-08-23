@@ -56,8 +56,23 @@ export const LoginService = async (data) => {
     }
 }
 
-export const GetPostService = async () => {
-    const result = await GetPostModel()
+export const GetPostService = async (query) => {
+    let { page, limit, filter = null } = query
+    const { search = null } = query
+
+    page = Number(page)
+    limit = Number(limit)
+
+    page = page > 0 ? page : 1
+    limit = limit < 11 && limit > 0 ? limit : 10
+    const setoff = (page - 1) * limit 
+    const filteCheck = ['open', 'closed']
+
+    if (!filteCheck.includes(filter) && filter !== null) {
+        filter = null
+    }
+
+    const result = await GetPostModel(setoff, limit, search, filter)
 
     return {
         message : 'Get post succeed',
@@ -105,7 +120,6 @@ export const ApplyResumeService = async (
         resume.buffer,
         resume.mimetype,
         "resume",
-        "resume",
         resume.originalname
     );
 
@@ -114,7 +128,6 @@ export const ApplyResumeService = async (
     const transcriptUpload = await UploadToSupabase(
         transcript.buffer,
         transcript.mimetype,
-        "transcript",
         "transcript",
         transcript.originalname
     );
@@ -130,12 +143,9 @@ export const ApplyResumeService = async (
         }
     );
 
-
-  // 1. Log ดู Response ทั้งหมดที่ FastAPI ส่งกลับมา (จะได้เห็นโครงสร้างแบบเต็มๆ)
     console.log("=== FULL AI RESULT ===");
     console.log(JSON.stringify(aiResult.data, null, 2));
 
-    // 2. Log เช็คการสกัด Text (ดูว่าเป็น text_layer หรือ ocr_fallback)
     console.log("=== EXTRACTION INFO ===");
     console.log("Method:", aiResult.data.text_extraction_method);
     console.log("Warning:", aiResult.data.text_extraction_warning);
@@ -147,7 +157,6 @@ export const ApplyResumeService = async (
 
     const memberId = memberResult.insertId;
 
-    // 3. ปรับ analysis ให้แปลง Array/Object เป็น String ก่อน (ป้องกัน [object Object])
     const hardSkills = Array.isArray(aiResult.data.skills?.hard)
         ? aiResult.data.skills.hard.join(", ")
         : JSON.stringify(aiResult.data.skills?.hard || "");
@@ -159,7 +168,6 @@ export const ApplyResumeService = async (
         overall_confidence : ${aiResult.data.overall_confidence}
     `.trim();
 
-    // 4. Log ดูค่าที่จะเซฟลง Database จริงๆ
     console.log("=== ANALYSIS STRING TO SAVE ===");
     console.log(analysis);  
 
@@ -184,9 +192,24 @@ export const ApplyResumeService = async (
 
 
 
-export const EditMyProfileService = async (id, data) => {
-    const check = await EditMyProfileModel(id, data)
-    if (!check.affectedRows === 0) {
+export const EditMyProfileService = async (id, data, file) => {
+
+    let icon = null
+
+    if (file) {
+        const upload = await UploadToSupabase(
+            file.buffer,
+            file.mimetype,
+            "profile",
+            file.originalname
+        )
+
+        icon = upload.publicUrl
+    }
+
+    const check = await EditMyProfileModel(id, data, icon)
+
+    if (check.affectedRows === 0) {
         throw new AppError('User not found', 404)
     }
 

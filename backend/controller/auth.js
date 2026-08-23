@@ -28,7 +28,7 @@ export const Login = asyncHandler(async (req, res) => {
 })
 
 export const GetPost = asyncHandler(async (req, res) => {
-    const result = await GetPostService()
+    const result = await GetPostService(req.query)
     res.status(200).json(result)
 })
 
@@ -38,7 +38,7 @@ export const ApplyResume = asyncHandler(async (req, res) => {
 })
 
 export const EditMyProfile = asyncHandler(async (req, res) => {
-    const result = await EditMyProfileService(req.user.id, req.body)
+    const result = await EditMyProfileService(req.user.id, req.body, req.file)
     res.status(200).json(result)
 })
 
