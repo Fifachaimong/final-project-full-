@@ -5,7 +5,7 @@ const registerSchema = {
         validate : [
             {
                 check : (value) => /^[a-zA-Zก-๙]+$/.test(value),
-                message : 'First name must contain only Thai or English letters.'
+                message : 'ชื่อต้องประกอบด้วยตัวอักษรภาษาไทยหรือภาษาอังกฤษเท่านั้น'
             }
         ]
     },
@@ -15,7 +15,7 @@ const registerSchema = {
         validate : [
             {
                 check : (value) => /^[a-zA-Zก-๙]+$/.test(value),
-                message : 'Last name must contain only Thai or English letters.'
+                message : 'นามสกุลต้องประกอบด้วยตัวอักษรภาษาไทยหรือภาษาอังกฤษเท่านั้น'
             }
         ]
     },
@@ -25,7 +25,7 @@ const registerSchema = {
         validate : [
             {
                 check : (value) => /^[a-zA-Z0-9]{1,20}@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value),
-                message : 'Please enter a valid email format.'
+                message : 'กรุณากรอกอีเมลให้ถูกต้องตามรูปแบบ'
             }
         ]
     },
@@ -35,7 +35,7 @@ const registerSchema = {
         validate : [
             {
                 check : (value) => /^(?=(?:.*[0-9]){5,})(?=.*[a-z])(?=.*[A-Z]).+$/.test(value),
-                message : 'Password must contain at least 5 numbers, one uppercase letter, and one lowercase letter.'
+                message : 'รหัสผ่านต้องมีตัวเลขอย่างน้อย 5 ตัว และต้องมีตัวพิมพ์ใหญ่และตัวพิมพ์เล็กอย่างน้อย 1 ตัว'
             }
         ]
     },
@@ -64,7 +64,7 @@ const editMyProfileSchema = {
         validate : [
             {
                 check : (value) => /^[a-zA-Zก-๙]+$/.test(value),
-                message : 'First name must contain only Thai or English letters.'
+                message : 'ชื่อต้องประกอบด้วยตัวอักษรภาษาไทยหรือภาษาอังกฤษเท่านั้น'
             }
         ]
     },
@@ -74,7 +74,7 @@ const editMyProfileSchema = {
         validate : [
             {
                 check : (value) => /^[a-zA-Zก-๙]+$/.test(value),
-                message : 'Last name must contain only Thai or English letters.'
+                message : 'นามสกุลต้องประกอบด้วยตัวอักษรภาษาไทยหรือภาษาอังกฤษเท่านั้น'
             }
         ]
     },
@@ -84,7 +84,7 @@ const editMyProfileSchema = {
         validate : [
             {
                 check : (value) => /^[0-9]{10}$/.test(value),
-                message : 'Phone number must contain exactly 10 digits.'
+                message : 'หมายเลขโทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น'
             }
         ]
     }
