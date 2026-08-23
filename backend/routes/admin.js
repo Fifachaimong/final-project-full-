@@ -12,6 +12,45 @@ routess.put('/users/:id', ValidateBody(editUserSchema), EditUser)
 
 export default routess
 
+
+ /**
+ * @swagger
+ * /admin/users:
+ *   get:
+ *     summary: Get all users
+ *     description: Get a list of all users in the system.
+ *     tags:
+ *       - admin
+ *
+ *     responses:
+ *       200:
+ *         description: Users retrieved successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Get User succeed"
+ *               data:
+ *                 - id: 6
+ *                   firstname: "Naruechit"
+ *                   lastname: "chaimongkon"
+ *                   email: "Naruechit@gmail.com"
+ *                   role: "applicant"
+ *                   created_at: 2026-08-10T09:15:39.000Z
+ *                 - id: 31
+ *                   firstname: "Golf"
+ *                   lastname: "mark"
+ *                   email: "BakaZEno@gmail.com"
+ *                   role: "hr"
+ *                   created_at: "2026-08-23T09:15:39.000Z"
+ *
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Internal server error."
+ */
+
 /**
  * @swagger
  * /admin/users:
