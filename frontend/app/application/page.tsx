@@ -48,7 +48,7 @@ const fetcher = async (url: string) => {
   const data = await r.json()
 
   if (!r.ok) {
-    throw new Error(data?.message ?? "Failed to fetch")
+    throw new Error(data?.message ?? data?.error ?? "Failed to fetch")
   }
 
   if (!Array.isArray(data.data)) {
@@ -137,7 +137,7 @@ function MemberForm({
     }
     if (form.password) payload.password = form.password
     try {
-      const res = await fetch(isEdit ? `http://localhost:5000/admin/users/${member!.id}` : "http://localhost:5000/admin/users", {
+      const res = await fetch(isEdit ? `/api/admin/members/${member!.id}` : "/api/admin/members", {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -321,7 +321,7 @@ function DeleteConfirm({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminMembersPage() {
-  const { data: members, isLoading, error: fetchError, mutate } = useSWR<Member[]>("http://localhost:5000/admin/users", fetcher)
+  const { data: members, isLoading, error: fetchError, mutate } = useSWR<Member[]>("/api/admin/members", fetcher)
 
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState<string | "all">("all")
@@ -370,7 +370,7 @@ export default function AdminMembersPage() {
   const handleDelete = useCallback(async () => {
     if (!deleteMember) return
     setDeleteLoading(true)
-    await fetch(`http://localhost:5000/admin/users/${deleteMember.id}`, { method: "DELETE" })
+    await fetch(`/api/admin/members/${deleteMember.id}`, { method: "DELETE" })
     setDeleteLoading(false)
     setDeleteMember(null)
     mutate()
