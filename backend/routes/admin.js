@@ -1,10 +1,11 @@
 import express from 'express'
-import { CreateUserByAdmin, DeleteUser, EditUser } from '../controller/admin.js'
+import { CreateUserByAdmin, DeleteUser, EditUser, GetUserByAdmin } from '../controller/admin.js'
 import { createUserSchema, editUserSchema }from '../schema/admin.js'
 import { ValidateBody } from '../middleware/validate.js'
 
 const routess = express.Router()
 
+routess.get('/users', GetUserByAdmin)
 routess.post('/users', ValidateBody(createUserSchema), CreateUserByAdmin)
 routess.delete('/users/:id', DeleteUser)
 routess.put('/users/:id', ValidateBody(editUserSchema), EditUser)

@@ -1,5 +1,14 @@
 import db from "../lib/db.js"
 
+export const GetUserByAdminModel = async(data) => {
+    const [result] = await db.query(`
+        SELECT id, firstname, lastname, email, role, created_at
+        FROM users
+    `)
+
+    return result
+}
+
 export const CreateUserByAdminModel = async(data) => {
     const { firstname, lastname, email, password, role } = data
     const [result] = await db.query('INSERT INTO users(firstname, lastname, email, password, role) VALUES(?, ?, ?, ?, ?)', [firstname, lastname, email, password, role])

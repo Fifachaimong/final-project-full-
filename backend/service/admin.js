@@ -1,7 +1,16 @@
-import { CreateUserByAdminModel, DeleteUserByID, EditUserByIDModel } from "../models/admin.js"
+import { CreateUserByAdminModel, DeleteUserByID, EditUserByIDModel, GetUserByAdminModel } from "../models/admin.js"
 import { GetUserByEmail } from "../models/auth.js"
 import AppError from "../utils/AppError.js"
 import bcrypt from "bcryptjs"
+
+export const GetUserByAdminService = async () => {
+    const data = await GetUserByAdminModel()
+
+    return {
+        message : 'Get User succeed',
+        data : data
+    }
+}
 
 export const CreateUserByAdminService = async (data) => {
     const { firstname, lastname, email, password, role } = data

@@ -1,6 +1,11 @@
 import asyncHandler from "express-async-handler"
-import { CreateUserByAdminService, DeleteUserService, EditUserService } from "../service/admin.js"
+import { CreateUserByAdminService, DeleteUserService, EditUserService, GetUserByAdminService } from "../service/admin.js"
 
+
+export const GetUserByAdmin = asyncHandler(async (req, res) => {
+    const result = await GetUserByAdminService()
+    res.status(200).json(result)
+})
 
 export const CreateUserByAdmin = asyncHandler(async (req, res) => {
     const data = req.body
