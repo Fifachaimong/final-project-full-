@@ -11,7 +11,7 @@ interface UserAvatarProps {
 
 interface User {
   id: number
-  name: string
+  firstname: string
   lastname: string
   email: string
   role_id: number
@@ -71,10 +71,10 @@ export function UserAvatar({
   }
 
   const fullName = user
-    ? `${user.name} ${user.lastname}`
+    ? `${user.firstname} ${user.lastname}`
     : "Loading..."
 
-  const firstName = user?.name ?? ""
+  const firstName = user?.firstname ?? ""
 
   const homeLink =
     user?.role_id === 1

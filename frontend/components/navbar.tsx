@@ -6,7 +6,7 @@ import { UserAvatar } from "@/components/user-avatar"
 import { useEffect, useState } from "react"
 
 interface User {
-  role_id: number
+  role: string
 }
 
 export function Navbar() {
@@ -26,11 +26,11 @@ export function Navbar() {
   }, [])
 
   const homeLink =
-    user?.role_id === 1
+    user?.role === "admin"
       ? "/home/admin"
-      : user?.role_id === 2
+      : user?.role === "hr"
       ? "/home/hr"
-      : user?.role_id === 3
+      : user?.role === "applicant"
       ? "/home/applicant"
       : "/"
 
@@ -93,7 +93,7 @@ export function Navbar() {
                 <span className="ml-3">Browse</span>
               </Link>
 
-              {user?.role_id === 1 && (
+              {user?.role === "admin" && (
                 <Link
                   href="/application"
                   className="mt-1 flex items-center rounded-lg px-4 py-3 text-sm
