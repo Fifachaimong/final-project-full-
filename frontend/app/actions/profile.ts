@@ -3,14 +3,15 @@
 import { cookies } from "next/headers"
 
 export async function getProfile() {
-  const token = (await cookies()).get("token")?.value
+  const cookieStore = await cookies()
+  const token = cookieStore.get("token")?.value
 
   if (!token) {
     throw new Error("Unauthorized")
   }
 
   const response = await fetch(
-    'http://localhost:5000/auth/profile',
+    "http://localhost:5000/auth/profile",
     {
       method: "GET",
       headers: {
@@ -20,11 +21,15 @@ export async function getProfile() {
     }
   )
 
-  if (!response.ok) {
-    throw new Error("Get profile failed")
-  }
-
   const result = await response.json()
 
-  return result.data
+  if (!response.ok) {
+    console.error("Backend profile error:", result)
+
+    throw new Error(
+      result?.message || "Get profile failed"
+    )
+  }
+
+  return result.data ?? result
 }

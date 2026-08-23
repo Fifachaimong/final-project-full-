@@ -58,6 +58,7 @@ function AvatarUploader({
           <img
             src={avatarUrl}
             alt="Profile avatar"
+            loading="eager"
             className="h-full w-full object-cover"
           />
         ) : (

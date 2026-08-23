@@ -1,66 +1,33 @@
-import { NextResponse } from "next/server";
-import { jwtVerify } from "jose";
-import db from "@/lib/db";
+import { NextResponse } from "next/server"
+import { headers } from "next/headers"
 
-const secret = new TextEncoder().encode(process.env.JWT_TOKEN);
-
-export async function GET(request) {
+export async function GET() {
   try {
-    const cookieHeader = request.headers.get("cookie") ?? "";
+    const headerList = await headers()
+    const cookie = headerList.get("cookie") ?? ""
 
-    const token = cookieHeader
-      .split(";")
-      .map((c) => c.trim())
-      .find((c) => c.startsWith("token="))
-      ?.split("=")[1];
+    const response = await fetch(
+      "http://localhost:5000/auth/profile",
+      {
+        method: "GET",
+        headers: {
+          Cookie: cookie,
+        },
+        cache: "no-store",
+      }
+    )
 
-    if (!token) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const data = await response.json()
 
-    const { payload } = await jwtVerify(token, secret);
-
-    const [rows] = await db.query(
-      `
-      SELECT
-        id,
-        firstname,
-        lastname,
-        email,
-        phone,
-        role
-      FROM users
-      WHERE id = ?
-      `,
-      [payload.id]
-    );
-
-    if (rows.length === 0) {
-      return NextResponse.json(
-        { message: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    const user = rows[0];
-
-    return NextResponse.json({
-      id: user.id,
-      firstname: user.firstname,
-      lastname: user.lastname,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-    });
+    return NextResponse.json(data, {
+      status: response.status,
+    })
   } catch (error) {
-    console.error("GET /api/me error:", error);
+    console.error("GET /api/me error:", error)
 
     return NextResponse.json(
-      { message: "Unauthorized" },
-      { status: 401 }
-    );
+      { message: "Cannot connect to backend" },
+      { status: 500 }
+    )
   }
 }
