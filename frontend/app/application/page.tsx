@@ -46,9 +46,16 @@ const ROLES: Record<string, { label: string; className: string }> = {
 const fetcher = async (url: string) => {
   const r = await fetch(url)
   const data = await r.json()
-  if (!r.ok) throw new Error(data?.error ?? "Failed to fetch")
-  if (!Array.isArray(data)) throw new Error("Unexpected response format")
-  return data as Member[]
+
+  if (!r.ok) {
+    throw new Error(data?.message ?? "Failed to fetch")
+  }
+
+  if (!Array.isArray(data.data)) {
+    throw new Error("Unexpected response format")
+  }
+
+  return data.data as Member[]
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -130,8 +137,8 @@ function MemberForm({
     }
     if (form.password) payload.password = form.password
     try {
-      const res = await fetch(isEdit ? `/api/admin/members/${member!.id}` : "/api/admin/members", {
-        method: isEdit ? "PATCH" : "POST",
+      const res = await fetch(isEdit ? `http://localhost:5000/admin/users/${member!.id}` : "http://localhost:5000/admin/users", {
+        method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
@@ -314,7 +321,7 @@ function DeleteConfirm({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminMembersPage() {
-  const { data: members, isLoading, error: fetchError, mutate } = useSWR<Member[]>("/api/admin/members", fetcher)
+  const { data: members, isLoading, error: fetchError, mutate } = useSWR<Member[]>("http://localhost:5000/admin/users", fetcher)
 
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState<string | "all">("all")
@@ -363,7 +370,7 @@ export default function AdminMembersPage() {
   const handleDelete = useCallback(async () => {
     if (!deleteMember) return
     setDeleteLoading(true)
-    await fetch(`/api/admin/members/${deleteMember.id}`, { method: "DELETE" })
+    await fetch(`http://localhost:5000/admin/users/${deleteMember.id}`, { method: "DELETE" })
     setDeleteLoading(false)
     setDeleteMember(null)
     mutate()
