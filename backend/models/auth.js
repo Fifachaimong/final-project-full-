@@ -17,11 +17,16 @@ export const GetUserByID = async(id) => {
 }
 
 export const GetPostModel = async(setoff, limit, search, filter) => {
-    let query = `
-        SELECT posts.title, posts.owner_id, posts.faculty, posts.description, posts.deadline, 
-        users.firstname as owner_firstname, users.lastname as owner_lastname, posts.posts_status
-        FROM posts
-        JOIN users ON posts.owner_id = users.id
+    let query = ` 
+    SELECT posts.id, posts.owner_id, posts.title, posts.faculty, posts.deadline,
+        posts.icon,
+        CASE
+            WHEN posts.posts_status = 'open' THEN true
+            ELSE false
+        END AS is_open,
+        CONCAT(users.firstname, ' ', users.lastname) AS owner_name
+    FROM posts
+    JOIN users ON posts.owner_id = users.id
     `
     let value = []
     let condition = []
@@ -32,7 +37,7 @@ export const GetPostModel = async(setoff, limit, search, filter) => {
     }
 
     if (filter !== null) {
-        condition.push('posts.status = ?')
+        condition.push('posts.posts_status = ?')
         value.push(filter)
     }
 
@@ -104,6 +109,17 @@ export const GetMyProfileModel = async (id) => {
 
 export const GetPostByIDModel = async (post_id) => {
     const [result] = await db.query(`
+        SELECT posts.id, posts.owner_id, posts.title, posts.faculty, posts.description, 
+        posts.deadline, posts.icon, posts.posts_status
+        FROM posts
+        WHERE posts.id = ?
+    `,[ post_id ])
+
+    return result[0]
+}
+
+export const GetPostDescription = async (post_id) => {
+    const [result] = await db.query(`
         SELECT description FROM posts WHERE id = ?
     `,[ post_id ])
 
@@ -119,5 +135,5 @@ export const GetMyApplicationResultModel = async (id) => {
         WHERE m.user_id = ?
     `,[ id ])
 
-    return result
+    return result[0]
 }

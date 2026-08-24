@@ -2,20 +2,72 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import Link from "next/link"
 import Image from "next/image"
-import { ChevronLeft, LogOut, User, Users, X, Upload, Pencil, Send } from "lucide-react"
-import type { Post, Applicant } from "@/app/api/posts/route"
+import {
+  ChevronLeft,
+  Users,
+  X,
+  Upload,
+  Pencil,
+  Send,
+} from "lucide-react"
 import { Navbar } from "@/components/navbar"
+
+// ──────────────────────────────────────────────
+// Types
+// ──────────────────────────────────────────────
+
+interface Post {
+  id: string
+  owner_id: string
+  title: string
+  faculty: string
+  description: string
+  deadline: string
+  icon?: string | null
+  posts_status: number | boolean
+  applicants?: Applicant[]
+}
+
+interface Applicant {
+  id: string
+  name: string
+  lastname: string
+  email: string
+  applied_at: string
+  resume_url?: string | null
+}
+
+interface CurrentUser {
+  id: string
+  role: string
+  name: string
+  lastname: string
+  email: string
+}
 
 // ──────────────────────────────────────────────
 // Status badge
 // ──────────────────────────────────────────────
-function StatusBadge({ isOpen, deadline }: { isOpen: boolean; deadline: string }) {
+
+function StatusBadge({
+  isOpen,
+  deadline,
+}: {
+  isOpen: boolean
+  deadline: string
+}) {
   const expired = new Date(deadline) < new Date()
   const open = isOpen && !expired
+
   return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${open ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+        open
+          ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+          : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+      }`}
+    >
       {open ? "เปิดรับสมัคร" : "ปิดรับสมัคร"}
     </span>
   )
@@ -24,23 +76,53 @@ function StatusBadge({ isOpen, deadline }: { isOpen: boolean; deadline: string }
 // ──────────────────────────────────────────────
 // Applicant row
 // ──────────────────────────────────────────────
-function ApplicantRow({ index, applicant }: { index: number; applicant: Applicant }) {
-  const initials = `${applicant.name.charAt(0)}${applicant.lastname.charAt(0)}`
+
+function ApplicantRow({
+  index,
+  applicant,
+}: {
+  index: number
+  applicant: Applicant
+}) {
+  const initials = `${applicant.name?.charAt(0) ?? ""}${
+    applicant.lastname?.charAt(0) ?? ""
+  }`
+
   return (
     <div className="flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40">
-      <span className="w-6 text-center text-sm font-medium text-muted-foreground">{index}</span>
+      <span className="w-6 text-center text-sm font-medium text-muted-foreground">
+        {index}
+      </span>
+
       <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
         {initials.toUpperCase()}
       </div>
+
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-sm font-medium text-foreground">{applicant.name} {applicant.lastname}</span>
-        <span className="truncate text-xs text-muted-foreground">{applicant.email}</span>
+        <span className="truncate text-sm font-medium text-foreground">
+          {applicant.name} {applicant.lastname}
+        </span>
+
+        <span className="truncate text-xs text-muted-foreground">
+          {applicant.email}
+        </span>
       </div>
+
       <span className="flex-shrink-0 text-xs text-muted-foreground">
-        {new Date(applicant.applied_at).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}
+        {new Date(applicant.applied_at).toLocaleDateString("th-TH", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })}
       </span>
+
       {applicant.resume_url && (
-        <a href={applicant.resume_url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+        <a
+          href={applicant.resume_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
           ดู Resume
         </a>
       )}
@@ -49,8 +131,9 @@ function ApplicantRow({ index, applicant }: { index: number; applicant: Applican
 }
 
 // ──────────────────────────────────────────────
-// Apply Dialog (for applicants)
+// Apply Dialog
 // ──────────────────────────────────────────────
+
 interface ApplyDialogProps {
   open: boolean
   onClose: () => void
@@ -59,7 +142,13 @@ interface ApplyDialogProps {
   currentUser: CurrentUser | null
 }
 
-function ApplyDialog({ open, onClose, onApplied, postId, currentUser }: ApplyDialogProps) {
+function ApplyDialog({
+  open,
+  onClose,
+  onApplied,
+  postId,
+  currentUser,
+}: ApplyDialogProps) {
   const [resumeFile, setResumeFile] = useState<string | null>(null)
   const [resumeFileName, setResumeFileName] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -72,36 +161,50 @@ function ApplyDialog({ open, onClose, onApplied, postId, currentUser }: ApplyDia
     setError("")
   }
 
-  const handleClose = () => { reset(); onClose() }
+  const handleClose = () => {
+    reset()
+    onClose()
+  }
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+
     if (!file) return
+
     setResumeFileName(file.name)
+
     const reader = new FileReader()
-    reader.onload = (ev) => setResumeFile(ev.target?.result as string)
+
+    reader.onload = (ev) => {
+      setResumeFile(ev.target?.result as string)
+    }
+
     reader.readAsDataURL(file)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!currentUser) {
       setError("ไม่พบข้อมูลผู้ใช้งาน กรุณาเข้าสู่ระบบใหม่อีกครั้ง")
       return
     }
+
     if (!resumeFile) {
       setError("กรุณาแนบไฟล์ Resume")
       return
     }
+
     setSubmitting(true)
     setError("")
+
     try {
       const res = await fetch(`/api/posts/${postId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // name/lastname/email come from the authenticated session, not
-        // from editable form fields, so an applicant can't apply under
-        // someone else's identity.
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
         body: JSON.stringify({
           name: currentUser.name,
           lastname: currentUser.lastname,
@@ -109,16 +212,28 @@ function ApplyDialog({ open, onClose, onApplied, postId, currentUser }: ApplyDia
           resume_url: resumeFile,
         }),
       })
+
       if (res.status === 409) {
         setError("คุณได้สมัครตำแหน่งนี้ไปแล้ว")
         return
       }
+
       if (res.status === 400) {
-        const data = await res.json()
-        setError(data.error ?? "ไม่สามารถสมัครได้")
+        const data = await res.json().catch(() => null)
+
+        setError(
+          data?.error ??
+            data?.message ??
+            "ไม่สามารถสมัครได้"
+        )
+
         return
       }
-      if (!res.ok) throw new Error("Failed")
+
+      if (!res.ok) {
+        throw new Error("Failed")
+      }
+
       reset()
       onApplied()
       onClose()
@@ -132,50 +247,95 @@ function ApplyDialog({ open, onClose, onApplied, postId, currentUser }: ApplyDia
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={handleClose}>
-      <div className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={handleClose}
+    >
+      <div
+        className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-card-foreground">สมัครงาน</h2>
-            <p className="text-xs text-muted-foreground">กรอกข้อมูลเพื่อสมัครตำแหน่งนี้</p>
+            <h2 className="text-lg font-semibold text-card-foreground">
+              สมัครงาน
+            </h2>
+
+            <p className="text-xs text-muted-foreground">
+              กรอกข้อมูลเพื่อสมัครตำแหน่งนี้
+            </p>
           </div>
-          <button onClick={handleClose} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground">
+
+          <button
+            onClick={handleClose}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Identity — pulled from the logged-in account, not editable */}
           <div className="rounded-lg bg-muted/50 px-3 py-2.5">
             <p className="text-sm font-medium text-foreground">
-              {currentUser ? `${currentUser.name} ${currentUser.lastname}` : "กำลังโหลดข้อมูล..."}
+              {currentUser
+                ? `${currentUser.name} ${currentUser.lastname}`
+                : "กำลังโหลดข้อมูล..."}
             </p>
-            <p className="text-xs text-muted-foreground">{currentUser?.email ?? ""}</p>
+
+            <p className="text-xs text-muted-foreground">
+              {currentUser?.email ?? ""}
+            </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-card-foreground">
-              Resume / CV <span className="text-destructive">*</span>
+              Resume / CV{" "}
+              <span className="text-destructive">*</span>
             </label>
+
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="flex items-center gap-3 rounded-lg border border-dashed border-input bg-background px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:bg-accent hover:text-foreground"
             >
               <Upload className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">{resumeFileName || "เลือกไฟล์ PDF, DOC, DOCX"}</span>
+
+              <span className="truncate">
+                {resumeFileName || "เลือกไฟล์ PDF, DOC, DOCX"}
+              </span>
             </button>
-            <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={handleFile} />
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx"
+              className="hidden"
+              onChange={handleFile}
+            />
           </div>
 
-          {error && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
+          {error && (
+            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          )}
 
           <div className="flex justify-end gap-2 pt-1">
-            <button type="button" onClick={handleClose} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
               ยกเลิก
             </button>
-            <button type="submit" disabled={submitting} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50">
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
               <Send className="h-3.5 w-3.5" />
+
               {submitting ? "กำลังส่ง..." : "ส่งใบสมัคร"}
             </button>
           </div>
@@ -186,8 +346,9 @@ function ApplyDialog({ open, onClose, onApplied, postId, currentUser }: ApplyDia
 }
 
 // ──────────────────────────────────────────────
-// Edit Post Dialog (for HR)
+// Edit Post Dialog
 // ──────────────────────────────────────────────
+
 interface EditDialogProps {
   open: boolean
   onClose: () => void
@@ -195,55 +356,112 @@ interface EditDialogProps {
   post: Post
 }
 
-function EditPostDialog({ open, onClose, onSaved, post }: EditDialogProps) {
+function EditPostDialog({
+  open,
+  onClose,
+  onSaved,
+  post,
+}: EditDialogProps) {
   const [title, setTitle] = useState(post.title)
   const [faculty, setFaculty] = useState(post.faculty)
   const [description, setDescription] = useState(post.description)
-  const [deadline, setDeadline] = useState(post.deadline.slice(0, 10))
-  const [isOpen, setIsOpen] = useState(post.is_open)
-  const [logoPreview, setLogoPreview] = useState<string | null>(post.logo_url ?? null)
+  const [deadline, setDeadline] = useState(
+    post.deadline?.slice(0, 10) ?? ""
+  )
+
+  const [isOpen, setIsOpen] = useState(
+    Boolean(post.posts_status)
+  )
+
+  const [logoPreview, setLogoPreview] = useState<string | null>(
+    post.icon ?? null
+  )
+
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Sync when post changes
   useEffect(() => {
     setTitle(post.title)
     setFaculty(post.faculty)
     setDescription(post.description)
-    setDeadline(post.deadline.slice(0, 10))
-    setIsOpen(post.is_open)
-    setLogoPreview(post.logo_url ?? null)
+    setDeadline(post.deadline?.slice(0, 10) ?? "")
+    setIsOpen(Boolean(post.posts_status))
+    setLogoPreview(post.icon ?? null)
     setError("")
   }, [post, open])
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0]
+
     if (!file) return
+
     const reader = new FileReader()
-    reader.onload = (ev) => setLogoPreview(ev.target?.result as string)
+
+    reader.onload = (ev) => {
+      setLogoPreview(ev.target?.result as string)
+    }
+
     reader.readAsDataURL(file)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault()
-    if (!title || !faculty || !description || !deadline) {
+
+    if (
+      !title ||
+      !faculty ||
+      !description ||
+      !deadline
+    ) {
       setError("กรุณากรอกข้อมูลให้ครบ")
       return
     }
+
     setSubmitting(true)
     setError("")
+
     try {
       const res = await fetch("/api/posts", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: post.id, title, faculty, description, deadline, logo_url: logoPreview, is_open: isOpen }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          id: post.id,
+          title,
+          faculty,
+          description,
+          deadline,
+          icon: logoPreview,
+          posts_status: isOpen ? 1 : 0,
+        }),
       })
-      if (!res.ok) throw new Error("Failed")
+
+      const result = await res.json().catch(() => null)
+
+      if (!res.ok) {
+        throw new Error(
+          result?.message ??
+            result?.error ??
+            "บันทึกการแก้ไขไม่สำเร็จ"
+        )
+      }
+
       onSaved()
       onClose()
-    } catch {
-      setError("เกิดข้อผิดพลาด กรุณาลองใหม่")
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "เกิดข้อผิดพลาด กรุณาลองใหม่"
+      )
     } finally {
       setSubmitting(false)
     }
@@ -252,66 +470,160 @@ function EditPostDialog({ open, onClose, onSaved, post }: EditDialogProps) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-card-foreground">แก้ไขประกาศ</h2>
-          <button onClick={onClose} className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground">
+          <h2 className="text-lg font-semibold text-card-foreground">
+            แก้ไขประกาศ
+          </h2>
+
+          <button
+            onClick={onClose}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Logo */}
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4"
+        >
           <div className="flex flex-col items-center gap-2">
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted transition-colors hover:border-primary hover:bg-accent">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted transition-colors hover:border-primary hover:bg-accent"
+            >
               {logoPreview ? (
-                <Image src={logoPreview} alt="Logo" width={96} height={96} className="h-24 w-24 rounded-2xl object-cover" />
+                <Image
+                  src={logoPreview}
+                  alt="Logo"
+                  width={96}
+                  height={96}
+                  className="h-24 w-24 rounded-2xl object-cover"
+                />
               ) : (
                 <Upload className="h-6 w-6 text-muted-foreground" />
               )}
             </button>
-            <span className="text-xs text-muted-foreground">อัปโหลดโลโก้ (ไม่บังคับ)</span>
-            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+
+            <span className="text-xs text-muted-foreground">
+              อัปโหลดโลโก้ (ไม่บังคับ)
+            </span>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFile}
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-card-foreground">ชื่อตำแหน่ง <span className="text-destructive">*</span></label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+            <label className="text-sm font-medium text-card-foreground">
+              ชื่อตำแหน่ง{" "}
+              <span className="text-destructive">*</span>
+            </label>
+
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-card-foreground">คณะ / หน่วยงาน <span className="text-destructive">*</span></label>
-            <input type="text" value={faculty} onChange={(e) => setFaculty(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+            <label className="text-sm font-medium text-card-foreground">
+              คณะ / หน่วยงาน{" "}
+              <span className="text-destructive">*</span>
+            </label>
+
+            <input
+              type="text"
+              value={faculty}
+              onChange={(e) => setFaculty(e.target.value)}
+              className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-card-foreground">รายละเอียด <span className="text-destructive">*</span></label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+            <label className="text-sm font-medium text-card-foreground">
+              รายละเอียด{" "}
+              <span className="text-destructive">*</span>
+            </label>
+
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-card-foreground">วันปิดรับสมัคร <span className="text-destructive">*</span></label>
-            <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+            <label className="text-sm font-medium text-card-foreground">
+              วันปิดรับสมัคร{" "}
+              <span className="text-destructive">*</span>
+            </label>
+
+            <input
+              type="date"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-card-foreground">สถานะ</label>
+            <label className="text-sm font-medium text-card-foreground">
+              สถานะ
+            </label>
+
             <button
               type="button"
               onClick={() => setIsOpen((v) => !v)}
-              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors ${isOpen ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-red-100 text-red-700 hover:bg-red-200"}`}
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                isOpen
+                  ? "bg-green-100 text-green-700 hover:bg-green-200"
+                  : "bg-red-100 text-red-700 hover:bg-red-200"
+              }`}
             >
               {isOpen ? "เปิดรับสมัคร" : "ปิดรับสมัคร"}
             </button>
           </div>
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && (
+            <p className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
 
           <div className="flex justify-end gap-2 pt-1">
-            <button type="button" onClick={onClose} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">ยกเลิก</button>
-            <button type="submit" disabled={submitting} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50">
-              {submitting ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              ยกเลิก
+            </button>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {submitting
+                ? "กำลังบันทึก..."
+                : "บันทึกการแก้ไข"}
             </button>
           </div>
         </form>
@@ -323,16 +635,29 @@ function EditPostDialog({ open, onClose, onSaved, post }: EditDialogProps) {
 // ──────────────────────────────────────────────
 // Success Toast
 // ──────────────────────────────────────────────
-function SuccessToast({ message, onDone }: { message: string; onDone: () => void }) {
+
+function SuccessToast({
+  message,
+  onDone,
+}: {
+  message: string
+  onDone: () => void
+}) {
   useEffect(() => {
     const t = setTimeout(onDone, 3000)
+
     return () => clearTimeout(t)
   }, [onDone])
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 shadow-lg dark:border-green-800 dark:bg-green-900/30">
-      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-500 text-white text-xs font-bold">✓</div>
-      <p className="text-sm font-medium text-green-800 dark:text-green-300">{message}</p>
+      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white">
+        ✓
+      </div>
+
+      <p className="text-sm font-medium text-green-800 dark:text-green-300">
+        {message}
+      </p>
     </div>
   )
 }
@@ -340,13 +665,6 @@ function SuccessToast({ message, onDone }: { message: string; onDone: () => void
 // ──────────────────────────────────────────────
 // Page
 // ──────────────────────────────────────────────
-interface CurrentUser {
-  id: string
-  role: string
-  name: string
-  lastname: string
-  email: string
-}
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -354,62 +672,175 @@ export default function PostDetailPage() {
 
   const [post, setPost] = useState<Post | null>(null)
   const [applicants, setApplicants] = useState<Applicant[]>([])
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
+  const [currentUser, setCurrentUser] =
+    useState<CurrentUser | null>(null)
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [applyOpen, setApplyOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [toast, setToast] = useState("")
 
-  const isHR = currentUser?.role === "hr" || currentUser?.role === "admin"
-  const isOwner = isHR && post?.owner_id === currentUser?.id
+  const isHR =
+    currentUser?.role === "hr" ||
+    currentUser?.role === "admin"
+
+  const isOwner =
+    isHR &&
+    post?.owner_id != null &&
+    currentUser?.id != null &&
+    String(post.owner_id) === String(currentUser.id)
+
+  // ──────────────────────────────────────────────
+  // Get current user
+  // ──────────────────────────────────────────────
 
   useEffect(() => {
-    fetch("/api/me")
+    fetch("/api/me", {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    })
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d?.id) setCurrentUser(d) })
+      .then((d) => {
+        if (d?.id) {
+          setCurrentUser(d)
+        }
+      })
       .catch(() => {})
   }, [])
 
-  const fetchData = () => {
+  // ──────────────────────────────────────────────
+  // Get post by ID
+  // ──────────────────────────────────────────────
+
+  const fetchData = async () => {
     if (!id) return
+
     setLoading(true)
-    fetch(`/api/posts/${id}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("not found")
-        return r.json()
-      })
-      .then(({ post, applicants }: { post: Post; applicants: Applicant[] }) => {
-        setPost(post)
-        setApplicants(applicants)
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false))
+    setError(false)
+
+    try {
+      const res = await fetch(
+        `/api/posts/${encodeURIComponent(id)}`,
+        {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        }
+      )
+
+      const text = await res.text()
+
+      let result: any = null
+
+      if (text) {
+        try {
+          result = JSON.parse(text)
+        } catch {
+          result = null
+        }
+      }
+
+      if (!res.ok) {
+        console.error(
+          "Get post error:",
+          res.status,
+          result
+        )
+
+        throw new Error(
+          result?.message ||
+            result?.error ||
+            `โหลดประกาศไม่สำเร็จ (${res.status})`
+        )
+      }
+
+      console.log("Get post response:", result)
+
+      /*
+      * Backend ของนายจาก Swagger
+      *
+      * {
+      *   message: "Get post by id succeed",
+      *   data: {...}
+      * }
+      */
+
+      const data: Post | null =
+        result?.data ?? null
+
+      if (!data?.id) {
+        throw new Error("Post not found")
+      }
+
+      setPost(data)
+
+      if (Array.isArray((data as any).applicants)) {
+        setApplicants((data as any).applicants)
+      } else {
+        setApplicants([])
+      }
+    } catch (error) {
+      console.error(
+        "Fetch post detail error:",
+        error
+      )
+
+      setPost(null)
+      setApplicants([])
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  useEffect(() => { fetchData() }, [id])
+  useEffect(() => {
+    fetchData()
+  }, [id])
+
+  // ──────────────────────────────────────────────
+  // After apply
+  // ──────────────────────────────────────────────
 
   const handleApplied = () => {
     setToast("ส่งใบสมัครเรียบร้อยแล้ว!")
     fetchData()
   }
 
+  // ──────────────────────────────────────────────
+  // After edit
+  // ──────────────────────────────────────────────
+
   const handlePostSaved = () => {
     setToast("บันทึกการแก้ไขเรียบร้อยแล้ว!")
     fetchData()
   }
 
-  const isPositionOpen = post ? (post.is_open && new Date(post.deadline) >= new Date()) : false
+  // ──────────────────────────────────────────────
+  // Position status
+  // ──────────────────────────────────────────────
 
-  // ── Loading skeleton ──
+  const isPositionOpen = post
+    ? Boolean(post.posts_status) &&
+      new Date(post.deadline) >= new Date()
+    : false
+
+  // ──────────────────────────────────────────────
+  // Loading
+  // ──────────────────────────────────────────────
+
   if (loading) {
     return (
       <main className="min-h-screen bg-background">
         <Navbar />
+
         <div className="mx-auto max-w-7xl px-6 py-8">
           <div className="h-6 w-32 animate-pulse rounded bg-muted" />
+
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
             <div className="h-80 animate-pulse rounded-2xl bg-muted" />
+
             <div className="h-80 animate-pulse rounded-2xl bg-muted" />
           </div>
         </div>
@@ -417,15 +848,28 @@ export default function PostDetailPage() {
     )
   }
 
-  // ── Error / not found ──
+  // ──────────────────────────────────────────────
+  // Error / not found
+  // ──────────────────────────────────────────────
+
   if (error || !post) {
     return (
       <main className="min-h-screen bg-background">
         <Navbar />
+
         <div className="flex flex-col items-center justify-center py-40 text-center">
-          <p className="text-lg font-semibold text-foreground">ไม่พบประกาศที่ต้องการ</p>
-          <p className="mt-1 text-sm text-muted-foreground">ประกาศนี้อาจถูกลบหรือไม่มีอยู่ในระบบ</p>
-          <button onClick={() => router.push("/resume")} className="mt-6 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90">
+          <p className="text-lg font-semibold text-foreground">
+            ไม่พบประกาศที่ต้องการ
+          </p>
+
+          <p className="mt-1 text-sm text-muted-foreground">
+            ประกาศนี้อาจถูกลบหรือไม่มีอยู่ในระบบ
+          </p>
+
+          <button
+            onClick={() => router.push("/resume")}
+            className="mt-6 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          >
             กลับไปหน้ารายการ
           </button>
         </div>
@@ -435,63 +879,123 @@ export default function PostDetailPage() {
 
   const deadlineDate = new Date(post.deadline)
 
+  // ──────────────────────────────────────────────
+  // Main UI
+  // ──────────────────────────────────────────────
+
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
 
       <div className="mx-auto max-w-7xl px-6 py-8">
+
         {/* Back button */}
+
         <button
           onClick={() => router.push("/resume")}
           className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ChevronLeft className="h-4 w-4" />
+
           กลับไปรายการ
         </button>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
 
-          {/* ── Left panel: post details ── */}
+          {/* ──────────────────────────────────────
+              Left panel
+          ────────────────────────────────────── */}
+
           <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
+
             <div className="flex flex-col items-center gap-3">
+
               <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted">
-                {post.logo_url ? (
-                  <Image src={post.logo_url} alt={`${post.title} logo`} width={128} height={128} className="h-full w-full object-contain" />
+
+                {post.icon ? (
+                  <Image
+                    src={post.icon}
+                    alt={`${post.title} logo`}
+                    width={128}
+                    height={128}
+                    className="h-full w-full object-contain"
+                  />
                 ) : (
-                  <span className="text-4xl font-bold text-muted-foreground">{post.title.charAt(0).toUpperCase()}</span>
+                  <span className="text-4xl font-bold text-muted-foreground">
+                    {post.title.charAt(0).toUpperCase()}
+                  </span>
                 )}
+
               </div>
-              <StatusBadge isOpen={post.is_open} deadline={post.deadline} />
+
+              <StatusBadge
+                isOpen={Boolean(post.posts_status)}
+                deadline={post.deadline}
+              />
             </div>
 
             <div className="h-px bg-border" />
 
             <div className="flex flex-col gap-3">
+
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">ตำแหน่ง</p>
-                <p className="mt-0.5 text-base font-semibold text-foreground">{post.title}</p>
-              </div>
-              <div>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">คณะ / หน่วยงาน</p>
-                <p className="mt-0.5 text-sm text-foreground">{post.faculty}</p>
-              </div>
-              <div>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">รายละเอียด</p>
-                <p className="mt-0.5 whitespace-pre-wrap text-sm leading-relaxed text-foreground">{post.description}</p>
-              </div>
-              <div>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">วันปิดรับสมัคร</p>
-                <p className="mt-0.5 text-sm text-foreground">
-                  {deadlineDate.toLocaleDateString("th-TH", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  ตำแหน่ง
+                </p>
+
+                <p className="mt-0.5 text-base font-semibold text-foreground">
+                  {post.title}
                 </p>
               </div>
+
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  คณะ / หน่วยงาน
+                </p>
+
+                <p className="mt-0.5 text-sm text-foreground">
+                  {post.faculty}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  รายละเอียด
+                </p>
+
+                <p className="mt-0.5 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                  {post.description}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  วันปิดรับสมัคร
+                </p>
+
+                <p className="mt-0.5 text-sm text-foreground">
+                  {deadlineDate.toLocaleDateString(
+                    "th-TH",
+                    {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    }
+                  )}
+                </p>
+              </div>
+
             </div>
 
             <div className="h-px bg-border" />
 
             {/* Action buttons */}
+
             <div className="flex flex-col gap-2">
-              {/* Apply button — only for non-HR users when position is open */}
+
+              {/* Apply */}
+
               {!isHR && (
                 <button
                   onClick={() => setApplyOpen(true)}
@@ -503,88 +1007,173 @@ export default function PostDetailPage() {
                   }`}
                 >
                   <Send className="h-4 w-4" />
-                  {isPositionOpen ? "สมัครงานตำแหน่งนี้" : "ปิดรับสมัครแล้ว"}
+
+                  {isPositionOpen
+                    ? "สมัครงานตำแหน่งนี้"
+                    : "ปิดรับสมัครแล้ว"}
                 </button>
               )}
 
-              {/* Edit button — only for HR who owns the post */}
+              {/* Edit */}
+
               {isOwner && (
                 <button
                   onClick={() => setEditOpen(true)}
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
                 >
                   <Pencil className="h-4 w-4" />
+
                   แก้ไขประกาศ
                 </button>
               )}
+
             </div>
           </div>
 
-          {/* ── Right panel: applicant list (HR only) ── */}
+          {/* ──────────────────────────────────────
+              Right panel
+          ────────────────────────────────────── */}
+
           {isHR ? (
             <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
+
               <div className="flex items-center justify-between">
+
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-muted-foreground" />
-                  <h2 className="text-base font-semibold text-foreground">รายชื่อผู้สมัคร</h2>
+
+                  <h2 className="text-base font-semibold text-foreground">
+                    รายชื่อผู้สมัคร
+                  </h2>
                 </div>
+
                 <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                   {applicants.length} คน
                 </span>
+
               </div>
 
               <div className="h-px bg-border" />
 
               {applicants.length === 0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
+
                   <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
                     <Users className="h-6 w-6 text-muted-foreground" />
                   </div>
-                  <p className="text-sm font-medium text-foreground">ขณะนี้ไม่มีคนสมัครอยู่</p>
-                  <p className="mt-1 text-xs text-muted-foreground">เมื่อมีผู้สมัครงาน รายชื่อจะปรากฏที่นี่</p>
+
+                  <p className="text-sm font-medium text-foreground">
+                    ขณะนี้ไม่มีคนสมัครอยู่
+                  </p>
+
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    เมื่อมีผู้สมัครงาน รายชื่อจะปรากฏที่นี่
+                  </p>
+
                 </div>
               ) : (
                 <div className="flex flex-col gap-2 overflow-y-auto">
+
                   {applicants.map((applicant, i) => (
-                    <ApplicantRow key={applicant.id} index={i + 1} applicant={applicant} />
+                    <ApplicantRow
+                      key={applicant.id}
+                      index={i + 1}
+                      applicant={applicant}
+                    />
                   ))}
+
                 </div>
               )}
+
             </div>
           ) : (
-            // ── Applicant view: job info card ──
+
+            // Applicant view
+
             <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
-              <h2 className="text-base font-semibold text-foreground">ข้อมูลเพิ่มเติม</h2>
+
+              <h2 className="text-base font-semibold text-foreground">
+                ข้อมูลเพิ่มเติม
+              </h2>
+
               <div className="h-px bg-border" />
+
               <div className="flex flex-col gap-4">
+
                 <div className="rounded-xl bg-muted/50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">วิธีการสมัคร</p>
-                  <p className="text-sm text-foreground leading-relaxed">
-                    กดปุ่ม <span className="font-semibold">&quot;สมัครงานตำแหน่งนี้&quot;</span> ด้านซ้ายมือ กรอกข้อมูลส่วนตัวและแนบ Resume ของคุณ แล้วกดส่งใบสมัคร ทีมงานจะติดต่อกลับทางอีเมลที่ระบุไว้
+
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    วิธีการสมัคร
                   </p>
+
+                  <p className="text-sm leading-relaxed text-foreground">
+                    กดปุ่ม{" "}
+                    <span className="font-semibold">
+                      &quot;สมัครงานตำแหน่งนี้&quot;
+                    </span>{" "}
+                    ด้านซ้ายมือ กรอกข้อมูลส่วนตัวและแนบ Resume
+                    ของคุณ แล้วกดส่งใบสมัคร
+                    ทีมงานจะติดต่อกลับทางอีเมลที่ระบุไว้
+                  </p>
+
                 </div>
+
                 <div className="rounded-xl bg-muted/50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">สถานะการรับสมัคร</p>
+
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    สถานะการรับสมัคร
+                  </p>
+
                   <div className="flex items-center gap-2">
-                    <div className={`h-2 w-2 rounded-full ${isPositionOpen ? "bg-green-500" : "bg-red-500"}`} />
+
+                    <div
+                      className={`h-2 w-2 rounded-full ${
+                        isPositionOpen
+                          ? "bg-green-500"
+                          : "bg-red-500"
+                      }`}
+                    />
+
                     <p className="text-sm text-foreground">
+
                       {isPositionOpen
-                        ? `เปิดรับสมัครถึง ${deadlineDate.toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" })}`
+                        ? `เปิดรับสมัครถึง ${deadlineDate.toLocaleDateString(
+                            "th-TH",
+                            {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            }
+                          )}`
                         : "ปิดรับสมัครแล้ว"}
+
                     </p>
+
                   </div>
+
                 </div>
+
                 <div className="rounded-xl bg-muted/50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">ผู้ดูแล</p>
-                  <p className="text-sm text-foreground">{post.faculty}</p>
+
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    ผู้ดูแล
+                  </p>
+
+                  <p className="text-sm text-foreground">
+                    {post.faculty}
+                  </p>
+
                 </div>
+
               </div>
+
             </div>
           )}
         </div>
       </div>
 
-      {/* Apply Dialog (applicants only) */}
+      {/* Apply Dialog */}
+
       {!isHR && (
         <ApplyDialog
           open={applyOpen}
@@ -595,7 +1184,8 @@ export default function PostDetailPage() {
         />
       )}
 
-      {/* Edit Dialog (HR owner) */}
+      {/* Edit Dialog */}
+
       {isOwner && editOpen && (
         <EditPostDialog
           open={editOpen}
@@ -606,7 +1196,13 @@ export default function PostDetailPage() {
       )}
 
       {/* Toast */}
-      {toast && <SuccessToast message={toast} onDone={() => setToast("")} />}
+
+      {toast && (
+        <SuccessToast
+          message={toast}
+          onDone={() => setToast("")}
+        />
+      )}
     </main>
   )
 }

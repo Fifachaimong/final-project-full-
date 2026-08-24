@@ -47,9 +47,9 @@ export function UserAvatar({
 
         if (!res.ok) return
 
-        const data = await res.json()
+        const result = await res.json()
 
-        setUser(data)
+        setUser(result.data)
       } catch (err) {
         console.error(err)
       }

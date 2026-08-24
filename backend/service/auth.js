@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs"
-import { CreateMember, CreateResume, CreateUser, EditMyProfileModel, GetMemberByUserAndPost, GetMyApplicationResultModel, GetMyProfileModel, GetPostByIDModel, GetPostModel, GetUserByEmail } from "../models/auth.js"
+import { CreateMember, CreateResume, CreateUser, EditMyProfileModel, GetMemberByUserAndPost, GetMyApplicationResultModel, GetMyProfileModel, GetPostByIDModel, GetPostDescription, GetPostModel, GetUserByEmail } from "../models/auth.js"
 import AppError from '../utils/AppError.js'
 import jwt from 'jsonwebtoken'
 import { UploadToSupabase } from "../utils/UploadToSupabase.js";
@@ -80,6 +80,18 @@ export const GetPostService = async (query) => {
     }
 } 
 
+export const GetPostByIDService = async (id) => {
+    const result = await GetPostByIDModel(id)
+
+    if (!result) {
+        throw new AppError('Posts not found', 404)
+    }
+
+    return {
+        message: 'Get post by id succeed',
+        data: result
+    }
+}
 
 export const ApplyResumeService = async (
     userId,
@@ -96,9 +108,7 @@ export const ApplyResumeService = async (
         throw new AppError("You already applied", 409);
     }
 
-        const post = await GetPostByIDModel(
-        postId
-    )
+        const post = await GetPostDescription(postId)
 
     if (!post) {
         throw new AppError("Post not found", 404)
