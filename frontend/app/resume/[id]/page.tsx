@@ -25,7 +25,7 @@ interface Post {
   description: string
   deadline: string
   icon?: string | null
-  posts_status: number | boolean
+  posts_status: boolean
   applicants?: Applicant[]
 }
 
@@ -52,23 +52,18 @@ interface CurrentUser {
 
 function StatusBadge({
   isOpen,
-  deadline,
 }: {
   isOpen: boolean
-  deadline: string
 }) {
-  const expired = new Date(deadline) < new Date()
-  const open = isOpen && !expired
-
   return (
     <span
       className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-        open
+        isOpen
           ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
           : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
       }`}
     >
-      {open ? "เปิดรับสมัคร" : "ปิดรับสมัคร"}
+      {isOpen ? "เปิดรับสมัคร" : "ปิดรับสมัคร"}
     </span>
   )
 }
@@ -758,26 +753,26 @@ export default function PostDetailPage() {
 
       console.log("Get post response:", result)
 
-      /*
-      * Backend ของนายจาก Swagger
-      *
-      * {
-      *   message: "Get post by id succeed",
-      *   data: {...}
-      * }
-      */
+      const rawData = result?.data ?? null
 
-      const data: Post | null =
-        result?.data ?? null
-
-      if (!data?.id) {
+      if (!rawData?.id) {
         throw new Error("Post not found")
+      }
+
+      // Normalize posts_status
+      // รองรับทั้ง boolean, number และ string
+      const data: Post = {
+        ...rawData,
+        posts_status:
+          rawData.posts_status === true ||
+          rawData.posts_status === 1 ||
+          rawData.posts_status === "1",
       }
 
       setPost(data)
 
-      if (Array.isArray((data as any).applicants)) {
-        setApplicants((data as any).applicants)
+      if (Array.isArray(data.applicants)) {
+        setApplicants(data.applicants)
       } else {
         setApplicants([])
       }
@@ -822,7 +817,7 @@ export default function PostDetailPage() {
   // ──────────────────────────────────────────────
 
   const isPositionOpen = post
-    ? Boolean(post.posts_status) &&
+    ? post.posts_status === true &&
       new Date(post.deadline) >= new Date()
     : false
 
@@ -902,9 +897,7 @@ export default function PostDetailPage() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
 
-          {/* ──────────────────────────────────────
-              Left panel
-          ────────────────────────────────────── */}
+          {/* Left panel */}
 
           <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
 
@@ -929,8 +922,7 @@ export default function PostDetailPage() {
               </div>
 
               <StatusBadge
-                isOpen={Boolean(post.posts_status)}
-                deadline={post.deadline}
+                isOpen={isPositionOpen}
               />
             </div>
 
@@ -1030,9 +1022,7 @@ export default function PostDetailPage() {
             </div>
           </div>
 
-          {/* ──────────────────────────────────────
-              Right panel
-          ────────────────────────────────────── */}
+          {/* Right panel */}
 
           {isHR ? (
             <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
