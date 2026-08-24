@@ -72,10 +72,6 @@ function PostDialog({
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // ──────────────────────────────────────────────
-  // Populate fields when editing
-  // ──────────────────────────────────────────────
-
   useEffect(() => {
     if (editPost) {
       setTitle(editPost.title)
@@ -102,10 +98,6 @@ function PostDialog({
     setError("")
   }, [editPost, open])
 
-  // ──────────────────────────────────────────────
-  // Logo upload
-  // ──────────────────────────────────────────────
-
   const handleFile = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -123,10 +115,6 @@ function PostDialog({
 
     reader.readAsDataURL(file)
   }
-
-  // ──────────────────────────────────────────────
-  // Create / Update
-  // ──────────────────────────────────────────────
 
   const handleSubmit = async (
     e: React.FormEvent
@@ -150,35 +138,25 @@ function PostDialog({
       let res: Response
 
       if (isEdit && editPost) {
-        // ────────────────────────────────────────
-        // UPDATE
-        // ────────────────────────────────────────
-
-        res = await fetch(
-          `/api/posts?id=${encodeURIComponent(
-            editPost.id
-          )}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              title,
-              faculty,
-              description,
-              deadline,
-              logo_url: logoPreview,
-              is_open: isOpen,
-            }),
-          }
-        )
+        // แก้ไขประกาศ
+        res = await fetch("/api/posts", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            id: editPost.id,
+            title,
+            faculty,
+            description,
+            deadline,
+            logo_url: logoPreview,
+            is_open: isOpen,
+          }),
+        })
       } else {
-        // ────────────────────────────────────────
-        // CREATE
-        // ────────────────────────────────────────
-
+        // สร้างประกาศใหม่
         res = await fetch("/api/posts", {
           method: "POST",
           headers: {
@@ -219,7 +197,6 @@ function PostDialog({
         )
       }
 
-      // สำเร็จ
       onSaved()
       onClose()
     } catch (error) {
@@ -247,9 +224,7 @@ function PostDialog({
     >
       <div
         className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl"
-        onClick={(e) =>
-          e.stopPropagation()
-        }
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-card-foreground">
@@ -409,14 +384,12 @@ function PostDialog({
             </div>
           )}
 
-          {/* Error */}
           {error && (
             <p className="text-sm text-destructive">
               {error}
             </p>
           )}
 
-          {/* Buttons */}
           <div className="flex justify-end gap-2 pt-1">
             <button
               type="button"
@@ -445,7 +418,7 @@ function PostDialog({
 }
 
 // ──────────────────────────────────────────────
-// Delete Confirm Dialog
+// Delete Dialog
 // ──────────────────────────────────────────────
 
 interface DeleteDialogProps {
@@ -468,9 +441,7 @@ function DeleteConfirmDialog({
     >
       <div
         className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
-        onClick={(e) =>
-          e.stopPropagation()
-        }
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-destructive/10">
           <Trash2 className="h-5 w-5 text-destructive" />
@@ -522,17 +493,15 @@ function PostCard({
   onDelete,
   onEdit,
 }: PostCardProps) {
-  const deadlineDate = new Date(
-    post.deadline
-  )
+  const deadlineDate = new Date(post.deadline)
 
   const isExpired =
     deadlineDate < new Date()
 
+  // เวลาเป็นหลัก + status เป็นตัวควบคุม
   const isOpen =
     post.is_open && !isExpired
 
-  // แก้ไขได้เฉพาะคนที่สร้างโพสนี้เท่านั้น
   const isCreator =
     !!currentUserId &&
     String(post.owner_id) ===
@@ -545,7 +514,6 @@ function PostCard({
     >
       {isCreator && (
         <div className="absolute right-2.5 top-2.5 z-10 flex items-center gap-1 opacity-0 transition-all duration-150 group-hover:opacity-100">
-          {/* Edit */}
           <button
             onClick={(e) => {
               e.preventDefault()
@@ -557,7 +525,6 @@ function PostCard({
             <Pencil className="h-3.5 w-3.5" />
           </button>
 
-          {/* Delete */}
           <button
             onClick={(e) => {
               e.preventDefault()
@@ -588,7 +555,6 @@ function PostCard({
           </div>
         )}
 
-        {/* ชื่อผู้ประกาศรับ */}
         {post.owner_name && (
           <span className="absolute bottom-2 right-2.5 z-10 max-w-[80%] truncate rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm">
             โดย {post.owner_name}
@@ -643,7 +609,6 @@ function PostCard({
 
 export default function ResumePage() {
   const [posts, setPosts] = useState<Post[]>([])
-
   const [currentUser, setCurrentUser] =
     useState<CurrentUser | null>(null)
 
@@ -655,7 +620,8 @@ export default function ResumePage() {
       "all" | "open" | "closed"
     >("all")
 
-  const [page, setPage] = useState(1)
+  const [page, setPage] =
+    useState(1)
 
   const [dialogOpen, setDialogOpen] =
     useState(false)
@@ -680,89 +646,109 @@ export default function ResumePage() {
     currentUser?.role === "admin"
 
   // ──────────────────────────────────────────────
-  // Get current user
+  // Current user
   // ──────────────────────────────────────────────
 
   useEffect(() => {
-    fetch("/api/me", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
+  fetch("/api/me", {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((result) => {
+      console.log("ME API:", result)
+
+      const user = result?.data
+
+      if (user?.id) {
+        setCurrentUser({
+          id: String(user.id),
+          name: user.firstname ?? "",
+          lastname: user.lastname ?? "",
+          email: user.email ?? "",
+          role_id: user.role_id ?? 0,
+          role: user.role ?? "",
+        })
+      }
     })
-      .then((r) =>
-        r.ok ? r.json() : null
-      )
-      .then((data) => {
-        if (data?.id) {
-          setCurrentUser(
-            data as CurrentUser
-          )
-        }
-      })
-      .catch(() => {})
-      .finally(() =>
-        setLoadingUser(false)
-      )
+    .catch((error) => {
+      console.error("GET /api/me error:", error)
+    })
+    .finally(() => {
+      setLoadingUser(false)
+    })
   }, [])
 
   // ──────────────────────────────────────────────
-  // Get posts
+  // Fetch posts
   // ──────────────────────────────────────────────
 
-  const fetchPosts = useCallback(async () => {
-  setLoading(true)
+  const fetchPosts = useCallback(
+    async () => {
+      setLoading(true)
 
-  try {
-    const params = new URLSearchParams({
-      search,
-      filter,
-    })
-
-    const res = await fetch(
-      `/api/posts?${params.toString()}`,
-      {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store",
-      }
-    )
-
-    const text = await res.text()
-
-    let result: any = null
-
-    if (text) {
       try {
-        result = JSON.parse(text)
-      } catch {
-        result = null
+        const params =
+          new URLSearchParams({
+            search,
+            filter,
+          })
+
+        const res = await fetch(
+          `/api/posts?${params.toString()}`,
+          {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+          }
+        )
+
+        const text =
+          await res.text()
+
+        let result: any = null
+
+        if (text) {
+          try {
+            result = JSON.parse(text)
+          } catch {
+            result = null
+          }
+        }
+
+        if (!res.ok) {
+          throw new Error(
+            result?.message ||
+              result?.error ||
+              text ||
+              `โหลดประกาศไม่สำเร็จ (${res.status})`
+          )
+        }
+
+        const data: Post[] =
+          Array.isArray(result)
+            ? result
+            : Array.isArray(
+                result?.data
+              )
+              ? result.data
+              : []
+
+        setPosts(data)
+      } catch (error) {
+        console.error(
+          "Fetch posts error:",
+          error
+        )
+
+        setPosts([])
+      } finally {
+        setLoading(false)
       }
-    }
-
-    if (!res.ok) {
-      throw new Error(
-        result?.message ||
-          result?.error ||
-          text ||
-          `โหลดประกาศไม่สำเร็จ (${res.status})`
-      )
-    }
-
-    const data: Post[] =
-      Array.isArray(result)
-        ? result
-        : Array.isArray(result?.data)
-          ? result.data
-          : []
-
-    setPosts(data)
-  } catch (error) {
-    console.error("Fetch posts error:", error)
-    setPosts([])
-  } finally {
-    setLoading(false)
-  }
-  }, [search, filter])
+    },
+    [search, filter]
+  )
 
   useEffect(() => {
     fetchPosts()
@@ -868,10 +854,6 @@ export default function ResumePage() {
       }
     }
 
-  // ──────────────────────────────────────────────
-  // Render
-  // ──────────────────────────────────────────────
-
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
@@ -933,6 +915,7 @@ export default function ResumePage() {
             </button>
           </div>
 
+          {/* ปุ่มสร้างประกาศ */}
           {!loadingUser &&
             canManagePosts && (
               <button
@@ -957,8 +940,7 @@ export default function ResumePage() {
               />
             ))}
           </div>
-        ) : paginatedPosts.length ===
-          0 ? (
+        ) : paginatedPosts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
               <Search className="h-7 w-7 text-muted-foreground" />
