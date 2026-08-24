@@ -30,8 +30,21 @@ export const CreatePostService = async (id, data, file) => {
     }
 }
 
-export const EditPostService = async (data, owner_id, post_id) => {
-    const check = await EditPostModel(data, owner_id, post_id)
+export const EditPostService = async (data, owner_id, post_id, file) => {
+    let icon = null
+
+    if (file) {
+        const upload = await UploadToSupabase(
+            file.buffer,
+            file.mimetype,
+            "logo_company",
+            file.originalname
+        )
+
+        icon = upload.publicUrl
+    }
+
+    const check = await EditPostModel(data, owner_id, post_id, icon)
     if (check.affectedRows === 0) {
         throw new AppError('Post not found', 404)
     }

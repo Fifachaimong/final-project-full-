@@ -11,7 +11,7 @@ route.get('/members', authMiddleware, GetMember)
 route.get('/members/profile/:id', authMiddleware, GetProfileByMember)
 route.get('/members/:id', authMiddleware, GetMemberResumeResult)
 route.post('/posts', authMiddleware, upload.single('logo'), ValidateBody(createPostSchema), CreatePost)
-route.put('/posts/:id', authMiddleware, ValidateBody(editPostSchema), EditPost)
+route.put('/posts/:id', authMiddleware,upload.single('logo'), ValidateBody(editPostSchema), EditPost)
 route.put('/members/:id', authMiddleware, ValidateBody(updateCandidateStatusSchema), UpdateCandidateStatus)
 route.delete('/posts/:id', authMiddleware, DeletePost)
 

@@ -51,6 +51,79 @@ interface CurrentUser {
 }
 
 // ──────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────
+
+function normalizeBoolean(value: unknown): boolean {
+  if (typeof value === "boolean") {
+    return value
+  }
+
+  if (typeof value === "number") {
+    return value === 1
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase()
+
+    return (
+      normalized === "1" ||
+      normalized === "true" ||
+      normalized === "yes" ||
+      normalized === "open"
+    )
+  }
+
+  return false
+}
+
+function getDeadlineDate(
+  deadline: string
+): Date | null {
+  if (!deadline) return null
+
+  const dateOnly = deadline.slice(0, 10)
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
+    const parsed = new Date(deadline)
+
+    return Number.isNaN(parsed.getTime())
+      ? null
+      : parsed
+  }
+
+  const [year, month, day] =
+    dateOnly.split("-").map(Number)
+
+  const date = new Date(
+    year,
+    month - 1,
+    day,
+    23,
+    59,
+    59,
+    999
+  )
+
+  return Number.isNaN(date.getTime())
+    ? null
+    : date
+}
+
+function isDeadlinePassed(
+  deadline: string
+): boolean {
+  const deadlineDate =
+    getDeadlineDate(deadline)
+
+  if (!deadlineDate) {
+    return false
+  }
+
+  return new Date() > deadlineDate
+}
+
+// ──────────────────────────────────────────────
 // Status badge
 // ──────────────────────────────────────────────
 
@@ -108,7 +181,9 @@ function ApplicantRow({
       </div>
 
       <span className="flex-shrink-0 text-xs text-muted-foreground">
-        {new Date(applicant.applied_at).toLocaleDateString("th-TH", {
+        {new Date(
+          applicant.applied_at
+        ).toLocaleDateString("th-TH", {
           day: "numeric",
           month: "short",
           year: "numeric",
@@ -148,19 +223,34 @@ function ApplyDialog({
   postId,
   currentUser,
 }: ApplyDialogProps) {
-  const [resumeFile, setResumeFile] = useState<string | null>(null)
-  const [resumeFileName, setResumeFileName] = useState("")
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState("")
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [resumeFile, setResumeFile] =
+    useState<string | null>(null)
+
+  const [resumeFileName, setResumeFileName] =
+    useState("")
+
+  const [submitting, setSubmitting] =
+    useState(false)
+
+  const [error, setError] =
+    useState("")
+
+  const fileInputRef =
+    useRef<HTMLInputElement>(null)
 
   const reset = () => {
     setResumeFile(null)
     setResumeFileName("")
     setError("")
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
   }
 
   const handleClose = () => {
+    if (submitting) return
+
     reset()
     onClose()
   }
@@ -172,12 +262,71 @@ function ApplyDialog({
 
     if (!file) return
 
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ]
+
+    const extension =
+      file.name
+        .split(".")
+        .pop()
+        ?.toLowerCase()
+
+    const allowedExtensions = [
+      "pdf",
+      "doc",
+      "docx",
+    ]
+
+    const validType =
+      allowedTypes.includes(file.type) ||
+      (extension
+        ? allowedExtensions.includes(extension)
+        : false)
+
+    if (!validType) {
+      setError(
+        "รองรับเฉพาะไฟล์ PDF, DOC และ DOCX"
+      )
+
+      e.target.value = ""
+      return
+    }
+
+    const maxSize =
+      10 * 1024 * 1024
+
+    if (file.size > maxSize) {
+      setError(
+        "ไฟล์ Resume ต้องมีขนาดไม่เกิน 10 MB"
+      )
+
+      e.target.value = ""
+      return
+    }
+
+    setError("")
     setResumeFileName(file.name)
 
     const reader = new FileReader()
 
     reader.onload = (ev) => {
-      setResumeFile(ev.target?.result as string)
+      const result = ev.target?.result
+
+      if (typeof result === "string") {
+        setResumeFile(result)
+      }
+    }
+
+    reader.onerror = () => {
+      setError(
+        "ไม่สามารถอ่านไฟล์ได้ กรุณาลองใหม่"
+      )
+
+      setResumeFile(null)
+      setResumeFileName("")
     }
 
     reader.readAsDataURL(file)
@@ -204,46 +353,74 @@ function ApplyDialog({
     setError("")
 
     try {
-      const res = await fetch(`/api/posts/${postId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          name: currentUser.name,
-          lastname: currentUser.lastname,
-          email: currentUser.email,
-          resume_url: resumeFile,
-        }),
-      })
+      const res = await fetch(
+        `/api/posts/${encodeURIComponent(postId)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            name: currentUser.name,
+            lastname: currentUser.lastname,
+            email: currentUser.email,
+            resume_url: resumeFile,
+          }),
+        }
+      )
+
+      const data =
+        await res.json().catch(() => null)
 
       if (res.status === 409) {
-        setError("คุณได้สมัครตำแหน่งนี้ไปแล้ว")
+        setError(
+          data?.error ??
+            data?.message ??
+            "คุณได้สมัครตำแหน่งนี้ไปแล้ว"
+        )
         return
       }
 
       if (res.status === 400) {
-        const data = await res.json().catch(() => null)
-
         setError(
           data?.error ??
             data?.message ??
             "ไม่สามารถสมัครได้"
         )
+        return
+      }
 
+      if (res.status === 401) {
+        setError(
+          "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่"
+        )
         return
       }
 
       if (!res.ok) {
-        throw new Error("Failed")
+        throw new Error(
+          data?.error ??
+            data?.message ??
+            "Failed"
+        )
       }
 
       reset()
       onApplied()
       onClose()
-    } catch {
-      setError("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง")
+    } catch (error) {
+      console.error(
+        "Apply error:",
+        error
+      )
+
+      setError(
+        error instanceof Error &&
+          error.message !== "Failed"
+          ? error.message
+          : "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง"
+      )
     } finally {
       setSubmitting(false)
     }
@@ -258,7 +435,9 @@ function ApplyDialog({
     >
       <div
         className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) =>
+          e.stopPropagation()
+        }
       >
         <div className="mb-5 flex items-center justify-between">
           <div>
@@ -273,7 +452,8 @@ function ApplyDialog({
 
           <button
             onClick={handleClose}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+            disabled={submitting}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
           >
             <X className="h-4 w-4" />
           </button>
@@ -298,7 +478,9 @@ function ApplyDialog({
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-card-foreground">
               Resume / CV{" "}
-              <span className="text-destructive">*</span>
+              <span className="text-destructive">
+                *
+              </span>
             </label>
 
             <button
@@ -319,7 +501,7 @@ function ApplyDialog({
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,.doc,.docx"
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               className="hidden"
               onChange={handleFile}
             />
@@ -335,14 +517,18 @@ function ApplyDialog({
             <button
               type="button"
               onClick={handleClose}
-              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              disabled={submitting}
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
             >
               ยกเลิก
             </button>
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={
+                submitting ||
+                !currentUser
+              }
               className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               <Send className="h-3.5 w-3.5" />
@@ -375,22 +561,35 @@ function EditPostDialog({
   onSaved,
   post,
 }: EditDialogProps) {
-  const [title, setTitle] = useState(post.title)
-  const [faculty, setFaculty] = useState(post.faculty)
-  const [description, setDescription] = useState(post.description)
-  const [deadline, setDeadline] = useState(
-    post.deadline?.slice(0, 10) ?? ""
-  )
+  const [title, setTitle] =
+    useState(post.title)
 
-  const [isOpen, setIsOpen] = useState(
-    Boolean(post.posts_status)
-  )
+  const [faculty, setFaculty] =
+    useState(post.faculty)
+
+  const [description, setDescription] =
+    useState(post.description)
+
+  const [deadline, setDeadline] =
+    useState(
+      post.deadline?.slice(0, 10) ?? ""
+    )
+
+  const [isOpen, setIsOpen] =
+    useState(
+      Boolean(post.posts_status)
+    )
 
   const [logoPreview, setLogoPreview] =
-    useState<string | null>(post.icon ?? null)
+    useState<string | null>(
+      post.icon ?? null
+    )
 
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState("")
+  const [submitting, setSubmitting] =
+    useState(false)
+
+  const [error, setError] =
+    useState("")
 
   const fileInputRef =
     useRef<HTMLInputElement>(null)
@@ -399,10 +598,20 @@ function EditPostDialog({
     setTitle(post.title)
     setFaculty(post.faculty)
     setDescription(post.description)
-    setDeadline(post.deadline?.slice(0, 10) ?? "")
-    setIsOpen(Boolean(post.posts_status))
+    setDeadline(
+      post.deadline?.slice(0, 10) ?? ""
+    )
+    setIsOpen(
+      normalizeBoolean(
+        post.posts_status
+      )
+    )
     setLogoPreview(post.icon ?? null)
     setError("")
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
   }, [post, open])
 
   const handleFile = (
@@ -412,11 +621,42 @@ function EditPostDialog({
 
     if (!file) return
 
+    if (!file.type.startsWith("image/")) {
+      setError(
+        "กรุณาเลือกไฟล์รูปภาพ"
+      )
+
+      e.target.value = ""
+      return
+    }
+
+    const maxSize =
+      5 * 1024 * 1024
+
+    if (file.size > maxSize) {
+      setError(
+        "รูปโลโก้ต้องมีขนาดไม่เกิน 5 MB"
+      )
+
+      e.target.value = ""
+      return
+    }
+
+    setError("")
+
     const reader = new FileReader()
 
     reader.onload = (ev) => {
-      setLogoPreview(
-        ev.target?.result as string
+      const result = ev.target?.result
+
+      if (typeof result === "string") {
+        setLogoPreview(result)
+      }
+    }
+
+    reader.onerror = () => {
+      setError(
+        "ไม่สามารถอ่านรูปภาพได้"
       )
     }
 
@@ -429,12 +669,14 @@ function EditPostDialog({
     e.preventDefault()
 
     if (
-      !title ||
-      !faculty ||
-      !description ||
+      !title.trim() ||
+      !faculty.trim() ||
+      !description.trim() ||
       !deadline
     ) {
-      setError("กรุณากรอกข้อมูลให้ครบ")
+      setError(
+        "กรุณากรอกข้อมูลให้ครบ"
+      )
       return
     }
 
@@ -442,25 +684,32 @@ function EditPostDialog({
     setError("")
 
     try {
-      const res = await fetch("/api/posts", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          id: post.id,
-          title,
-          faculty,
-          description,
-          deadline,
-          icon: logoPreview,
-          posts_status: isOpen ? 1 : 0,
-        }),
-      })
+      const res = await fetch(
+        "/api/posts",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            id: post.id,
+            title: title.trim(),
+            faculty: faculty.trim(),
+            description:
+              description.trim(),
+            deadline,
+            icon: logoPreview,
+            posts_status: isOpen ? 1 : 0,
+          }),
+        }
+      )
 
       const result =
-        await res.json().catch(() => null)
+        await res.json().catch(
+          () => null
+        )
 
       if (!res.ok) {
         throw new Error(
@@ -473,6 +722,11 @@ function EditPostDialog({
       onSaved()
       onClose()
     } catch (error) {
+      console.error(
+        "Edit post error:",
+        error
+      )
+
       setError(
         error instanceof Error
           ? error.message
@@ -488,11 +742,17 @@ function EditPostDialog({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={() => {
+        if (!submitting) {
+          onClose()
+        }
+      }}
     >
       <div
         className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) =>
+          e.stopPropagation()
+        }
       >
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-card-foreground">
@@ -501,7 +761,8 @@ function EditPostDialog({
 
           <button
             onClick={onClose}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+            disabled={submitting}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
           >
             <X className="h-4 w-4" />
           </button>
@@ -526,6 +787,7 @@ function EditPostDialog({
                   width={96}
                   height={96}
                   className="h-24 w-24 rounded-2xl object-cover"
+                  unoptimized
                 />
               ) : (
                 <Upload className="h-6 w-6 text-muted-foreground" />
@@ -608,7 +870,9 @@ function EditPostDialog({
             <textarea
               value={description}
               onChange={(e) =>
-                setDescription(e.target.value)
+                setDescription(
+                  e.target.value
+                )
               }
               rows={3}
               className="resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -627,7 +891,9 @@ function EditPostDialog({
               type="date"
               value={deadline}
               onChange={(e) =>
-                setDeadline(e.target.value)
+                setDeadline(
+                  e.target.value
+                )
               }
               className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
@@ -665,7 +931,8 @@ function EditPostDialog({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              disabled={submitting}
+              className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
             >
               ยกเลิก
             </button>
@@ -698,9 +965,13 @@ function SuccessToast({
   onDone: () => void
 }) {
   useEffect(() => {
-    const t = setTimeout(onDone, 3000)
+    const t = setTimeout(
+      onDone,
+      3000
+    )
 
-    return () => clearTimeout(t)
+    return () =>
+      clearTimeout(t)
   }, [onDone])
 
   return (
@@ -721,7 +992,9 @@ function SuccessToast({
 // ──────────────────────────────────────────────
 
 export default function PostDetailPage() {
-  const { id } = useParams<{ id: string }>()
+  const { id } =
+    useParams<{ id: string }>()
+
   const router = useRouter()
 
   const [post, setPost] =
@@ -748,9 +1021,18 @@ export default function PostDetailPage() {
   const [toast, setToast] =
     useState("")
 
+  // ──────────────────────────────────────────────
+  // User roles
+  // ──────────────────────────────────────────────
+
+  const normalizedRole =
+    currentUser?.role
+      ?.trim()
+      .toLowerCase()
+
   const isHR =
-    currentUser?.role === "hr" ||
-    currentUser?.role === "admin"
+    normalizedRole === "hr" ||
+    normalizedRole === "admin"
 
   const isOwner =
     isHR &&
@@ -764,127 +1046,170 @@ export default function PostDetailPage() {
   // ──────────────────────────────────────────────
 
   useEffect(() => {
-    fetch("/api/me", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    })
-      .then((r) =>
-        r.ok ? r.json() : null
-      )
-      .then((d) => {
-        if (d?.id) {
-          setCurrentUser(d)
+    let cancelled = false
+
+    const loadCurrentUser =
+      async () => {
+        try {
+          const res =
+            await fetch(
+              "/api/me",
+              {
+                method: "GET",
+                credentials:
+                  "include",
+                cache: "no-store",
+              }
+            )
+
+          if (!res.ok) {
+            return
+          }
+
+          const data =
+            await res.json()
+
+          if (
+            !cancelled &&
+            data?.id
+          ) {
+            setCurrentUser(data)
+          }
+        } catch {
+          // User may simply not be logged in.
         }
-      })
-      .catch(() => {})
+      }
+
+    loadCurrentUser()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   // ──────────────────────────────────────────────
   // Get post by ID
   // ──────────────────────────────────────────────
 
-  const fetchData = async () => {
-    if (!id) return
+  const fetchData =
+    async () => {
+      if (!id) return
 
-    setLoading(true)
-    setError(false)
+      setLoading(true)
+      setError(false)
 
-    try {
-      const res = await fetch(
-        `/api/posts/${encodeURIComponent(id)}`,
-        {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
+      try {
+        const res =
+          await fetch(
+            `/api/posts/${encodeURIComponent(
+              id
+            )}`,
+            {
+              method: "GET",
+              credentials:
+                "include",
+              cache: "no-store",
+            }
+          )
+
+        const text =
+          await res.text()
+
+        let result: any = null
+
+        if (text) {
+          try {
+            result =
+              JSON.parse(text)
+          } catch {
+            result = null
+          }
         }
-      )
 
-      const text = await res.text()
+        if (!res.ok) {
+          console.error(
+            "Get post error:",
+            res.status,
+            result
+          )
 
-      let result: any = null
-
-      if (text) {
-        try {
-          result = JSON.parse(text)
-        } catch {
-          result = null
+          throw new Error(
+            result?.message ||
+              result?.error ||
+              `โหลดประกาศไม่สำเร็จ (${res.status})`
+          )
         }
-      }
 
-      if (!res.ok) {
-        console.error(
-          "Get post error:",
-          res.status,
+        const rawData =
+          result?.data ??
           result
+
+        if (!rawData?.id) {
+          throw new Error(
+            "Post not found"
+          )
+        }
+
+        const normalizedStatus =
+          normalizeBoolean(
+            rawData.posts_status
+          )
+
+        const data: Post = {
+          ...rawData,
+
+          posts_status:
+            normalizedStatus,
+
+          company_name:
+            rawData.company_name ??
+            "",
+
+          owner_id:
+            String(
+              rawData.owner_id ??
+                ""
+            ),
+
+          owner_name:
+            rawData.owner_name ??
+            "",
+
+          owner_lastname:
+            rawData.owner_lastname ??
+            "",
+
+          owner_phone:
+            rawData.owner_phone ??
+            "",
+        }
+
+        setPost(data)
+
+        if (
+          Array.isArray(
+            data.applicants
+          )
+        ) {
+          setApplicants(
+            data.applicants
+          )
+        } else {
+          setApplicants([])
+        }
+      } catch (error) {
+        console.error(
+          "Fetch post detail error:",
+          error
         )
 
-        throw new Error(
-          result?.message ||
-            result?.error ||
-            `โหลดประกาศไม่สำเร็จ (${res.status})`
-        )
-      }
-
-      console.log(
-        "Get post response:",
-        result
-      )
-
-      const rawData =
-        result?.data ?? null
-
-      if (!rawData?.id) {
-        throw new Error(
-          "Post not found"
-        )
-      }
-
-      const data: Post = {
-        ...rawData,
-
-        posts_status:
-          rawData.posts_status === true ||
-          rawData.posts_status === 1 ||
-          rawData.posts_status === "1",
-
-        company_name:
-          rawData.company_name ?? "",
-
-        owner_name:
-          rawData.owner_name ?? "",
-
-        owner_lastname:
-          rawData.owner_lastname ?? "",
-
-        owner_phone:
-          rawData.owner_phone ?? "",
-      }
-
-      setPost(data)
-
-      if (
-        Array.isArray(data.applicants)
-      ) {
-        setApplicants(
-          data.applicants
-        )
-      } else {
+        setPost(null)
         setApplicants([])
+        setError(true)
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error(
-        "Fetch post detail error:",
-        error
-      )
-
-      setPost(null)
-      setApplicants([])
-      setError(true)
-    } finally {
-      setLoading(false)
     }
-  }
 
   useEffect(() => {
     fetchData()
@@ -894,35 +1219,47 @@ export default function PostDetailPage() {
   // After apply
   // ──────────────────────────────────────────────
 
-  const handleApplied = () => {
-    setToast(
-      "ส่งใบสมัครเรียบร้อยแล้ว!"
-    )
+  const handleApplied =
+    () => {
+      setToast(
+        "ส่งใบสมัครเรียบร้อยแล้ว!"
+      )
 
-    fetchData()
-  }
+      fetchData()
+    }
 
   // ──────────────────────────────────────────────
   // After edit
   // ──────────────────────────────────────────────
 
-  const handlePostSaved = () => {
-    setToast(
-      "บันทึกการแก้ไขเรียบร้อยแล้ว!"
-    )
+  const handlePostSaved =
+    () => {
+      setToast(
+        "บันทึกการแก้ไขเรียบร้อยแล้ว!"
+      )
 
-    fetchData()
-  }
+      fetchData()
+    }
 
   // ──────────────────────────────────────────────
   // Position status
+  //
+  // Rule:
+  // 1. posts_status ต้องเปิด
+  // 2. deadline ต้องยังไม่หมด
+  //
+  // Deadline ของวันที่เลือกจะหมดตอน
+  // 23:59:59 ของวันนั้น
   // ──────────────────────────────────────────────
 
-  const isPositionOpen = post
-    ? post.posts_status === true &&
-      new Date(post.deadline) >=
-        new Date()
-    : false
+  const isPositionOpen =
+    post
+      ? post.posts_status ===
+          true &&
+        !isDeadlinePassed(
+          post.deadline
+        )
+      : false
 
   // ──────────────────────────────────────────────
   // Loading
@@ -966,7 +1303,9 @@ export default function PostDetailPage() {
 
           <button
             onClick={() =>
-              router.push("/resume")
+              router.push(
+                "/resume"
+              )
             }
             className="mt-6 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
@@ -978,7 +1317,9 @@ export default function PostDetailPage() {
   }
 
   const deadlineDate =
-    new Date(post.deadline)
+    getDeadlineDate(
+      post.deadline
+    )
 
   // ──────────────────────────────────────────────
   // Main UI
@@ -989,10 +1330,11 @@ export default function PostDetailPage() {
       <Navbar />
 
       <div className="mx-auto max-w-7xl px-6 py-8">
-
         <button
           onClick={() =>
-            router.push("/resume")
+            router.push(
+              "/resume"
+            )
           }
           className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
@@ -1002,15 +1344,11 @@ export default function PostDetailPage() {
         </button>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-
           {/* Left panel */}
 
           <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
-
             <div className="flex flex-col items-center gap-3">
-
               <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted">
-
                 {post.icon ? (
                   <Image
                     src={post.icon}
@@ -1018,6 +1356,7 @@ export default function PostDetailPage() {
                     width={128}
                     height={128}
                     className="h-full w-full object-contain"
+                    unoptimized
                   />
                 ) : (
                   <span className="text-4xl font-bold text-muted-foreground">
@@ -1029,18 +1368,18 @@ export default function PostDetailPage() {
                         .toUpperCase()}
                   </span>
                 )}
-
               </div>
 
               <StatusBadge
-                isOpen={isPositionOpen}
+                isOpen={
+                  isPositionOpen
+                }
               />
             </div>
 
             <div className="h-px bg-border" />
 
             <div className="flex flex-col gap-3">
-
               {/* Company */}
 
               <div>
@@ -1097,18 +1436,21 @@ export default function PostDetailPage() {
                 </p>
 
                 <p className="mt-0.5 text-sm text-foreground">
-                  {deadlineDate.toLocaleDateString(
-                    "th-TH",
-                    {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    }
-                  )}
+                  {deadlineDate
+                    ? deadlineDate.toLocaleDateString(
+                        "th-TH",
+                        {
+                          weekday:
+                            "long",
+                          day: "numeric",
+                          month:
+                            "long",
+                          year: "numeric",
+                        }
+                      )
+                    : "-"}
                 </p>
               </div>
-
             </div>
 
             <div className="h-px bg-border" />
@@ -1116,13 +1458,16 @@ export default function PostDetailPage() {
             {/* Actions */}
 
             <div className="flex flex-col gap-2">
-
               {!isHR && (
                 <button
                   onClick={() =>
-                    setApplyOpen(true)
+                    setApplyOpen(
+                      true
+                    )
                   }
-                  disabled={!isPositionOpen}
+                  disabled={
+                    !isPositionOpen
+                  }
                   className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
                     isPositionOpen
                       ? "bg-primary text-primary-foreground shadow-sm hover:opacity-90 active:scale-[0.98]"
@@ -1140,7 +1485,9 @@ export default function PostDetailPage() {
               {isOwner && (
                 <button
                   onClick={() =>
-                    setEditOpen(true)
+                    setEditOpen(
+                      true
+                    )
                   }
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
                 >
@@ -1149,7 +1496,6 @@ export default function PostDetailPage() {
                   แก้ไขประกาศ
                 </button>
               )}
-
             </div>
           </div>
 
@@ -1157,9 +1503,7 @@ export default function PostDetailPage() {
 
           {isHR ? (
             <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
-
               <div className="flex items-center justify-between">
-
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-muted-foreground" />
 
@@ -1171,14 +1515,13 @@ export default function PostDetailPage() {
                 <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
                   {applicants.length} คน
                 </span>
-
               </div>
 
               <div className="h-px bg-border" />
 
-              {applicants.length === 0 ? (
+              {applicants.length ===
+              0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
-
                   <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
                     <Users className="h-6 w-6 text-muted-foreground" />
                   </div>
@@ -1188,30 +1531,33 @@ export default function PostDetailPage() {
                   </p>
 
                   <p className="mt-1 text-xs text-muted-foreground">
-                    เมื่อมีผู้สมัครงาน รายชื่อจะปรากฏที่นี่
+                    เมื่อมีผู้สมัครงาน
+                    รายชื่อจะปรากฏที่นี่
                   </p>
-
                 </div>
               ) : (
                 <div className="flex flex-col gap-2 overflow-y-auto">
-
                   {applicants.map(
-                    (applicant, i) => (
+                    (
+                      applicant,
+                      i
+                    ) => (
                       <ApplicantRow
-                        key={applicant.id}
+                        key={
+                          applicant.id
+                        }
                         index={i + 1}
-                        applicant={applicant}
+                        applicant={
+                          applicant
+                        }
                       />
                     )
                   )}
-
                 </div>
               )}
-
             </div>
           ) : (
             <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
-
               <h2 className="text-base font-semibold text-foreground">
                 ข้อมูลเพิ่มเติม
               </h2>
@@ -1219,9 +1565,7 @@ export default function PostDetailPage() {
               <div className="h-px bg-border" />
 
               <div className="flex flex-col gap-4">
-
                 <div className="rounded-xl bg-muted/50 p-4">
-
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     วิธีการสมัคร
                   </p>
@@ -1231,21 +1575,21 @@ export default function PostDetailPage() {
                     <span className="font-semibold">
                       &quot;สมัครงานตำแหน่งนี้&quot;
                     </span>{" "}
-                    ด้านซ้ายมือ กรอกข้อมูลส่วนตัวและแนบ Resume
-                    ของคุณ แล้วกดส่งใบสมัคร
+                    ด้านซ้ายมือ
+                    กรอกข้อมูลส่วนตัวและแนบ
+                    Resume
+                    ของคุณ
+                    แล้วกดส่งใบสมัคร
                     ทีมงานจะติดต่อกลับทางอีเมลที่ระบุไว้
                   </p>
-
                 </div>
 
                 <div className="rounded-xl bg-muted/50 p-4">
-
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     สถานะการรับสมัคร
                   </p>
 
                   <div className="flex items-center gap-2">
-
                     <div
                       className={`h-2 w-2 rounded-full ${
                         isPositionOpen
@@ -1256,23 +1600,25 @@ export default function PostDetailPage() {
 
                     <p className="text-sm text-foreground">
                       {isPositionOpen
-                        ? `เปิดรับสมัครถึง ${deadlineDate.toLocaleDateString(
-                            "th-TH",
-                            {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                            }
-                          )}`
+                        ? `เปิดรับสมัครถึง ${
+                            deadlineDate
+                              ? deadlineDate.toLocaleDateString(
+                                  "th-TH",
+                                  {
+                                    day: "numeric",
+                                    month:
+                                      "long",
+                                    year: "numeric",
+                                  }
+                                )
+                              : "-"
+                          }`
                         : "ปิดรับสมัครแล้ว"}
                     </p>
-
                   </div>
-
                 </div>
 
                 <div className="rounded-xl bg-muted/50 p-4">
-
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     บริษัท
                   </p>
@@ -1280,40 +1626,36 @@ export default function PostDetailPage() {
                   <p className="text-sm text-foreground">
                     {post.company_name}
                   </p>
-
                 </div>
 
                 {/* Owner */}
 
                 <div className="rounded-xl bg-muted/50 p-4">
-
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     ผู้ดูแล
                   </p>
 
                   <p className="text-sm text-foreground">
-                    {post.owner_name || "-"}{" "}
-                    {post.owner_lastname || ""}
+                    {post.owner_name ||
+                      "-"}{" "}
+                    {post.owner_lastname ||
+                      ""}
                   </p>
-
                 </div>
 
                 {/* Owner phone */}
 
                 <div className="rounded-xl bg-muted/50 p-4">
-
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     เบอร์โทรติดต่อ
                   </p>
 
                   <p className="text-sm text-foreground">
-                    {post.owner_phone || "-"}
+                    {post.owner_phone ||
+                      "-"}
                   </p>
-
                 </div>
-
               </div>
-
             </div>
           )}
         </div>
@@ -1325,26 +1667,37 @@ export default function PostDetailPage() {
         <ApplyDialog
           open={applyOpen}
           onClose={() =>
-            setApplyOpen(false)
+            setApplyOpen(
+              false
+            )
           }
-          onApplied={handleApplied}
+          onApplied={
+            handleApplied
+          }
           postId={post.id}
-          currentUser={currentUser}
+          currentUser={
+            currentUser
+          }
         />
       )}
 
       {/* Edit Dialog */}
 
-      {isOwner && editOpen && (
-        <EditPostDialog
-          open={editOpen}
-          onClose={() =>
-            setEditOpen(false)
-          }
-          onSaved={handlePostSaved}
-          post={post}
-        />
-      )}
+      {isOwner &&
+        editOpen && (
+          <EditPostDialog
+            open={editOpen}
+            onClose={() =>
+              setEditOpen(
+                false
+              )
+            }
+            onSaved={
+              handlePostSaved
+            }
+            post={post}
+          />
+        )}
 
       {/* Toast */}
 

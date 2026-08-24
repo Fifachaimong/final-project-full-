@@ -33,6 +33,10 @@ const createPostSchema = {
 }
 
 const editPostSchema = {
+    company_name : {
+        type : 'string',
+        required : false
+    },
     title : {
         type : 'string',
         required : false
@@ -45,15 +49,24 @@ const editPostSchema = {
         type : 'string',
         required : false
     },
+    model_provider : {
+        type : 'string',
+        required : false
+    },
     deadline : {
         type : 'string',
         required : false,
         validate : [
             {
-                check : (value) => /^[2-9][0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-1])$/.test(value),
+                check : (value) =>
+                    /^[2-9][0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-1])$/.test(value),
                 message : 'กำหนดการต้องอยู่ในรูปแบบ YYYY-MM-DD'
             }
         ]
+    },
+    posts_status : {
+        type : ['open', 'closed'],
+        required : false
     }
 }
 

@@ -9,7 +9,7 @@ export const CreatePost = asyncHandler(async (req, res) => {
 
 export const EditPost = asyncHandler(async (req, res) => {
     const data = req.body
-    const result = await EditPostService(data, req.user.id, req.params.id)
+    const result = await EditPostService(data, req.user.id, req.params.id, req.file)
     res.status(200).json(result)
 })
 
