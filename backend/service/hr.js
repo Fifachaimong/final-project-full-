@@ -1,17 +1,32 @@
 import { GetUserByID } from "../models/auth.js";
 import { CreatePostModel, DeletePostModel, EditPostModel, GetMemberModel, GetMemberResumeResultModel, GetProfileByMemberModel, UpdateCandidateStatusModel } from "../models/hr.js";
 import AppError from "../utils/AppError.js";
+import { UploadToSupabase } from "../utils/UploadToSupabase.js";
 
-export const CreatePostService = async (id, data) => {
+export const CreatePostService = async (id, data, file) => {
     const check = await GetUserByID(id)
+
     if (check.length === 0) {
         throw new AppError('User not found', 404)
     }
 
-    await CreatePostModel(id, data)
+    let icon = null
+
+    if (file) {
+        const upload = await UploadToSupabase(
+            file.buffer,
+            file.mimetype,
+            "logo_company",
+            file.originalname
+        )
+
+        icon = upload.publicUrl
+    }
+
+    await CreatePostModel(id, data, icon)
 
     return {
-        message : 'Create post succeed'
+        message: 'Create post succeed'
     }
 }
 

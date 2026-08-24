@@ -25,11 +25,19 @@ interface Post {
   id: string
   owner_id: string
   owner_name?: string | null
+
+  // ชื่อบริษัท / หน่วยงาน
+  company_name: string
+
   title: string
   faculty: string
   description: string
+  model_provider?: string | null
   deadline: string
-  logo_url?: string | null
+
+  // ชื่อ field ตรงกับ Backend / Database
+  icon?: string | null
+
   is_open: boolean
 }
 
@@ -61,22 +69,50 @@ function PostDialog({
 }: PostDialogProps) {
   const isEdit = !!editPost
 
+  const [companyName, setCompanyName] = useState("")
   const [title, setTitle] = useState("")
   const [faculty, setFaculty] = useState("")
   const [description, setDescription] = useState("")
+  const [modelProvider, setModelProvider] = useState("")
   const [deadline, setDeadline] = useState("")
+
   const [isOpen, setIsOpen] = useState(true)
-  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+
+  const [iconPreview, setIconPreview] =
+    useState<string | null>(null)
+
+  const [selectedFile, setSelectedFile] =
+    useState<File | null>(null)
+
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef =
+    useRef<HTMLInputElement>(null)
+
+  // ──────────────────────────────────────────────
+  // Reset / Load form
+  // ──────────────────────────────────────────────
 
   useEffect(() => {
+    if (!open) return
+
     if (editPost) {
-      setTitle(editPost.title)
-      setFaculty(editPost.faculty)
-      setDescription(editPost.description)
+      setCompanyName(
+        editPost.company_name ?? ""
+      )
+
+      setTitle(editPost.title ?? "")
+
+      setFaculty(editPost.faculty ?? "")
+
+      setDescription(
+        editPost.description ?? ""
+      )
+
+      setModelProvider(
+        editPost.model_provider ?? ""
+      )
 
       setDeadline(
         editPost.deadline
@@ -85,18 +121,35 @@ function PostDialog({
       )
 
       setIsOpen(editPost.is_open)
-      setLogoPreview(editPost.logo_url ?? null)
+
+      // ใช้ icon ตรงกับ Backend
+      setIconPreview(
+        editPost.icon ?? null
+      )
+
+      setSelectedFile(null)
     } else {
+      setCompanyName("")
       setTitle("")
       setFaculty("")
       setDescription("")
+      setModelProvider("")
       setDeadline("")
       setIsOpen(true)
-      setLogoPreview(null)
+      setIconPreview(null)
+      setSelectedFile(null)
     }
 
     setError("")
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
   }, [editPost, open])
+
+  // ──────────────────────────────────────────────
+  // File
+  // ──────────────────────────────────────────────
 
   const handleFile = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -105,10 +158,12 @@ function PostDialog({
 
     if (!file) return
 
+    setSelectedFile(file)
+
     const reader = new FileReader()
 
     reader.onload = (ev) => {
-      setLogoPreview(
+      setIconPreview(
         ev.target?.result as string
       )
     }
@@ -116,18 +171,41 @@ function PostDialog({
     reader.readAsDataURL(file)
   }
 
+  // ──────────────────────────────────────────────
+  // Submit
+  // ──────────────────────────────────────────────
+
   const handleSubmit = async (
     e: React.FormEvent
   ) => {
     e.preventDefault()
 
+    // ตรวจข้อมูลที่จำเป็น
     if (
-      !title ||
-      !faculty ||
-      !description ||
+      !companyName.trim() ||
+      !title.trim() ||
+      !faculty.trim() ||
+      !description.trim() ||
+      !modelProvider.trim() ||
       !deadline
     ) {
-      setError("กรุณากรอกข้อมูลให้ครบทุกช่อง")
+      setError(
+        "กรุณากรอกข้อมูลให้ครบทุกช่อง"
+      )
+
+      return
+    }
+
+    // ตรวจรูปแบบ YYYY-MM-DD
+    if (
+      !/^[2-9][0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[0-1])$/.test(
+        deadline
+      )
+    ) {
+      setError(
+        "กำหนดการต้องอยู่ในรูปแบบ YYYY-MM-DD"
+      )
+
       return
     }
 
@@ -137,45 +215,97 @@ function PostDialog({
     try {
       let res: Response
 
+      // ────────────────────────────────────────
+      // EDIT
+      // ────────────────────────────────────────
+
       if (isEdit && editPost) {
-        // แก้ไขประกาศ
         res = await fetch("/api/posts", {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
+
           body: JSON.stringify({
             id: editPost.id,
+
+            // company_name
+            company_name: companyName,
+
             title,
             faculty,
             description,
+            model_provider: modelProvider,
             deadline,
-            logo_url: logoPreview,
+
+            // ใช้ icon
+            icon: iconPreview,
+
             is_open: isOpen,
           }),
         })
-      } else {
-        // สร้างประกาศใหม่
+      }
+
+      // ────────────────────────────────────────
+      // CREATE
+      // ────────────────────────────────────────
+      else {
+        const formData = new FormData()
+
+        // company_name
+        formData.append(
+          "company_name",
+          companyName
+        )
+
+        formData.append(
+          "title",
+          title
+        )
+
+        formData.append(
+          "faculty",
+          faculty
+        )
+
+        formData.append(
+          "description",
+          description
+        )
+
+        formData.append(
+          "model_provider",
+          modelProvider
+        )
+
+        formData.append(
+          "deadline",
+          deadline
+        )
+
+        // ส่งไฟล์โดยใช้ชื่อ icon
+        if (selectedFile) {
+          formData.append(
+            "icon",
+            selectedFile
+          )
+        }
+
         res = await fetch("/api/posts", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
           credentials: "include",
-          body: JSON.stringify({
-            title,
-            faculty,
-            description,
-            deadline,
-            logo_url: logoPreview,
-          }),
+          body: formData,
         })
       }
 
       const result = await res
         .json()
         .catch(() => null)
+
+      // ────────────────────────────────────────
+      // Permission
+      // ────────────────────────────────────────
 
       if (
         res.status === 401 ||
@@ -186,8 +316,13 @@ function PostDialog({
             result?.error ||
             "คุณไม่มีสิทธิ์ดำเนินการนี้"
         )
+
         return
       }
+
+      // ────────────────────────────────────────
+      // Error
+      // ────────────────────────────────────────
 
       if (!res.ok) {
         throw new Error(
@@ -196,6 +331,10 @@ function PostDialog({
             "บันทึกประกาศไม่สำเร็จ"
         )
       }
+
+      // ────────────────────────────────────────
+      // Success
+      // ────────────────────────────────────────
 
       onSaved()
       onClose()
@@ -219,13 +358,17 @@ function PostDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        onClick={(e) =>
+          e.stopPropagation()
+        }
       >
+        {/* Header */}
+
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-card-foreground">
             {isEdit
@@ -234,6 +377,7 @@ function PostDialog({
           </h2>
 
           <button
+            type="button"
             onClick={onClose}
             className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
           >
@@ -245,22 +389,26 @@ function PostDialog({
           onSubmit={handleSubmit}
           className="flex flex-col gap-4"
         >
-          {/* Logo */}
+          {/* ─────────────────────────────────────
+              Icon / Logo
+          ───────────────────────────────────── */}
+
           <div className="flex flex-col items-center gap-2">
             <button
               type="button"
               onClick={() =>
                 fileInputRef.current?.click()
               }
-              className="flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted transition-colors hover:border-primary hover:bg-accent"
+              className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-muted transition-colors hover:border-primary hover:bg-accent"
             >
-              {logoPreview ? (
+              {iconPreview ? (
                 <Image
-                  src={logoPreview}
-                  alt="Logo preview"
+                  src={iconPreview}
+                  alt="Company logo preview"
                   width={96}
                   height={96}
                   className="h-24 w-24 rounded-2xl object-cover"
+                  unoptimized
                 />
               ) : (
                 <Upload className="h-6 w-6 text-muted-foreground" />
@@ -280,7 +428,36 @@ function PostDialog({
             />
           </div>
 
-          {/* Title */}
+          {/* ─────────────────────────────────────
+              Company Name
+          ───────────────────────────────────── */}
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-card-foreground">
+              ชื่อบริษัท / หน่วยงาน{" "}
+              <span className="text-destructive">
+                *
+              </span>
+            </label>
+
+            <input
+              type="text"
+              value={companyName}
+              onChange={(e) =>
+                setCompanyName(
+                  e.target.value
+                )
+              }
+              placeholder="เช่น บริษัท ABC จำกัด"
+              required
+              className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          {/* ─────────────────────────────────────
+              Title
+          ───────────────────────────────────── */}
+
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-card-foreground">
               ชื่อตำแหน่ง{" "}
@@ -295,12 +472,16 @@ function PostDialog({
               onChange={(e) =>
                 setTitle(e.target.value)
               }
-              placeholder="เช่น นักพัฒนาซอฟต์แวร์"
+              placeholder="เช่น Software Developer"
+              required
               className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
-          {/* Faculty */}
+          {/* ─────────────────────────────────────
+              Faculty
+          ───────────────────────────────────── */}
+
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-card-foreground">
               คณะ / หน่วยงาน{" "}
@@ -313,14 +494,20 @@ function PostDialog({
               type="text"
               value={faculty}
               onChange={(e) =>
-                setFaculty(e.target.value)
+                setFaculty(
+                  e.target.value
+                )
               }
               placeholder="เช่น คณะวิศวกรรมศาสตร์"
+              required
               className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
-          {/* Description */}
+          {/* ─────────────────────────────────────
+              Description
+          ───────────────────────────────────── */}
+
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-card-foreground">
               รายละเอียด{" "}
@@ -332,15 +519,47 @@ function PostDialog({
             <textarea
               value={description}
               onChange={(e) =>
-                setDescription(e.target.value)
+                setDescription(
+                  e.target.value
+                )
               }
-              rows={3}
+              rows={4}
               placeholder="อธิบายลักษณะงาน คุณสมบัติ ฯลฯ"
+              required
               className="resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
-          {/* Deadline */}
+          {/* ─────────────────────────────────────
+              Model Provider
+          ───────────────────────────────────── */}
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-card-foreground">
+              Model Provider{" "}
+              <span className="text-destructive">
+                *
+              </span>
+            </label>
+
+            <input
+              type="text"
+              value={modelProvider}
+              onChange={(e) =>
+                setModelProvider(
+                  e.target.value
+                )
+              }
+              placeholder="เช่น OpenAI, Google, Anthropic"
+              required
+              className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          {/* ─────────────────────────────────────
+              Deadline
+          ───────────────────────────────────── */}
+
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-card-foreground">
               วันปิดรับสมัคร{" "}
@@ -353,13 +572,19 @@ function PostDialog({
               type="date"
               value={deadline}
               onChange={(e) =>
-                setDeadline(e.target.value)
+                setDeadline(
+                  e.target.value
+                )
               }
+              required
               className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
-          {/* Status */}
+          {/* ─────────────────────────────────────
+              Status
+          ───────────────────────────────────── */}
+
           {isEdit && (
             <div className="flex items-center gap-3">
               <label className="text-sm font-medium text-card-foreground">
@@ -384,11 +609,15 @@ function PostDialog({
             </div>
           )}
 
+          {/* Error */}
+
           {error && (
             <p className="text-sm text-destructive">
               {error}
             </p>
           )}
+
+          {/* Buttons */}
 
           <div className="flex justify-end gap-2 pt-1">
             <button
@@ -441,7 +670,9 @@ function DeleteConfirmDialog({
     >
       <div
         className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) =>
+          e.stopPropagation()
+        }
       >
         <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-destructive/10">
           <Trash2 className="h-5 w-5 text-destructive" />
@@ -458,6 +689,7 @@ function DeleteConfirmDialog({
 
         <div className="flex justify-end gap-2">
           <button
+            type="button"
             onClick={onClose}
             className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
@@ -465,6 +697,7 @@ function DeleteConfirmDialog({
           </button>
 
           <button
+            type="button"
             onClick={onConfirm}
             className="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
           >
@@ -493,12 +726,12 @@ function PostCard({
   onDelete,
   onEdit,
 }: PostCardProps) {
-  const deadlineDate = new Date(post.deadline)
+  const deadlineDate =
+    new Date(post.deadline)
 
   const isExpired =
     deadlineDate < new Date()
 
-  // เวลาเป็นหลัก + status เป็นตัวควบคุม
   const isOpen =
     post.is_open && !isExpired
 
@@ -512,9 +745,12 @@ function PostCard({
       href={`/resume/${post.id}`}
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
     >
+      {/* Edit / Delete */}
+
       {isCreator && (
         <div className="absolute right-2.5 top-2.5 z-10 flex items-center gap-1 opacity-0 transition-all duration-150 group-hover:opacity-100">
           <button
+            type="button"
             onClick={(e) => {
               e.preventDefault()
               onEdit(post)
@@ -526,6 +762,7 @@ function PostCard({
           </button>
 
           <button
+            type="button"
             onClick={(e) => {
               e.preventDefault()
               onDelete(post.id)
@@ -538,22 +775,31 @@ function PostCard({
         </div>
       )}
 
+      {/* ─────────────────────────────────────
+          Icon
+      ───────────────────────────────────── */}
+
       <div className="relative flex h-40 items-center justify-center bg-muted">
-        {post.logo_url ? (
+        {post.icon ? (
           <Image
-            src={post.logo_url}
-            alt={`${post.title} logo`}
+            src={post.icon}
+            alt={`${post.company_name ?? post.title} logo`}
             width={120}
             height={120}
             className="h-32 w-32 object-contain"
+            unoptimized
           />
         ) : (
           <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-background text-2xl font-bold text-muted-foreground">
-            {post.title
+            {(post.company_name ||
+              post.title ||
+              "?")
               .charAt(0)
               .toUpperCase()}
           </div>
         )}
+
+        {/* Owner */}
 
         {post.owner_name && (
           <span className="absolute bottom-2 right-2.5 z-10 max-w-[80%] truncate rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm">
@@ -564,14 +810,30 @@ function PostCard({
 
       <div className="h-px bg-border" />
 
+      {/* ─────────────────────────────────────
+          Post Information
+      ───────────────────────────────────── */}
+
       <div className="flex flex-1 flex-col gap-1 px-4 py-3">
+        {/* Company Name */}
+
+        <p className="truncate text-xs font-medium text-primary">
+          {post.company_name || "ไม่ระบุบริษัท"}
+        </p>
+
+        {/* Position */}
+
         <p className="truncate text-sm font-semibold text-card-foreground">
           {post.title}
         </p>
 
+        {/* Faculty */}
+
         <p className="truncate text-xs text-muted-foreground">
           {post.faculty}
         </p>
+
+        {/* Status / Deadline */}
 
         <div className="mt-1 flex items-center gap-2">
           <span
@@ -608,7 +870,9 @@ function PostCard({
 // ──────────────────────────────────────────────
 
 export default function ResumePage() {
-  const [posts, setPosts] = useState<Post[]>([])
+  const [posts, setPosts] =
+    useState<Post[]>([])
+
   const [currentUser, setCurrentUser] =
     useState<CurrentUser | null>(null)
 
@@ -650,42 +914,55 @@ export default function ResumePage() {
   // ──────────────────────────────────────────────
 
   useEffect(() => {
-  fetch("/api/me", {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  })
-    .then((r) => (r.ok ? r.json() : null))
-    .then((result) => {
-      console.log("ME API:", result)
+    fetch("/api/me", {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then((r) =>
+        r.ok ? r.json() : null
+      )
+      .then((result) => {
+        console.log(
+          "ME API:",
+          result
+        )
 
-      const user = result?.data
+        const user = result?.data
 
-      if (user?.id) {
-        setCurrentUser({
-          id: String(user.id),
-          name: user.firstname ?? "",
-          lastname: user.lastname ?? "",
-          email: user.email ?? "",
-          role_id: user.role_id ?? 0,
-          role: user.role ?? "",
-        })
-      }
-    })
-    .catch((error) => {
-      console.error("GET /api/me error:", error)
-    })
-    .finally(() => {
-      setLoadingUser(false)
-    })
+        if (user?.id) {
+          setCurrentUser({
+            id: String(user.id),
+            name:
+              user.firstname ?? "",
+            lastname:
+              user.lastname ?? "",
+            email:
+              user.email ?? "",
+            role_id:
+              user.role_id ?? 0,
+            role:
+              user.role ?? "",
+          })
+        }
+      })
+      .catch((error) => {
+        console.error(
+          "GET /api/me error:",
+          error
+        )
+      })
+      .finally(() => {
+        setLoadingUser(false)
+      })
   }, [])
 
   // ──────────────────────────────────────────────
   // Fetch posts
   // ──────────────────────────────────────────────
 
-  const fetchPosts = useCallback(
-    async () => {
+  const fetchPosts =
+    useCallback(async () => {
       setLoading(true)
 
       try {
@@ -730,8 +1007,8 @@ export default function ResumePage() {
           Array.isArray(result)
             ? result
             : Array.isArray(
-                result?.data
-              )
+                  result?.data
+                )
               ? result.data
               : []
 
@@ -746,9 +1023,7 @@ export default function ResumePage() {
       } finally {
         setLoading(false)
       }
-    },
-    [search, filter]
-  )
+    }, [search, filter])
 
   useEffect(() => {
     fetchPosts()
@@ -762,13 +1037,14 @@ export default function ResumePage() {
   // Pagination
   // ──────────────────────────────────────────────
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(
-      posts.length /
-        POSTS_PER_PAGE
+  const totalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        posts.length /
+          POSTS_PER_PAGE
+      )
     )
-  )
 
   const paginatedPosts =
     posts.slice(
@@ -859,8 +1135,13 @@ export default function ResumePage() {
       <Navbar />
 
       <div className="mx-auto max-w-7xl px-6 pt-6">
-        {/* Toolbar */}
+        {/* ─────────────────────────────────────
+            Toolbar
+        ───────────────────────────────────── */}
+
         <div className="mb-6 flex flex-wrap items-center gap-3">
+          {/* Search */}
+
           <div className="relative min-w-48 flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
@@ -868,7 +1149,9 @@ export default function ResumePage() {
               type="text"
               value={search}
               onChange={(e) =>
-                setSearch(e.target.value)
+                setSearch(
+                  e.target.value
+                )
               }
               placeholder="ค้นหาตำแหน่งหรือคณะ..."
               className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -877,8 +1160,11 @@ export default function ResumePage() {
 
           <div className="h-8 w-px bg-border" />
 
+          {/* Filters */}
+
           <div className="flex items-center gap-1">
             <button
+              type="button"
               onClick={() =>
                 setFilter(
                   filter === "open"
@@ -898,6 +1184,7 @@ export default function ResumePage() {
             <div className="h-5 w-px bg-border" />
 
             <button
+              type="button"
               onClick={() =>
                 setFilter(
                   filter === "closed"
@@ -915,10 +1202,12 @@ export default function ResumePage() {
             </button>
           </div>
 
-          {/* ปุ่มสร้างประกาศ */}
+          {/* Create */}
+
           {!loadingUser &&
             canManagePosts && (
               <button
+                type="button"
                 onClick={openCreate}
                 className="ml-auto flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90"
               >
@@ -928,7 +1217,10 @@ export default function ResumePage() {
             )}
         </div>
 
-        {/* Grid */}
+        {/* ─────────────────────────────────────
+            Grid
+        ───────────────────────────────────── */}
+
         {loading ? (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({
@@ -940,7 +1232,8 @@ export default function ResumePage() {
               />
             ))}
           </div>
-        ) : paginatedPosts.length === 0 ? (
+        ) : paginatedPosts.length ===
+          0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
               <Search className="h-7 w-7 text-muted-foreground" />
@@ -968,7 +1261,9 @@ export default function ResumePage() {
                     currentUserId
                   }
                   onDelete={(id) =>
-                    setDeleteTarget(id)
+                    setDeleteTarget(
+                      id
+                    )
                   }
                   onEdit={openEdit}
                 />
@@ -977,10 +1272,14 @@ export default function ResumePage() {
           </div>
         )}
 
-        {/* Pagination */}
+        {/* ─────────────────────────────────────
+            Pagination
+        ───────────────────────────────────── */}
+
         {totalPages > 1 && (
           <div className="mt-8 flex items-center justify-center gap-2 pb-10">
             <button
+              type="button"
               onClick={() =>
                 setPage((p) =>
                   Math.max(
@@ -1002,6 +1301,7 @@ export default function ResumePage() {
               (_, i) => i + 1
             ).map((p) => (
               <button
+                type="button"
                 key={p}
                 onClick={() =>
                   setPage(p)
@@ -1017,6 +1317,7 @@ export default function ResumePage() {
             ))}
 
             <button
+              type="button"
               onClick={() =>
                 setPage((p) =>
                   Math.min(
@@ -1036,7 +1337,10 @@ export default function ResumePage() {
         )}
       </div>
 
-      {/* Create / Edit Dialog */}
+      {/* ─────────────────────────────────────
+          Create / Edit Dialog
+      ───────────────────────────────────── */}
+
       {canManagePosts && (
         <PostDialog
           open={dialogOpen}
@@ -1049,9 +1353,14 @@ export default function ResumePage() {
         />
       )}
 
-      {/* Delete Dialog */}
+      {/* ─────────────────────────────────────
+          Delete Dialog
+      ───────────────────────────────────── */}
+
       <DeleteConfirmDialog
-        open={deleteTarget !== null}
+        open={
+          deleteTarget !== null
+        }
         onClose={() =>
           setDeleteTarget(null)
         }

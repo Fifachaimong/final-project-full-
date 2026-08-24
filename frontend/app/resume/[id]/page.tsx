@@ -20,6 +20,10 @@ import { Navbar } from "@/components/navbar"
 interface Post {
   id: string
   owner_id: string
+  owner_name?: string | null
+  owner_lastname?: string | null
+  owner_phone?: string | null
+  company_name: string
   title: string
   faculty: string
   description: string
@@ -161,7 +165,9 @@ function ApplyDialog({
     onClose()
   }
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0]
 
     if (!file) return
@@ -177,11 +183,15 @@ function ApplyDialog({
     reader.readAsDataURL(file)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault()
 
     if (!currentUser) {
-      setError("ไม่พบข้อมูลผู้ใช้งาน กรุณาเข้าสู่ระบบใหม่อีกครั้ง")
+      setError(
+        "ไม่พบข้อมูลผู้ใช้งาน กรุณาเข้าสู่ระบบใหม่อีกครั้ง"
+      )
       return
     }
 
@@ -269,7 +279,10 @@ function ApplyDialog({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4"
+        >
           <div className="rounded-lg bg-muted/50 px-3 py-2.5">
             <p className="text-sm font-medium text-foreground">
               {currentUser
@@ -290,13 +303,16 @@ function ApplyDialog({
 
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() =>
+                fileInputRef.current?.click()
+              }
               className="flex items-center gap-3 rounded-lg border border-dashed border-input bg-background px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:bg-accent hover:text-foreground"
             >
               <Upload className="h-4 w-4 flex-shrink-0" />
 
               <span className="truncate">
-                {resumeFileName || "เลือกไฟล์ PDF, DOC, DOCX"}
+                {resumeFileName ||
+                  "เลือกไฟล์ PDF, DOC, DOCX"}
               </span>
             </button>
 
@@ -331,7 +347,9 @@ function ApplyDialog({
             >
               <Send className="h-3.5 w-3.5" />
 
-              {submitting ? "กำลังส่ง..." : "ส่งใบสมัคร"}
+              {submitting
+                ? "กำลังส่ง..."
+                : "ส่งใบสมัคร"}
             </button>
           </div>
         </form>
@@ -368,14 +386,14 @@ function EditPostDialog({
     Boolean(post.posts_status)
   )
 
-  const [logoPreview, setLogoPreview] = useState<string | null>(
-    post.icon ?? null
-  )
+  const [logoPreview, setLogoPreview] =
+    useState<string | null>(post.icon ?? null)
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef =
+    useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setTitle(post.title)
@@ -397,7 +415,9 @@ function EditPostDialog({
     const reader = new FileReader()
 
     reader.onload = (ev) => {
-      setLogoPreview(ev.target?.result as string)
+      setLogoPreview(
+        ev.target?.result as string
+      )
     }
 
     reader.readAsDataURL(file)
@@ -439,7 +459,8 @@ function EditPostDialog({
         }),
       })
 
-      const result = await res.json().catch(() => null)
+      const result =
+        await res.json().catch(() => null)
 
       if (!res.ok) {
         throw new Error(
@@ -493,7 +514,9 @@ function EditPostDialog({
           <div className="flex flex-col items-center gap-2">
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() =>
+                fileInputRef.current?.click()
+              }
               className="flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted transition-colors hover:border-primary hover:bg-accent"
             >
               {logoPreview ? (
@@ -524,14 +547,34 @@ function EditPostDialog({
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-card-foreground">
+              ชื่อบริษัท{" "}
+              <span className="text-destructive">
+                *
+              </span>
+            </label>
+
+            <input
+              type="text"
+              value={post.company_name}
+              readOnly
+              className="rounded-lg border border-input bg-muted px-3 py-2 text-sm text-muted-foreground focus:outline-none"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-card-foreground">
               ชื่อตำแหน่ง{" "}
-              <span className="text-destructive">*</span>
+              <span className="text-destructive">
+                *
+              </span>
             </label>
 
             <input
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) =>
+                setTitle(e.target.value)
+              }
               className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -539,13 +582,17 @@ function EditPostDialog({
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-card-foreground">
               คณะ / หน่วยงาน{" "}
-              <span className="text-destructive">*</span>
+              <span className="text-destructive">
+                *
+              </span>
             </label>
 
             <input
               type="text"
               value={faculty}
-              onChange={(e) => setFaculty(e.target.value)}
+              onChange={(e) =>
+                setFaculty(e.target.value)
+              }
               className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -553,12 +600,16 @@ function EditPostDialog({
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-card-foreground">
               รายละเอียด{" "}
-              <span className="text-destructive">*</span>
+              <span className="text-destructive">
+                *
+              </span>
             </label>
 
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) =>
+                setDescription(e.target.value)
+              }
               rows={3}
               className="resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
@@ -567,13 +618,17 @@ function EditPostDialog({
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-card-foreground">
               วันปิดรับสมัคร{" "}
-              <span className="text-destructive">*</span>
+              <span className="text-destructive">
+                *
+              </span>
             </label>
 
             <input
               type="date"
               value={deadline}
-              onChange={(e) => setDeadline(e.target.value)}
+              onChange={(e) =>
+                setDeadline(e.target.value)
+              }
               className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -585,14 +640,18 @@ function EditPostDialog({
 
             <button
               type="button"
-              onClick={() => setIsOpen((v) => !v)}
+              onClick={() =>
+                setIsOpen((v) => !v)
+              }
               className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
                 isOpen
                   ? "bg-green-100 text-green-700 hover:bg-green-200"
                   : "bg-red-100 text-red-700 hover:bg-red-200"
               }`}
             >
-              {isOpen ? "เปิดรับสมัคร" : "ปิดรับสมัคร"}
+              {isOpen
+                ? "เปิดรับสมัคร"
+                : "ปิดรับสมัคร"}
             </button>
           </div>
 
@@ -665,16 +724,29 @@ export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
 
-  const [post, setPost] = useState<Post | null>(null)
-  const [applicants, setApplicants] = useState<Applicant[]>([])
+  const [post, setPost] =
+    useState<Post | null>(null)
+
+  const [applicants, setApplicants] =
+    useState<Applicant[]>([])
+
   const [currentUser, setCurrentUser] =
     useState<CurrentUser | null>(null)
 
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
-  const [applyOpen, setApplyOpen] = useState(false)
-  const [editOpen, setEditOpen] = useState(false)
-  const [toast, setToast] = useState("")
+  const [loading, setLoading] =
+    useState(true)
+
+  const [error, setError] =
+    useState(false)
+
+  const [applyOpen, setApplyOpen] =
+    useState(false)
+
+  const [editOpen, setEditOpen] =
+    useState(false)
+
+  const [toast, setToast] =
+    useState("")
 
   const isHR =
     currentUser?.role === "hr" ||
@@ -684,7 +756,8 @@ export default function PostDetailPage() {
     isHR &&
     post?.owner_id != null &&
     currentUser?.id != null &&
-    String(post.owner_id) === String(currentUser.id)
+    String(post.owner_id) ===
+      String(currentUser.id)
 
   // ──────────────────────────────────────────────
   // Get current user
@@ -696,7 +769,9 @@ export default function PostDetailPage() {
       credentials: "include",
       cache: "no-store",
     })
-      .then((r) => (r.ok ? r.json() : null))
+      .then((r) =>
+        r.ok ? r.json() : null
+      )
       .then((d) => {
         if (d?.id) {
           setCurrentUser(d)
@@ -751,28 +826,49 @@ export default function PostDetailPage() {
         )
       }
 
-      console.log("Get post response:", result)
+      console.log(
+        "Get post response:",
+        result
+      )
 
-      const rawData = result?.data ?? null
+      const rawData =
+        result?.data ?? null
 
       if (!rawData?.id) {
-        throw new Error("Post not found")
+        throw new Error(
+          "Post not found"
+        )
       }
 
-      // Normalize posts_status
-      // รองรับทั้ง boolean, number และ string
       const data: Post = {
         ...rawData,
+
         posts_status:
           rawData.posts_status === true ||
           rawData.posts_status === 1 ||
           rawData.posts_status === "1",
+
+        company_name:
+          rawData.company_name ?? "",
+
+        owner_name:
+          rawData.owner_name ?? "",
+
+        owner_lastname:
+          rawData.owner_lastname ?? "",
+
+        owner_phone:
+          rawData.owner_phone ?? "",
       }
 
       setPost(data)
 
-      if (Array.isArray(data.applicants)) {
-        setApplicants(data.applicants)
+      if (
+        Array.isArray(data.applicants)
+      ) {
+        setApplicants(
+          data.applicants
+        )
       } else {
         setApplicants([])
       }
@@ -799,7 +895,10 @@ export default function PostDetailPage() {
   // ──────────────────────────────────────────────
 
   const handleApplied = () => {
-    setToast("ส่งใบสมัครเรียบร้อยแล้ว!")
+    setToast(
+      "ส่งใบสมัครเรียบร้อยแล้ว!"
+    )
+
     fetchData()
   }
 
@@ -808,7 +907,10 @@ export default function PostDetailPage() {
   // ──────────────────────────────────────────────
 
   const handlePostSaved = () => {
-    setToast("บันทึกการแก้ไขเรียบร้อยแล้ว!")
+    setToast(
+      "บันทึกการแก้ไขเรียบร้อยแล้ว!"
+    )
+
     fetchData()
   }
 
@@ -818,7 +920,8 @@ export default function PostDetailPage() {
 
   const isPositionOpen = post
     ? post.posts_status === true &&
-      new Date(post.deadline) >= new Date()
+      new Date(post.deadline) >=
+        new Date()
     : false
 
   // ──────────────────────────────────────────────
@@ -844,7 +947,7 @@ export default function PostDetailPage() {
   }
 
   // ──────────────────────────────────────────────
-  // Error / not found
+  // Error
   // ──────────────────────────────────────────────
 
   if (error || !post) {
@@ -862,7 +965,9 @@ export default function PostDetailPage() {
           </p>
 
           <button
-            onClick={() => router.push("/resume")}
+            onClick={() =>
+              router.push("/resume")
+            }
             className="mt-6 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
             กลับไปหน้ารายการ
@@ -872,7 +977,8 @@ export default function PostDetailPage() {
     )
   }
 
-  const deadlineDate = new Date(post.deadline)
+  const deadlineDate =
+    new Date(post.deadline)
 
   // ──────────────────────────────────────────────
   // Main UI
@@ -884,10 +990,10 @@ export default function PostDetailPage() {
 
       <div className="mx-auto max-w-7xl px-6 py-8">
 
-        {/* Back button */}
-
         <button
-          onClick={() => router.push("/resume")}
+          onClick={() =>
+            router.push("/resume")
+          }
           className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -908,14 +1014,19 @@ export default function PostDetailPage() {
                 {post.icon ? (
                   <Image
                     src={post.icon}
-                    alt={`${post.title} logo`}
+                    alt={`${post.company_name} logo`}
                     width={128}
                     height={128}
                     className="h-full w-full object-contain"
                   />
                 ) : (
                   <span className="text-4xl font-bold text-muted-foreground">
-                    {post.title.charAt(0).toUpperCase()}
+                    {post.company_name
+                      ?.charAt(0)
+                      .toUpperCase() ||
+                      post.title
+                        .charAt(0)
+                        .toUpperCase()}
                   </span>
                 )}
 
@@ -930,6 +1041,20 @@ export default function PostDetailPage() {
 
             <div className="flex flex-col gap-3">
 
+              {/* Company */}
+
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  บริษัท
+                </p>
+
+                <p className="mt-0.5 text-base font-semibold text-foreground">
+                  {post.company_name}
+                </p>
+              </div>
+
+              {/* Position */}
+
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   ตำแหน่ง
@@ -939,6 +1064,8 @@ export default function PostDetailPage() {
                   {post.title}
                 </p>
               </div>
+
+              {/* Faculty */}
 
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -950,6 +1077,8 @@ export default function PostDetailPage() {
                 </p>
               </div>
 
+              {/* Description */}
+
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   รายละเอียด
@@ -959,6 +1088,8 @@ export default function PostDetailPage() {
                   {post.description}
                 </p>
               </div>
+
+              {/* Deadline */}
 
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -982,15 +1113,15 @@ export default function PostDetailPage() {
 
             <div className="h-px bg-border" />
 
-            {/* Action buttons */}
+            {/* Actions */}
 
             <div className="flex flex-col gap-2">
 
-              {/* Apply */}
-
               {!isHR && (
                 <button
-                  onClick={() => setApplyOpen(true)}
+                  onClick={() =>
+                    setApplyOpen(true)
+                  }
                   disabled={!isPositionOpen}
                   className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
                     isPositionOpen
@@ -1006,11 +1137,11 @@ export default function PostDetailPage() {
                 </button>
               )}
 
-              {/* Edit */}
-
               {isOwner && (
                 <button
-                  onClick={() => setEditOpen(true)}
+                  onClick={() =>
+                    setEditOpen(true)
+                  }
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
                 >
                   <Pencil className="h-4 w-4" />
@@ -1064,22 +1195,21 @@ export default function PostDetailPage() {
               ) : (
                 <div className="flex flex-col gap-2 overflow-y-auto">
 
-                  {applicants.map((applicant, i) => (
-                    <ApplicantRow
-                      key={applicant.id}
-                      index={i + 1}
-                      applicant={applicant}
-                    />
-                  ))}
+                  {applicants.map(
+                    (applicant, i) => (
+                      <ApplicantRow
+                        key={applicant.id}
+                        index={i + 1}
+                        applicant={applicant}
+                      />
+                    )
+                  )}
 
                 </div>
               )}
 
             </div>
           ) : (
-
-            // Applicant view
-
             <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
 
               <h2 className="text-base font-semibold text-foreground">
@@ -1125,7 +1255,6 @@ export default function PostDetailPage() {
                     />
 
                     <p className="text-sm text-foreground">
-
                       {isPositionOpen
                         ? `เปิดรับสมัครถึง ${deadlineDate.toLocaleDateString(
                             "th-TH",
@@ -1136,7 +1265,6 @@ export default function PostDetailPage() {
                             }
                           )}`
                         : "ปิดรับสมัครแล้ว"}
-
                     </p>
 
                   </div>
@@ -1146,11 +1274,40 @@ export default function PostDetailPage() {
                 <div className="rounded-xl bg-muted/50 p-4">
 
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    บริษัท
+                  </p>
+
+                  <p className="text-sm text-foreground">
+                    {post.company_name}
+                  </p>
+
+                </div>
+
+                {/* Owner */}
+
+                <div className="rounded-xl bg-muted/50 p-4">
+
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     ผู้ดูแล
                   </p>
 
                   <p className="text-sm text-foreground">
-                    {post.faculty}
+                    {post.owner_name || "-"}{" "}
+                    {post.owner_lastname || ""}
+                  </p>
+
+                </div>
+
+                {/* Owner phone */}
+
+                <div className="rounded-xl bg-muted/50 p-4">
+
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    เบอร์โทรติดต่อ
+                  </p>
+
+                  <p className="text-sm text-foreground">
+                    {post.owner_phone || "-"}
                   </p>
 
                 </div>
@@ -1167,7 +1324,9 @@ export default function PostDetailPage() {
       {!isHR && (
         <ApplyDialog
           open={applyOpen}
-          onClose={() => setApplyOpen(false)}
+          onClose={() =>
+            setApplyOpen(false)
+          }
           onApplied={handleApplied}
           postId={post.id}
           currentUser={currentUser}
@@ -1179,7 +1338,9 @@ export default function PostDetailPage() {
       {isOwner && editOpen && (
         <EditPostDialog
           open={editOpen}
-          onClose={() => setEditOpen(false)}
+          onClose={() =>
+            setEditOpen(false)
+          }
           onSaved={handlePostSaved}
           post={post}
         />
@@ -1190,7 +1351,9 @@ export default function PostDetailPage() {
       {toast && (
         <SuccessToast
           message={toast}
-          onDone={() => setToast("")}
+          onDone={() =>
+            setToast("")
+          }
         />
       )}
     </main>

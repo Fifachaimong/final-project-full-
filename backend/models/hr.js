@@ -1,12 +1,13 @@
 import db from "../lib/db.js"
 
-export const CreatePostModel = async(id, data) => {
-    const { title, faculty, description, model_name, deadline } = data
+export const CreatePostModel = async(id, data, icon) => {
+    const { company_name, title, faculty, description, model_provider, deadline } = data
+
     const [result] = await db.query(
-        'INSERT INTO posts(owner_id, title, faculty, description, model_name, deadline) VALUES(?, ?, ?, ?, ?, ?)',
-        [id, title, faculty, description, model_name, deadline]
+        'INSERT INTO posts (owner_id, company_name, title, icon, faculty, description, model_provider, deadline) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [ id, company_name, title, icon, faculty, description, model_provider, deadline ]
     )
-    
+
     return result
 }
 

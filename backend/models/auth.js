@@ -18,7 +18,7 @@ export const GetUserByID = async(id) => {
 
 export const GetPostModel = async(setoff, limit, search, filter) => {
     let query = ` 
-    SELECT posts.id, posts.owner_id, posts.title, posts.faculty, posts.deadline,
+    SELECT posts.id, posts.owner_id, posts.company_name, posts.title, posts.faculty, posts.deadline,
         posts.icon,
         CASE
             WHEN posts.posts_status = 'open' THEN true
@@ -109,9 +109,12 @@ export const GetMyProfileModel = async (id) => {
 
 export const GetPostByIDModel = async (post_id) => {
     const [result] = await db.query(`
-        SELECT posts.id, posts.owner_id, posts.title, posts.faculty, posts.description, 
-        posts.deadline, posts.icon, posts.posts_status
+        SELECT posts.id, posts.owner_id, posts.title, posts.company_name, posts.faculty,
+            posts.description, posts.deadline, posts.icon, posts.posts_status, users.firstname AS owner_name,
+            users.lastname AS owner_lastname, users.phone AS owner_phone
         FROM posts
+        LEFT JOIN users
+            ON posts.owner_id = users.id
         WHERE posts.id = ?
     `,[ post_id ])
 

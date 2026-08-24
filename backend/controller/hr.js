@@ -3,7 +3,7 @@ import { CreatePostService, DeletePostService, EditPostService, GetMemberResumeR
 
 export const CreatePost = asyncHandler(async (req, res) => {
     const data = req.body
-    const result = await CreatePostService(req.user.id, data)
+    const result = await CreatePostService(req.user.id, data, req.file)
     res.status(201).json(result)
 })
 

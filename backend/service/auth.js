@@ -4,7 +4,6 @@ import AppError from '../utils/AppError.js'
 import jwt from 'jsonwebtoken'
 import { UploadToSupabase } from "../utils/UploadToSupabase.js";
 import axios from "axios"
-import { AuthWeakPasswordError } from "@supabase/supabase-js";
 
 export const RegisterService = async (data) => {
     const { firstname, lastname, email, password, role } = data
