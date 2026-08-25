@@ -14,12 +14,12 @@ export const EditPost = asyncHandler(async (req, res) => {
 })
 
 export const DeletePost = asyncHandler(async (req, res) => {
-    const result = await DeletePostService(req.user.id, req.params.id)
+    const result = await DeletePostService(req.user.id, req.params.id, req.user.role)
     res.status(200).json(result)
 })
 
 export const GetMember = asyncHandler(async (req, res) => {
-    const result = await GetMemberService(req.user.id)
+    const result = await GetMemberService(req.user.id, req.params.post_id)
     res.status(200).json(result)
 })
 

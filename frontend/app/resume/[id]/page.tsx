@@ -10,13 +10,20 @@ import {
   Upload,
   Pencil,
   Send,
-  FileText,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 
 // ──────────────────────────────────────────────
 // Types
 // ──────────────────────────────────────────────
+
+interface Applicant {
+  user_id: string
+  user_firstname: string
+  user_lastname: string
+  ai_score: number | null
+  status: string | null
+}
 
 interface Post {
   id: string
@@ -32,16 +39,6 @@ interface Post {
   icon?: string | null
   posts_status: boolean
   applicants?: Applicant[]
-}
-
-interface Applicant {
-  id: string
-  name: string
-  lastname: string
-  email: string
-  applied_at: string
-  resume_url?: string | null
-  transcript_url?: string | null
 }
 
 interface CurrentUser {
@@ -79,9 +76,7 @@ function normalizeBoolean(value: unknown): boolean {
   return false
 }
 
-function getDeadlineDate(
-  deadline: string
-): Date | null {
+function getDeadlineDate(deadline: string): Date | null {
   if (!deadline) return null
 
   const dateOnly = deadline.slice(0, 10)
@@ -89,13 +84,10 @@ function getDeadlineDate(
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
     const parsed = new Date(deadline)
 
-    return Number.isNaN(parsed.getTime())
-      ? null
-      : parsed
+    return Number.isNaN(parsed.getTime()) ? null : parsed
   }
 
-  const [year, month, day] =
-    dateOnly.split("-").map(Number)
+  const [year, month, day] = dateOnly.split("-").map(Number)
 
   const date = new Date(
     year,
@@ -107,16 +99,11 @@ function getDeadlineDate(
     999
   )
 
-  return Number.isNaN(date.getTime())
-    ? null
-    : date
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
-function isDeadlinePassed(
-  deadline: string
-): boolean {
-  const deadlineDate =
-    getDeadlineDate(deadline)
+function isDeadlinePassed(deadline: string): boolean {
+  const deadlineDate = getDeadlineDate(deadline)
 
   if (!deadlineDate) {
     return false
@@ -126,7 +113,7 @@ function isDeadlinePassed(
 }
 
 // ──────────────────────────────────────────────
-// Status badge
+// Status Badge
 // ──────────────────────────────────────────────
 
 function StatusBadge({
@@ -148,7 +135,7 @@ function StatusBadge({
 }
 
 // ──────────────────────────────────────────────
-// Applicant row
+// Applicant Row
 // ──────────────────────────────────────────────
 
 function ApplicantRow({
@@ -158,13 +145,13 @@ function ApplicantRow({
   index: number
   applicant: Applicant
 }) {
-  const initials = `${applicant.name?.charAt(0) ?? ""}${
-    applicant.lastname?.charAt(0) ?? ""
+  const initials = `${applicant.user_firstname?.charAt(0) ?? ""}${
+    applicant.user_lastname?.charAt(0) ?? ""
   }`
 
   return (
     <div className="flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40">
-      <span className="w-6 text-center text-sm font-medium text-muted-foreground">
+      <span className="w-6 flex-shrink-0 text-center text-sm font-medium text-muted-foreground">
         {index}
       </span>
 
@@ -174,47 +161,27 @@ function ApplicantRow({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="truncate text-sm font-medium text-foreground">
-          {applicant.name} {applicant.lastname}
+          {applicant.user_firstname} {applicant.user_lastname}
         </span>
 
         <span className="truncate text-xs text-muted-foreground">
-          {applicant.email}
+          User ID: {applicant.user_id}
         </span>
       </div>
 
-      <span className="flex-shrink-0 text-xs text-muted-foreground">
-        {new Date(
-          applicant.applied_at
-        ).toLocaleDateString("th-TH", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })}
-      </span>
+      <div className="flex flex-shrink-0 flex-col items-end">
+        <span className="text-[11px] text-muted-foreground">
+          AI Score
+        </span>
 
-      <div className="flex flex-shrink-0 items-center gap-2">
-        {applicant.resume_url && (
-          <a
-            href={applicant.resume_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            ดู Resume
-          </a>
-        )}
-
-        {applicant.transcript_url && (
-          <a
-            href={applicant.transcript_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            ดู Transcript
-          </a>
-        )}
+        <span className="text-sm font-semibold text-foreground">
+          {applicant.ai_score ?? "-"}
+        </span>
       </div>
+
+      <span className="flex-shrink-0 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+        {applicant.status ?? "-"}
+      </span>
     </div>
   )
 }
@@ -243,23 +210,16 @@ const RESUME_ALLOWED_EXTENSIONS = [
   "docx",
 ]
 
-function validateDocumentFile(
-  file: File
-): string | null {
-  const extension =
-    file.name
-      .split(".")
-      .pop()
-      ?.toLowerCase()
+function validateDocumentFile(file: File): string | null {
+  const extension = file.name
+    .split(".")
+    .pop()
+    ?.toLowerCase()
 
   const validType =
-    RESUME_ALLOWED_TYPES.includes(
-      file.type
-    ) ||
+    RESUME_ALLOWED_TYPES.includes(file.type) ||
     (extension
-      ? RESUME_ALLOWED_EXTENSIONS.includes(
-          extension
-        )
+      ? RESUME_ALLOWED_EXTENSIONS.includes(extension)
       : false)
 
   if (!validType) {
@@ -384,13 +344,25 @@ function ApplyDialog({
     try {
       const formData = new FormData()
 
-      formData.append("name", currentUser.name)
+      formData.append(
+        "name",
+        currentUser.name
+      )
+
       formData.append(
         "lastname",
         currentUser.lastname
       )
-      formData.append("email", currentUser.email)
-      formData.append("resume", resumeFile)
+
+      formData.append(
+        "email",
+        currentUser.email
+      )
+
+      formData.append(
+        "resume",
+        resumeFile
+      )
 
       if (transcriptFile) {
         formData.append(
@@ -445,6 +417,7 @@ function ApplyDialog({
       }
 
       reset()
+
       onApplied()
       onClose()
     } catch (error) {
@@ -473,9 +446,7 @@ function ApplyDialog({
     >
       <div
         className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
-        onClick={(e) =>
-          e.stopPropagation()
-        }
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
           <div>
@@ -560,7 +531,7 @@ function ApplyDialog({
               }
               className="flex items-center gap-3 rounded-lg border border-dashed border-input bg-background px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:bg-accent hover:text-foreground"
             >
-              <FileText className="h-4 w-4 flex-shrink-0" />
+              <Upload className="h-4 w-4 flex-shrink-0" />
 
               <span className="truncate">
                 {transcriptFile?.name ||
@@ -647,7 +618,9 @@ function EditPostDialog({
 
   const [isOpen, setIsOpen] =
     useState(
-      Boolean(post.posts_status)
+      normalizeBoolean(
+        post.posts_status
+      )
     )
 
   const [logoFile, setLogoFile] =
@@ -671,14 +644,17 @@ function EditPostDialog({
     setTitle(post.title)
     setFaculty(post.faculty)
     setDescription(post.description)
+
     setDeadline(
       post.deadline?.slice(0, 10) ?? ""
     )
+
     setIsOpen(
       normalizeBoolean(
         post.posts_status
       )
     )
+
     setLogoFile(null)
     setLogoPreview(post.icon ?? null)
     setError("")
@@ -696,9 +672,7 @@ function EditPostDialog({
     if (!file) return
 
     if (!file.type.startsWith("image/")) {
-      setError(
-        "กรุณาเลือกไฟล์รูปภาพ"
-      )
+      setError("กรุณาเลือกไฟล์รูปภาพ")
 
       e.target.value = ""
       return
@@ -718,7 +692,10 @@ function EditPostDialog({
 
     setError("")
     setLogoFile(file)
-    setLogoPreview(URL.createObjectURL(file))
+
+    setLogoPreview(
+      URL.createObjectURL(file)
+    )
   }
 
   const handleSubmit = async (
@@ -744,24 +721,42 @@ function EditPostDialog({
     try {
       const formData = new FormData()
 
-      formData.append("title", title.trim())
-      formData.append("faculty", faculty.trim())
+      formData.append(
+        "title",
+        title.trim()
+      )
+
+      formData.append(
+        "faculty",
+        faculty.trim()
+      )
+
       formData.append(
         "description",
         description.trim()
       )
-      formData.append("deadline", deadline)
+
+      formData.append(
+        "deadline",
+        deadline
+      )
+
       formData.append(
         "posts_status",
         isOpen ? "1" : "0"
       )
 
       if (logoFile) {
-        formData.append("icon", logoFile)
+        formData.append(
+          "icon",
+          logoFile
+        )
       }
 
       const res = await fetch(
-        `/api/posts/${encodeURIComponent(post.id)}`,
+        `/api/posts/${encodeURIComponent(
+          post.id
+        )}`,
         {
           method: "PUT",
           credentials: "include",
@@ -1085,7 +1080,7 @@ export default function PostDetailPage() {
     useState("")
 
   // ──────────────────────────────────────────────
-  // User roles
+  // User Roles
   // ──────────────────────────────────────────────
 
   const normalizedRole =
@@ -1105,7 +1100,7 @@ export default function PostDetailPage() {
       String(currentUser.id)
 
   // ──────────────────────────────────────────────
-  // Get current user
+  // Get Current User
   // ──────────────────────────────────────────────
 
   useEffect(() => {
@@ -1141,18 +1136,20 @@ export default function PostDetailPage() {
           ) {
             setCurrentUser({
               id: String(raw.id),
-              role: raw.role ?? "",
+              role:
+                raw.role ?? "",
               name:
                 raw.name ??
                 raw.firstname ??
                 "",
               lastname:
                 raw.lastname ?? "",
-              email: raw.email ?? "",
+              email:
+                raw.email ?? "",
             })
           }
         } catch {
-          // User may simply not be logged in.
+          // Not logged in
         }
       }
 
@@ -1164,7 +1161,7 @@ export default function PostDetailPage() {
   }, [])
 
   // ──────────────────────────────────────────────
-  // Get post by ID
+  // Get Post
   // ──────────────────────────────────────────────
 
   const fetchData =
@@ -1177,9 +1174,7 @@ export default function PostDetailPage() {
       try {
         const res =
           await fetch(
-            `/api/posts/${encodeURIComponent(
-              id
-            )}`,
+            `/api/posts/${encodeURIComponent(id)}`,
             {
               method: "GET",
               credentials:
@@ -1217,8 +1212,7 @@ export default function PostDetailPage() {
         }
 
         const rawData =
-          result?.data ??
-          result
+          result?.data ?? result
 
         if (!rawData?.id) {
           throw new Error(
@@ -1270,8 +1264,6 @@ export default function PostDetailPage() {
           setApplicants(
             data.applicants
           )
-        } else {
-          setApplicants([])
         }
       } catch (error) {
         console.error(
@@ -1287,12 +1279,91 @@ export default function PostDetailPage() {
       }
     }
 
+  // ──────────────────────────────────────────────
+  // Get Applicants
+  // ──────────────────────────────────────────────
+
+  const fetchApplicants =
+    async () => {
+      if (!id) {
+        return
+      }
+
+      try {
+        const res =
+          await fetch(
+            `/api/members/${encodeURIComponent(id)}`,
+            {
+              method: "GET",
+              credentials:
+                "include",
+              cache: "no-store",
+            }
+          )
+
+        const result =
+          await res.json().catch(
+            () => null
+          )
+
+        if (!res.ok) {
+          console.error(
+            "Get applicants error:",
+            res.status,
+            result
+          )
+
+          throw new Error(
+            result?.message ||
+              result?.error ||
+              `โหลดรายชื่อผู้สมัครไม่สำเร็จ (${res.status})`
+          )
+        }
+
+        const data =
+          result?.data ?? result
+
+        if (Array.isArray(data)) {
+          setApplicants(data)
+        } else {
+          setApplicants([])
+        }
+      } catch (error) {
+        console.error(
+          "Fetch applicants error:",
+          error
+        )
+
+        setApplicants([])
+      }
+    }
+
+  // ──────────────────────────────────────────────
+  // Fetch Post
+  // ──────────────────────────────────────────────
+
   useEffect(() => {
     fetchData()
   }, [id])
 
   // ──────────────────────────────────────────────
-  // After apply
+  // Fetch Applicants
+  // ──────────────────────────────────────────────
+
+  useEffect(() => {
+    if (
+      isOwner &&
+      id
+    ) {
+      fetchApplicants()
+    }
+  }, [
+    isOwner,
+    id,
+  ])
+
+  // ──────────────────────────────────────────────
+  // After Apply
   // ──────────────────────────────────────────────
 
   const handleApplied =
@@ -1305,7 +1376,7 @@ export default function PostDetailPage() {
     }
 
   // ──────────────────────────────────────────────
-  // After edit
+  // After Edit
   // ──────────────────────────────────────────────
 
   const handlePostSaved =
@@ -1318,14 +1389,7 @@ export default function PostDetailPage() {
     }
 
   // ──────────────────────────────────────────────
-  // Position status
-  //
-  // Rule:
-  // 1. posts_status ต้องเปิด
-  // 2. deadline ต้องยังไม่หมด
-  //
-  // Deadline ของวันที่เลือกจะหมดตอน
-  // 23:59:59 ของวันนั้น
+  // Position Status
   // ──────────────────────────────────────────────
 
   const isPositionOpen =
@@ -1379,9 +1443,7 @@ export default function PostDetailPage() {
 
           <button
             onClick={() =>
-              router.push(
-                "/resume"
-              )
+              router.push("/resume")
             }
             className="mt-6 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
@@ -1408,9 +1470,7 @@ export default function PostDetailPage() {
       <div className="mx-auto max-w-7xl px-6 py-8">
         <button
           onClick={() =>
-            router.push(
-              "/resume"
-            )
+            router.push("/resume")
           }
           className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
@@ -1420,7 +1480,9 @@ export default function PostDetailPage() {
         </button>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-          {/* Left panel */}
+          {/* ──────────────────────────────────────
+              Left Panel
+          ────────────────────────────────────── */}
 
           <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="flex flex-col items-center gap-3">
@@ -1456,8 +1518,7 @@ export default function PostDetailPage() {
             <div className="h-px bg-border" />
 
             <div className="flex flex-col gap-3">
-              {/* Company */}
-
+              {/* บริษัท */}
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   บริษัท
@@ -1468,8 +1529,7 @@ export default function PostDetailPage() {
                 </p>
               </div>
 
-              {/* Position */}
-
+              {/* ตำแหน่ง */}
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   ตำแหน่ง
@@ -1480,8 +1540,7 @@ export default function PostDetailPage() {
                 </p>
               </div>
 
-              {/* Faculty */}
-
+              {/* คณะ / หน่วยงาน */}
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   คณะ / หน่วยงาน
@@ -1492,20 +1551,7 @@ export default function PostDetailPage() {
                 </p>
               </div>
 
-              {/* Description */}
-
-              <div>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  รายละเอียด
-                </p>
-
-                <p className="mt-0.5 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-                  {post.description}
-                </p>
-              </div>
-
-              {/* Deadline */}
-
+              {/* วันปิดรับสมัคร */}
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   วันปิดรับสมัคร
@@ -1521,7 +1567,8 @@ export default function PostDetailPage() {
                           day: "numeric",
                           month:
                             "long",
-                          year: "numeric",
+                          year:
+                            "numeric",
                         }
                       )
                     : "-"}
@@ -1532,14 +1579,11 @@ export default function PostDetailPage() {
             <div className="h-px bg-border" />
 
             {/* Actions */}
-
             <div className="flex flex-col gap-2">
               {!isHR && (
                 <button
                   onClick={() =>
-                    setApplyOpen(
-                      true
-                    )
+                    setApplyOpen(true)
                   }
                   disabled={
                     !isPositionOpen
@@ -1561,9 +1605,7 @@ export default function PostDetailPage() {
               {isOwner && (
                 <button
                   onClick={() =>
-                    setEditOpen(
-                      true
-                    )
+                    setEditOpen(true)
                   }
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
                 >
@@ -1575,9 +1617,11 @@ export default function PostDetailPage() {
             </div>
           </div>
 
-          {/* Right panel */}
+          {/* ──────────────────────────────────────
+              Right Panel
+          ────────────────────────────────────── */}
 
-          {isHR ? (
+          {isOwner ? (
             <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -1595,8 +1639,7 @@ export default function PostDetailPage() {
 
               <div className="h-px bg-border" />
 
-              {applicants.length ===
-              0 ? (
+              {applicants.length === 0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
                   <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
                     <Users className="h-6 w-6 text-muted-foreground" />
@@ -1612,17 +1655,17 @@ export default function PostDetailPage() {
                   </p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-2 overflow-y-auto">
+                <div className="flex max-h-[650px] flex-col gap-2 overflow-y-auto">
                   {applicants.map(
                     (
                       applicant,
-                      i
+                      index
                     ) => (
                       <ApplicantRow
-                        key={
-                          applicant.id
+                        key={`${applicant.user_id}-${index}`}
+                        index={
+                          index + 1
                         }
-                        index={i + 1}
                         applicant={
                           applicant
                         }
@@ -1633,6 +1676,9 @@ export default function PostDetailPage() {
               )}
             </div>
           ) : (
+            // ────────────────────────────────────
+            // ไม่ใช่เจ้าของโพสต์
+            // ────────────────────────────────────
             <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
               <h2 className="text-base font-semibold text-foreground">
                 ข้อมูลเพิ่มเติม
@@ -1641,6 +1687,9 @@ export default function PostDetailPage() {
               <div className="h-px bg-border" />
 
               <div className="flex flex-col gap-4">
+                {/* ──────────────────────────────
+                    วิธีการสมัคร
+                ────────────────────────────── */}
                 <div className="rounded-xl bg-muted/50 p-4">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     วิธีการสมัคร
@@ -1651,67 +1700,37 @@ export default function PostDetailPage() {
                     <span className="font-semibold">
                       &quot;สมัครงานตำแหน่งนี้&quot;
                     </span>{" "}
-                    ด้านซ้ายมือ
-                    กรอกข้อมูลส่วนตัวและแนบ
-                    Resume
-                    ของคุณ
+                    ด้านซ้าย กรอกข้อมูล
+                    และแนบ Resume
                     แล้วกดส่งใบสมัคร
-                    ทีมงานจะติดต่อกลับทางอีเมลที่ระบุไว้
                   </p>
                 </div>
 
+                {/* ──────────────────────────────
+                    รายละเอียด
+                    รองรับข้อความยาว
+                    และขึ้นบรรทัดใหม่อัตโนมัติ
+                ────────────────────────────── */}
                 <div className="rounded-xl bg-muted/50 p-4">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    สถานะการรับสมัคร
+                    รายละเอียด
                   </p>
 
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`h-2 w-2 rounded-full ${
-                        isPositionOpen
-                          ? "bg-green-500"
-                          : "bg-red-500"
-                      }`}
-                    />
-
-                    <p className="text-sm text-foreground">
-                      {isPositionOpen
-                        ? `เปิดรับสมัครถึง ${
-                            deadlineDate
-                              ? deadlineDate.toLocaleDateString(
-                                  "th-TH",
-                                  {
-                                    day: "numeric",
-                                    month:
-                                      "long",
-                                    year: "numeric",
-                                  }
-                                )
-                              : "-"
-                          }`
-                        : "ปิดรับสมัครแล้ว"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-muted/50 p-4">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    บริษัท
-                  </p>
-
-                  <p className="text-sm text-foreground">
-                    {post.company_name}
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
+                    {post.description?.trim() ||
+                      "-"}
                   </p>
                 </div>
 
-                {/* Owner */}
-
+                {/* ──────────────────────────────
+                    ผู้ประกาศ
+                ────────────────────────────── */}
                 <div className="rounded-xl bg-muted/50 p-4">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    ผู้ดูแล
+                    ผู้ประกาศ
                   </p>
 
-                  <p className="text-sm text-foreground">
+                  <p className="break-words text-sm text-foreground">
                     {post.owner_name ||
                       "-"}{" "}
                     {post.owner_lastname ||
@@ -1719,14 +1738,15 @@ export default function PostDetailPage() {
                   </p>
                 </div>
 
-                {/* Owner phone */}
-
+                {/* ──────────────────────────────
+                    เบอร์โทรติดต่อ
+                ────────────────────────────── */}
                 <div className="rounded-xl bg-muted/50 p-4">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     เบอร์โทรติดต่อ
                   </p>
 
-                  <p className="text-sm text-foreground">
+                  <p className="break-words text-sm text-foreground">
                     {post.owner_phone ||
                       "-"}
                   </p>
@@ -1737,15 +1757,15 @@ export default function PostDetailPage() {
         </div>
       </div>
 
-      {/* Apply Dialog */}
+      {/* ─────────────────────────────────────────
+          Apply Dialog
+      ───────────────────────────────────────── */}
 
       {!isHR && (
         <ApplyDialog
           open={applyOpen}
           onClose={() =>
-            setApplyOpen(
-              false
-            )
+            setApplyOpen(false)
           }
           onApplied={
             handleApplied
@@ -1757,16 +1777,16 @@ export default function PostDetailPage() {
         />
       )}
 
-      {/* Edit Dialog */}
+      {/* ─────────────────────────────────────────
+          Edit Dialog
+      ───────────────────────────────────────── */}
 
       {isOwner &&
         editOpen && (
           <EditPostDialog
             open={editOpen}
             onClose={() =>
-              setEditOpen(
-                false
-              )
+              setEditOpen(false)
             }
             onSaved={
               handlePostSaved
@@ -1775,7 +1795,9 @@ export default function PostDetailPage() {
           />
         )}
 
-      {/* Toast */}
+      {/* ─────────────────────────────────────────
+          Toast
+      ───────────────────────────────────────── */}
 
       {toast && (
         <SuccessToast

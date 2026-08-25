@@ -55,8 +55,8 @@ export const EditPostService = async (data, owner_id, post_id, file, role) => {
     }
 }
 
-export const DeletePostService = async (id, post_id) => {
-    const check = await DeletePostModel(id, post_id)
+export const DeletePostService = async (id, post_id, role) => {
+    const check = await DeletePostModel(id, post_id, role)
     if (check.affectedRows === 0) {
         throw new AppError('Post not found', 404)
     }
@@ -66,8 +66,8 @@ export const DeletePostService = async (id, post_id) => {
     }
 }
 
-export const GetMemberService = async (owner_id) => {
-    const data = await GetMemberModel(owner_id)
+export const GetMemberService = async (owner_id, post_id) => {
+    const data = await GetMemberModel(owner_id, post_id)
     
     return {
         message : 'Get my member succeed',
