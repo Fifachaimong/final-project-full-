@@ -798,28 +798,106 @@ function PostDialog({
             </div>
 
             {/* Model Provider */}
-
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-card-foreground">
                 Model Provider{" "}
-                <span className="text-destructive">
-                  *
-                </span>
+                <span className="text-destructive">*</span>
               </label>
 
-              <input
-                type="text"
-                value={modelProvider}
-                onChange={(e) =>
-                  setModelProvider(
-                    e.target.value
-                  )
-                }
-                placeholder="เช่น OpenAI, Google, Anthropic"
-                required
-                disabled={submitting}
-                className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
-              />
+              <div className="relative group">
+                <select
+                  value={modelProvider}
+                  onChange={(e) => setModelProvider(e.target.value)}
+                  required
+                  disabled={submitting}
+                  className="
+                    w-full
+                    appearance-none
+                    rounded-xl
+                    border border-input
+                    bg-background
+                    px-4 py-3
+                    pr-11
+                    text-sm
+                    text-foreground
+
+                    shadow-sm
+                    outline-none
+
+                    transition-all
+                    duration-300
+                    ease-out
+
+                    hover:border-primary/40
+                    hover:shadow-md
+
+                    focus:border-primary
+                    focus:ring-4
+                    focus:ring-primary/10
+                    focus:shadow-lg
+                    focus:shadow-primary/5
+
+                    disabled:cursor-not-allowed
+                    disabled:opacity-50
+                    disabled:hover:border-input
+                    disabled:hover:shadow-sm
+
+                    cursor-pointer
+                  "
+                >
+                  <option value="" disabled>
+                    เลือก Model Provider
+                  </option>
+
+                  <option value="gemini">Gemini</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="claude">Claude</option>
+                </select>
+
+                {/* Smooth Arrow */}
+                <div
+                  className="
+                    pointer-events-none
+                    absolute
+                    right-0
+                    top-1/2
+                    -translate-y-1/2
+                    mr-3
+                    text-muted-foreground
+
+                    transition-all
+                    duration-300
+                    ease-out
+
+                    group-hover:text-primary
+                    group-focus-within:text-primary
+                  "
+                >
+                  <svg
+                    className="
+                      h-4 w-4
+                      transition-transform
+                      duration-300
+                      ease-out
+                      group-focus-within:rotate-180
+                    "
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m6 9 6 6 6-6"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground transition-opacity duration-300">
+                เลือก AI Model Provider ที่ต้องการใช้งาน
+              </p>
             </div>
 
             {/* Deadline */}
@@ -996,6 +1074,7 @@ function DeleteConfirmDialog({
 interface PostCardProps {
   post: Post
   currentUserId: string
+  currentUserRole: string
   onDelete: (id: string) => void
   onEdit: (post: Post) => void
 }
@@ -1003,6 +1082,7 @@ interface PostCardProps {
 function PostCard({
   post,
   currentUserId,
+  currentUserRole,
   onDelete,
   onEdit,
 }: PostCardProps) {
@@ -1025,6 +1105,9 @@ function PostCard({
     String(post.owner_id) ===
       String(currentUserId)
 
+  const isAdmin = currentUserRole === "admin"
+  const canEditThisPost = isCreator || isAdmin
+
   return (
     <Link
       href={`/resume/${post.id}`}
@@ -1032,7 +1115,7 @@ function PostCard({
     >
       {/* Edit / Delete */}
 
-      {isCreator && (
+      {canEditThisPost && (
         <div className="absolute right-2.5 top-2.5 z-10 flex items-center gap-1 opacity-0 transition-all duration-150 group-hover:opacity-100">
           <button
             type="button"
@@ -1570,6 +1653,7 @@ export default function ResumePage() {
                   currentUserId={
                     currentUserId
                   }
+                  currentUserRole={currentUser?.role ?? ""}
                   onDelete={(id) =>
                     setDeleteTarget(
                       id

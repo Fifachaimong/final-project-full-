@@ -121,9 +121,9 @@ export const GetPostByIDModel = async (post_id) => {
     return result[0]
 }
 
-export const GetPostDescription = async (post_id) => {
+export const GetDataPostById = async (post_id) => {
     const [result] = await db.query(`
-        SELECT description FROM posts WHERE id = ?
+        SELECT description, model_provider FROM posts WHERE id = ?
     `,[ post_id ])
 
     return result[0]

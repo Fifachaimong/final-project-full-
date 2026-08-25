@@ -30,7 +30,7 @@ export const CreatePostService = async (id, data, file) => {
     }
 }
 
-export const EditPostService = async (data, owner_id, post_id, file) => {
+export const EditPostService = async (data, owner_id, post_id, file, role) => {
     let icon = null
 
     if (file) {
@@ -44,7 +44,8 @@ export const EditPostService = async (data, owner_id, post_id, file) => {
         icon = upload.publicUrl
     }
 
-    const check = await EditPostModel(data, owner_id, post_id, icon)
+    const check = await EditPostModel(data, owner_id, post_id, icon, role)
+    
     if (check.affectedRows === 0) {
         throw new AppError('Post not found', 404)
     }

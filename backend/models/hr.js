@@ -11,17 +11,24 @@ export const CreatePostModel = async(id, data, icon) => {
     return result
 }
 
-export const EditPostModel = async(data, owner_id, post_id, icon) => {
-    const { company_name, title, faculty, description, model_provider, deadline, posts_status } = data
-
-    const [result] = await db.query(`
+export const EditPostModel = async(data, owner_id, post_id, icon, role) => {
+    let query = `
         UPDATE posts 
         SET company_name = COALESCE(?, company_name), title = COALESCE(?, title), faculty = COALESCE(?, faculty), 
             description = COALESCE(?, description), model_provider = COALESCE(?, model_provider), 
             deadline = COALESCE(?, deadline), icon = COALESCE(?, icon), posts_status = COALESCE(?, posts_status)
-        WHERE id = ? AND owner_id = ?`,
-        [ company_name, title, faculty, description, model_provider, deadline, icon, posts_status, post_id, owner_id ]
-    )
+        WHERE id = ?`
+
+    const { company_name, title, faculty, description, model_provider, deadline, posts_status } = data
+
+    let value = [company_name, title, faculty, description, model_provider, deadline, icon, posts_status, post_id]
+
+    if (role !== 'admin') {
+        query += ' AND owner_id = ?'
+        value.push(owner_id)
+    }
+
+    const [result] = await db.query(query , value )
 
     return result
 }
@@ -34,7 +41,7 @@ export const DeletePostModel = async(id, post_id) => {
 
 export const GetMemberModel = async(owner_id) => {
     const [result] = await db.query(`
-        SELECT p.id AS Post_id , u.id AS user_id, u.firstname AS user_firstname, u.lastname AS user_lastname, r.ai_score
+        SELECT u.id AS user_id, u.firstname AS user_firstname, u.lastname AS user_lastname, r.ai_score, m.status
         FROM posts p 
         JOIN members m ON m.post_id = p.id
         JOIN users u ON m.user_id = u.id
@@ -62,7 +69,7 @@ export const GetProfileByMemberModel = async(member_id, owner_id) => {
 
 export const GetMemberResumeResultModel = async (member_id, owner_id) => {
     const [result] = await db.query(`
-        SELECT r.ai_score, r.ai_analysis
+        SELECT r.ai_score, r.storytelling_score, r.overall_confidence, r.skills, r.ai_reason
         FROM posts p
         JOIN members m ON m.post_id = p.id
         JOIN resume r ON r.member_id = m.id

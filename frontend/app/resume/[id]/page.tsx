@@ -10,6 +10,7 @@ import {
   Upload,
   Pencil,
   Send,
+  FileText,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 
@@ -40,6 +41,7 @@ interface Applicant {
   email: string
   applied_at: string
   resume_url?: string | null
+  transcript_url?: string | null
 }
 
 interface CurrentUser {
@@ -190,16 +192,29 @@ function ApplicantRow({
         })}
       </span>
 
-      {applicant.resume_url && (
-        <a
-          href={applicant.resume_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex-shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          ดู Resume
-        </a>
-      )}
+      <div className="flex flex-shrink-0 items-center gap-2">
+        {applicant.resume_url && (
+          <a
+            href={applicant.resume_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            ดู Resume
+          </a>
+        )}
+
+        {applicant.transcript_url && (
+          <a
+            href={applicant.transcript_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            ดู Transcript
+          </a>
+        )}
+      </div>
     </div>
   )
 }
@@ -216,6 +231,50 @@ interface ApplyDialogProps {
   currentUser: CurrentUser | null
 }
 
+const RESUME_ALLOWED_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]
+
+const RESUME_ALLOWED_EXTENSIONS = [
+  "pdf",
+  "doc",
+  "docx",
+]
+
+function validateDocumentFile(
+  file: File
+): string | null {
+  const extension =
+    file.name
+      .split(".")
+      .pop()
+      ?.toLowerCase()
+
+  const validType =
+    RESUME_ALLOWED_TYPES.includes(
+      file.type
+    ) ||
+    (extension
+      ? RESUME_ALLOWED_EXTENSIONS.includes(
+          extension
+        )
+      : false)
+
+  if (!validType) {
+    return "รองรับเฉพาะไฟล์ PDF, DOC และ DOCX"
+  }
+
+  const maxSize = 10 * 1024 * 1024
+
+  if (file.size > maxSize) {
+    return "ไฟล์ต้องมีขนาดไม่เกิน 10 MB"
+  }
+
+  return null
+}
+
 function ApplyDialog({
   open,
   onClose,
@@ -224,10 +283,10 @@ function ApplyDialog({
   currentUser,
 }: ApplyDialogProps) {
   const [resumeFile, setResumeFile] =
-    useState<string | null>(null)
+    useState<File | null>(null)
 
-  const [resumeFileName, setResumeFileName] =
-    useState("")
+  const [transcriptFile, setTranscriptFile] =
+    useState<File | null>(null)
 
   const [submitting, setSubmitting] =
     useState(false)
@@ -235,16 +294,23 @@ function ApplyDialog({
   const [error, setError] =
     useState("")
 
-  const fileInputRef =
+  const resumeInputRef =
+    useRef<HTMLInputElement>(null)
+
+  const transcriptInputRef =
     useRef<HTMLInputElement>(null)
 
   const reset = () => {
     setResumeFile(null)
-    setResumeFileName("")
+    setTranscriptFile(null)
     setError("")
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ""
+    if (resumeInputRef.current) {
+      resumeInputRef.current.value = ""
+    }
+
+    if (transcriptInputRef.current) {
+      transcriptInputRef.current.value = ""
     }
   }
 
@@ -255,81 +321,44 @@ function ApplyDialog({
     onClose()
   }
 
-  const handleFile = (
+  const handleResumeFile = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0]
 
     if (!file) return
 
-    const allowedTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ]
+    const validationError =
+      validateDocumentFile(file)
 
-    const extension =
-      file.name
-        .split(".")
-        .pop()
-        ?.toLowerCase()
-
-    const allowedExtensions = [
-      "pdf",
-      "doc",
-      "docx",
-    ]
-
-    const validType =
-      allowedTypes.includes(file.type) ||
-      (extension
-        ? allowedExtensions.includes(extension)
-        : false)
-
-    if (!validType) {
-      setError(
-        "รองรับเฉพาะไฟล์ PDF, DOC และ DOCX"
-      )
-
-      e.target.value = ""
-      return
-    }
-
-    const maxSize =
-      10 * 1024 * 1024
-
-    if (file.size > maxSize) {
-      setError(
-        "ไฟล์ Resume ต้องมีขนาดไม่เกิน 10 MB"
-      )
-
+    if (validationError) {
+      setError(validationError)
       e.target.value = ""
       return
     }
 
     setError("")
-    setResumeFileName(file.name)
+    setResumeFile(file)
+  }
 
-    const reader = new FileReader()
+  const handleTranscriptFile = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0]
 
-    reader.onload = (ev) => {
-      const result = ev.target?.result
+    if (!file) return
 
-      if (typeof result === "string") {
-        setResumeFile(result)
-      }
+    const validationError =
+      validateDocumentFile(file)
+
+    if (validationError) {
+      setError(validationError)
+      e.target.value = ""
+      return
     }
 
-    reader.onerror = () => {
-      setError(
-        "ไม่สามารถอ่านไฟล์ได้ กรุณาลองใหม่"
-      )
-
-      setResumeFile(null)
-      setResumeFileName("")
-    }
-
-    reader.readAsDataURL(file)
+    setError("")
+    setTranscriptFile(file)
   }
 
   const handleSubmit = async (
@@ -353,20 +382,29 @@ function ApplyDialog({
     setError("")
 
     try {
+      const formData = new FormData()
+
+      formData.append("name", currentUser.name)
+      formData.append(
+        "lastname",
+        currentUser.lastname
+      )
+      formData.append("email", currentUser.email)
+      formData.append("resume", resumeFile)
+
+      if (transcriptFile) {
+        formData.append(
+          "transcript",
+          transcriptFile
+        )
+      }
+
       const res = await fetch(
-        `/api/posts/${encodeURIComponent(postId)}`,
+        `/api/apply/${encodeURIComponent(postId)}`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
           credentials: "include",
-          body: JSON.stringify({
-            name: currentUser.name,
-            lastname: currentUser.lastname,
-            email: currentUser.email,
-            resume_url: resumeFile,
-          }),
+          body: formData,
         }
       )
 
@@ -375,8 +413,8 @@ function ApplyDialog({
 
       if (res.status === 409) {
         setError(
-          data?.error ??
-            data?.message ??
+          data?.message ??
+            data?.error ??
             "คุณได้สมัครตำแหน่งนี้ไปแล้ว"
         )
         return
@@ -384,8 +422,8 @@ function ApplyDialog({
 
       if (res.status === 400) {
         setError(
-          data?.error ??
-            data?.message ??
+          data?.message ??
+            data?.error ??
             "ไม่สามารถสมัครได้"
         )
         return
@@ -400,8 +438,8 @@ function ApplyDialog({
 
       if (!res.ok) {
         throw new Error(
-          data?.error ??
-            data?.message ??
+          data?.message ??
+            data?.error ??
             "Failed"
         )
       }
@@ -477,7 +515,7 @@ function ApplyDialog({
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-card-foreground">
-              Resume / CV{" "}
+              Resume{" "}
               <span className="text-destructive">
                 *
               </span>
@@ -486,24 +524,56 @@ function ApplyDialog({
             <button
               type="button"
               onClick={() =>
-                fileInputRef.current?.click()
+                resumeInputRef.current?.click()
               }
               className="flex items-center gap-3 rounded-lg border border-dashed border-input bg-background px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:bg-accent hover:text-foreground"
             >
               <Upload className="h-4 w-4 flex-shrink-0" />
 
               <span className="truncate">
-                {resumeFileName ||
+                {resumeFile?.name ||
                   "เลือกไฟล์ PDF, DOC, DOCX"}
               </span>
             </button>
 
             <input
-              ref={fileInputRef}
+              ref={resumeInputRef}
               type="file"
               accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               className="hidden"
-              onChange={handleFile}
+              onChange={handleResumeFile}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-card-foreground">
+              Transcript{" "}
+              <span className="text-xs font-normal text-muted-foreground">
+                (ถ้ามี)
+              </span>
+            </label>
+
+            <button
+              type="button"
+              onClick={() =>
+                transcriptInputRef.current?.click()
+              }
+              className="flex items-center gap-3 rounded-lg border border-dashed border-input bg-background px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:bg-accent hover:text-foreground"
+            >
+              <FileText className="h-4 w-4 flex-shrink-0" />
+
+              <span className="truncate">
+                {transcriptFile?.name ||
+                  "เลือกไฟล์ PDF, DOC, DOCX"}
+              </span>
+            </button>
+
+            <input
+              ref={transcriptInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="hidden"
+              onChange={handleTranscriptFile}
             />
           </div>
 
@@ -580,6 +650,9 @@ function EditPostDialog({
       Boolean(post.posts_status)
     )
 
+  const [logoFile, setLogoFile] =
+    useState<File | null>(null)
+
   const [logoPreview, setLogoPreview] =
     useState<string | null>(
       post.icon ?? null
@@ -606,6 +679,7 @@ function EditPostDialog({
         post.posts_status
       )
     )
+    setLogoFile(null)
     setLogoPreview(post.icon ?? null)
     setError("")
 
@@ -643,24 +717,8 @@ function EditPostDialog({
     }
 
     setError("")
-
-    const reader = new FileReader()
-
-    reader.onload = (ev) => {
-      const result = ev.target?.result
-
-      if (typeof result === "string") {
-        setLogoPreview(result)
-      }
-    }
-
-    reader.onerror = () => {
-      setError(
-        "ไม่สามารถอ่านรูปภาพได้"
-      )
-    }
-
-    reader.readAsDataURL(file)
+    setLogoFile(file)
+    setLogoPreview(URL.createObjectURL(file))
   }
 
   const handleSubmit = async (
@@ -684,25 +742,30 @@ function EditPostDialog({
     setError("")
 
     try {
+      const formData = new FormData()
+
+      formData.append("title", title.trim())
+      formData.append("faculty", faculty.trim())
+      formData.append(
+        "description",
+        description.trim()
+      )
+      formData.append("deadline", deadline)
+      formData.append(
+        "posts_status",
+        isOpen ? "1" : "0"
+      )
+
+      if (logoFile) {
+        formData.append("icon", logoFile)
+      }
+
       const res = await fetch(
-        "/api/posts",
+        `/api/posts/${encodeURIComponent(post.id)}`,
         {
-          method: "PATCH",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+          method: "PUT",
           credentials: "include",
-          body: JSON.stringify({
-            id: post.id,
-            title: title.trim(),
-            faculty: faculty.trim(),
-            description:
-              description.trim(),
-            deadline,
-            icon: logoPreview,
-            posts_status: isOpen ? 1 : 0,
-          }),
+          body: formData,
         }
       )
 
@@ -1066,14 +1129,27 @@ export default function PostDetailPage() {
             return
           }
 
-          const data =
+          const result =
             await res.json()
+
+          const raw =
+            result?.data ?? result
 
           if (
             !cancelled &&
-            data?.id
+            raw?.id
           ) {
-            setCurrentUser(data)
+            setCurrentUser({
+              id: String(raw.id),
+              role: raw.role ?? "",
+              name:
+                raw.name ??
+                raw.firstname ??
+                "",
+              lastname:
+                raw.lastname ?? "",
+              email: raw.email ?? "",
+            })
           }
         } catch {
           // User may simply not be logged in.

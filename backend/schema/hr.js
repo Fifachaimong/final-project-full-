@@ -29,6 +29,10 @@ const createPostSchema = {
                 message : 'กำหนดการต้องอยู่ในรูปแบบ YYYY-MM-DD'
             }
         ]
+    },
+    posts_status : {
+        type : ['open', 'closed'],
+        required : false
     }
 }
 

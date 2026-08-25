@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs"
-import { CreateMember, CreateResume, CreateUser, EditMyProfileModel, GetMemberByUserAndPost, GetMyApplicationResultModel, GetMyProfileModel, GetPostByIDModel, GetPostDescription, GetPostModel, GetUserByEmail } from "../models/auth.js"
+import { CreateMember, CreateResume, CreateUser, EditMyProfileModel, GetMemberByUserAndPost, GetMyApplicationResultModel, GetMyProfileModel, GetPostByIDModel, GetDataPostById, GetPostModel, GetUserByEmail } from "../models/auth.js"
 import AppError from '../utils/AppError.js'
 import jwt from 'jsonwebtoken'
 import { UploadToSupabase } from "../utils/UploadToSupabase.js";
@@ -45,7 +45,7 @@ export const LoginService = async (data) => {
             role : user.role
         },
         process.env.JWT_TOKEN,
-        { expiresIn : '15m' }
+        { expiresIn : '1h' }
     )
 
     return {
@@ -107,7 +107,7 @@ export const ApplyResumeService = async (
         throw new AppError("You already applied", 409);
     }
 
-        const post = await GetPostDescription(postId)
+        const post = await GetDataPostById(postId)
 
     if (!post) {
         throw new AppError("Post not found", 404)
@@ -147,8 +147,7 @@ export const ApplyResumeService = async (
         {
             resume_url : resumeUpload.publicUrl,
             job_text : post.description,
-            model_provider: 'openai',
-            model_name : 'gpt-5.6-luna',
+            model_provider: post.model_provider,
         }
     );
 
