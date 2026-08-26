@@ -77,7 +77,7 @@ export const GetProfileByMemberModel = async(member_id, owner_id) => {
 
 export const GetMemberResumeResultModel = async (member_id, owner_id) => {
     const [result] = await db.query(`
-        SELECT r.ai_score, r.storytelling_score, r.overall_confidence, r.skills, r.ai_reason
+        SELECT r.resume_url, r.transcript_url, r.ai_score, r.storytelling_score, r.overall_confidence, r.skills, r.ai_reason
         FROM posts p
         JOIN members m ON m.post_id = p.id
         JOIN resume r ON r.member_id = m.id

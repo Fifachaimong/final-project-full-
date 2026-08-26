@@ -31,9 +31,9 @@ export async function GET(
       headerList.get("cookie") ?? ""
 
     const response = await fetch(
-      `http://localhost:5000/hr/members/${encodeURIComponent(
+      `http://localhost:5000/hr/posts/${encodeURIComponent(
         post_id
-      )}`,
+      )}/members`,
       {
         method: "GET",
         headers: {
