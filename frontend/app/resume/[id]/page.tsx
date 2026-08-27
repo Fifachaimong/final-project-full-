@@ -137,10 +137,10 @@ function ApplicantRow({
   }`
 
   return (
-    <Link
-      href={`/member/${applicant.user_id}`}
-      className="flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40 hover:border-primary/30 cursor-pointer"
-    >
+      <Link
+        href={`/member/${postId}/${applicant.user_id}`}
+        className="flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40 hover:border-primary/30 cursor-pointer"
+      >
       <span className="w-6 flex-shrink-0 text-center text-sm font-medium text-muted-foreground">
         {index}
       </span>

@@ -9,7 +9,7 @@ const route = express.Router()
 
 route.get('/posts/:post_id/members', authMiddleware, GetMember)
 route.get('/members/profile/:id', authMiddleware, GetProfileByMember)
-route.get('posts/:post_id/members/:id', authMiddleware, GetMemberResumeResult)
+route.get('/posts/:post_id/members/:id', authMiddleware, GetMemberResumeResult)
 route.post('/posts', authMiddleware, upload.single('logo'), ValidateBody(createPostSchema), CreatePost)
 route.put('/posts/:id', authMiddleware,upload.single('logo'), ValidateBody(editPostSchema), EditPost)
 route.put('/posts/:post_id/members/:id', authMiddleware, ValidateBody(updateCandidateStatusSchema), UpdateCandidateStatus)
