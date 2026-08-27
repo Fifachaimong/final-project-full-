@@ -86,7 +86,7 @@ export async function GET(request, { params }) {
     )
   } catch (error) {
     console.error(
-      "GET api/members/[id] error:",
+      "GET api/member/[id] error:",
       error
     )
 
