@@ -75,26 +75,26 @@ export const GetProfileByMemberModel = async(member_id, owner_id) => {
     return result[0]
 }
 
-export const GetMemberResumeResultModel = async (member_id, owner_id) => {
+export const GetMemberResumeResultModel = async (member_id, owner_id, post_id) => {
     const [result] = await db.query(`
         SELECT r.resume_url, r.transcript_url, r.ai_score, r.storytelling_score, r.overall_confidence, r.skills, r.ai_reason
         FROM posts p
         JOIN members m ON m.post_id = p.id
         JOIN resume r ON r.member_id = m.id
-        WHERE m.user_id = ? AND p.owner_id = ?
-        `,[member_id, owner_id]
+        WHERE m.user_id = ? AND p.owner_id = ? AND p.id = ?
+        `,[member_id, owner_id, post_id]
     )
 
     return result[0]
 }
 
-export const UpdateCandidateStatusModel = async (member_status, member_id, owner_id) => {
+export const UpdateCandidateStatusModel = async (member_status, member_id, owner_id, post_id) => {
     const [result] = await db.query(`
         UPDATE members m
         JOIN posts p ON p.id = m.post_id
         SET m.status = COALESCE(?, m.status)
-        WHERE m.user_id = ? AND p.owner_id = ?
-    `,[member_status, member_id, owner_id])
+        WHERE m.user_id = ? AND p.owner_id = ? AND p.post_id = ?
+    `,[member_status, member_id, owner_id, post_id])
 
     return result
 }

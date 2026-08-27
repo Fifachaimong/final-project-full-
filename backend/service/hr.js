@@ -87,8 +87,8 @@ export const GetProfileByMemberService = async (member_id, owner_id) => {
     }
 }
 
-export const GetMemberResumeResultService = async (member_id, owner_id) => {
-    const data = await GetMemberResumeResultModel(member_id, owner_id)
+export const GetMemberResumeResultService = async (member_id, owner_id, post_id) => {
+    const data = await GetMemberResumeResultModel(member_id, owner_id, post_id)
     
     if (!data) {
         throw new AppError('Member not found', 404)
@@ -100,8 +100,8 @@ export const GetMemberResumeResultService = async (member_id, owner_id) => {
     }
 }
 
-export const UpdateCandidateStatusService = async (member_status, member_id, owner_id) => {
-    const data = await UpdateCandidateStatusModel(member_status, member_id, owner_id)
+export const UpdateCandidateStatusService = async (member_status, member_id, owner_id, post_id) => {
+    const data = await UpdateCandidateStatusModel(member_status, member_id, owner_id, post_id)
 
     if (data.affectedRows === 0) {
         throw new AppError('Member not found', 404)

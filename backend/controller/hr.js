@@ -29,11 +29,11 @@ export const GetProfileByMember = asyncHandler(async (req, res) => {
 })
  
 export const GetMemberResumeResult = asyncHandler(async (req, res) => {
-    const result = await GetMemberResumeResultService(req.params.id, req.user.id)
+    const result = await GetMemberResumeResultService(req.params.id, req.user.id, req.params.post_id)
     res.status(200).json(result)
 })
 
 export const UpdateCandidateStatus = asyncHandler(async (req, res) => {
-    const result = await UpdateCandidateStatusService(req.body.status, req.params.id, req.user.id)
+    const result = await UpdateCandidateStatusService(req.body.status, req.params.id, req.user.id, req.params.post_id)
     res.status(200).json(result)
 })
