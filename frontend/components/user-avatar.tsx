@@ -159,7 +159,7 @@ export function UserAvatar({
             </Link>
 
             <Link
-              href="#"
+              href="/resumehistory"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted"
             >
