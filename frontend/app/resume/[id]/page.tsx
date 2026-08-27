@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
+import Link from "next/link"
 import {
   ChevronLeft,
   Users,
@@ -12,10 +13,6 @@ import {
   Send,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
-
-// ──────────────────────────────────────────────
-// Types
-// ──────────────────────────────────────────────
 
 interface Applicant {
   user_id: string
@@ -48,10 +45,6 @@ interface CurrentUser {
   lastname: string
   email: string
 }
-
-// ──────────────────────────────────────────────
-// Helpers
-// ──────────────────────────────────────────────
 
 function normalizeBoolean(value: unknown): boolean {
   if (typeof value === "boolean") {
@@ -112,10 +105,6 @@ function isDeadlinePassed(deadline: string): boolean {
   return new Date() > deadlineDate
 }
 
-// ──────────────────────────────────────────────
-// Status Badge
-// ──────────────────────────────────────────────
-
 function StatusBadge({
   isOpen,
 }: {
@@ -134,23 +123,24 @@ function StatusBadge({
   )
 }
 
-// ──────────────────────────────────────────────
-// Applicant Row
-// ──────────────────────────────────────────────
-
 function ApplicantRow({
   index,
   applicant,
+  postId,
 }: {
   index: number
   applicant: Applicant
+  postId: string
 }) {
   const initials = `${applicant.user_firstname?.charAt(0) ?? ""}${
     applicant.user_lastname?.charAt(0) ?? ""
   }`
 
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40">
+    <Link
+      href={`/member/${applicant.user_id}`}
+      className="flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40 hover:border-primary/30 cursor-pointer"
+    >
       <span className="w-6 flex-shrink-0 text-center text-sm font-medium text-muted-foreground">
         {index}
       </span>
@@ -182,13 +172,9 @@ function ApplicantRow({
       <span className="flex-shrink-0 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
         {applicant.status ?? "-"}
       </span>
-    </div>
+    </Link>
   )
 }
-
-// ──────────────────────────────────────────────
-// Apply Dialog
-// ──────────────────────────────────────────────
 
 interface ApplyDialogProps {
   open: boolean
@@ -584,10 +570,6 @@ function ApplyDialog({
     </div>
   )
 }
-
-// ──────────────────────────────────────────────
-// Edit Post Dialog
-// ──────────────────────────────────────────────
 
 interface EditDialogProps {
   open: boolean
@@ -1011,10 +993,6 @@ function EditPostDialog({
   )
 }
 
-// ──────────────────────────────────────────────
-// Success Toast
-// ──────────────────────────────────────────────
-
 function SuccessToast({
   message,
   onDone,
@@ -1044,10 +1022,6 @@ function SuccessToast({
     </div>
   )
 }
-
-// ──────────────────────────────────────────────
-// Page
-// ──────────────────────────────────────────────
 
 export default function PostDetailPage() {
   const { id } =
@@ -1079,10 +1053,6 @@ export default function PostDetailPage() {
   const [toast, setToast] =
     useState("")
 
-  // ──────────────────────────────────────────────
-  // User Roles
-  // ──────────────────────────────────────────────
-
   const normalizedRole =
     currentUser?.role
       ?.trim()
@@ -1098,10 +1068,6 @@ export default function PostDetailPage() {
     currentUser?.id != null &&
     String(post.owner_id) ===
       String(currentUser.id)
-
-  // ──────────────────────────────────────────────
-  // Get Current User
-  // ──────────────────────────────────────────────
 
   useEffect(() => {
     let cancelled = false
@@ -1148,9 +1114,7 @@ export default function PostDetailPage() {
                 raw.email ?? "",
             })
           }
-        } catch {
-          // Not logged in
-        }
+        } catch {}
       }
 
     loadCurrentUser()
@@ -1159,10 +1123,6 @@ export default function PostDetailPage() {
       cancelled = true
     }
   }, [])
-
-  // ──────────────────────────────────────────────
-  // Get Post
-  // ──────────────────────────────────────────────
 
   const fetchData =
     async () => {
@@ -1279,10 +1239,6 @@ export default function PostDetailPage() {
       }
     }
 
-  // ──────────────────────────────────────────────
-  // Get Applicants
-  // ──────────────────────────────────────────────
-
   const fetchApplicants =
     async () => {
       if (!id) {
@@ -1338,17 +1294,9 @@ export default function PostDetailPage() {
       }
     }
 
-  // ──────────────────────────────────────────────
-  // Fetch Post
-  // ──────────────────────────────────────────────
-
   useEffect(() => {
     fetchData()
   }, [id])
-
-  // ──────────────────────────────────────────────
-  // Fetch Applicants
-  // ──────────────────────────────────────────────
 
   useEffect(() => {
     if (
@@ -1362,10 +1310,6 @@ export default function PostDetailPage() {
     id,
   ])
 
-  // ──────────────────────────────────────────────
-  // After Apply
-  // ──────────────────────────────────────────────
-
   const handleApplied =
     () => {
       setToast(
@@ -1374,10 +1318,6 @@ export default function PostDetailPage() {
 
       fetchData()
     }
-
-  // ──────────────────────────────────────────────
-  // After Edit
-  // ──────────────────────────────────────────────
 
   const handlePostSaved =
     () => {
@@ -1388,10 +1328,6 @@ export default function PostDetailPage() {
       fetchData()
     }
 
-  // ──────────────────────────────────────────────
-  // Position Status
-  // ──────────────────────────────────────────────
-
   const isPositionOpen =
     post
       ? post.posts_status ===
@@ -1400,10 +1336,6 @@ export default function PostDetailPage() {
           post.deadline
         )
       : false
-
-  // ──────────────────────────────────────────────
-  // Loading
-  // ──────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -1422,10 +1354,6 @@ export default function PostDetailPage() {
       </main>
     )
   }
-
-  // ──────────────────────────────────────────────
-  // Error
-  // ──────────────────────────────────────────────
 
   if (error || !post) {
     return (
@@ -1459,10 +1387,6 @@ export default function PostDetailPage() {
       post.deadline
     )
 
-  // ──────────────────────────────────────────────
-  // Main UI
-  // ──────────────────────────────────────────────
-
   return (
     <main className="min-h-screen bg-background">
       <Navbar />
@@ -1480,10 +1404,6 @@ export default function PostDetailPage() {
         </button>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-          {/* ──────────────────────────────────────
-              Left Panel
-          ────────────────────────────────────── */}
-
           <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
             <div className="flex flex-col items-center gap-3">
               <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted">
@@ -1518,7 +1438,6 @@ export default function PostDetailPage() {
             <div className="h-px bg-border" />
 
             <div className="flex flex-col gap-3">
-              {/* บริษัท */}
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   บริษัท
@@ -1529,7 +1448,6 @@ export default function PostDetailPage() {
                 </p>
               </div>
 
-              {/* ตำแหน่ง */}
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   ตำแหน่ง
@@ -1540,7 +1458,6 @@ export default function PostDetailPage() {
                 </p>
               </div>
 
-              {/* คณะ / หน่วยงาน */}
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   คณะ / หน่วยงาน
@@ -1551,7 +1468,6 @@ export default function PostDetailPage() {
                 </p>
               </div>
 
-              {/* วันปิดรับสมัคร */}
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   วันปิดรับสมัคร
@@ -1578,7 +1494,6 @@ export default function PostDetailPage() {
 
             <div className="h-px bg-border" />
 
-            {/* Actions */}
             <div className="flex flex-col gap-2">
               {!isHR && (
                 <button
@@ -1616,10 +1531,6 @@ export default function PostDetailPage() {
               )}
             </div>
           </div>
-
-          {/* ──────────────────────────────────────
-              Right Panel
-          ────────────────────────────────────── */}
 
           {isOwner ? (
             <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
@@ -1669,6 +1580,7 @@ export default function PostDetailPage() {
                         applicant={
                           applicant
                         }
+                        postId={post.id}
                       />
                     )
                   )}
@@ -1676,9 +1588,6 @@ export default function PostDetailPage() {
               )}
             </div>
           ) : (
-            // ────────────────────────────────────
-            // ไม่ใช่เจ้าของโพสต์
-            // ────────────────────────────────────
             <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm">
               <h2 className="text-base font-semibold text-foreground">
                 ข้อมูลเพิ่มเติม
@@ -1687,9 +1596,6 @@ export default function PostDetailPage() {
               <div className="h-px bg-border" />
 
               <div className="flex flex-col gap-4">
-                {/* ──────────────────────────────
-                    วิธีการสมัคร
-                ────────────────────────────── */}
                 <div className="rounded-xl bg-muted/50 p-4">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     วิธีการสมัคร
@@ -1706,11 +1612,6 @@ export default function PostDetailPage() {
                   </p>
                 </div>
 
-                {/* ──────────────────────────────
-                    รายละเอียด
-                    รองรับข้อความยาว
-                    และขึ้นบรรทัดใหม่อัตโนมัติ
-                ────────────────────────────── */}
                 <div className="rounded-xl bg-muted/50 p-4">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     รายละเอียด
@@ -1722,9 +1623,6 @@ export default function PostDetailPage() {
                   </p>
                 </div>
 
-                {/* ──────────────────────────────
-                    ผู้ประกาศ
-                ────────────────────────────── */}
                 <div className="rounded-xl bg-muted/50 p-4">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     ผู้ประกาศ
@@ -1738,9 +1636,6 @@ export default function PostDetailPage() {
                   </p>
                 </div>
 
-                {/* ──────────────────────────────
-                    เบอร์โทรติดต่อ
-                ────────────────────────────── */}
                 <div className="rounded-xl bg-muted/50 p-4">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     เบอร์โทรติดต่อ
@@ -1756,10 +1651,6 @@ export default function PostDetailPage() {
           )}
         </div>
       </div>
-
-      {/* ─────────────────────────────────────────
-          Apply Dialog
-      ───────────────────────────────────────── */}
 
       {!isHR && (
         <ApplyDialog
@@ -1777,10 +1668,6 @@ export default function PostDetailPage() {
         />
       )}
 
-      {/* ─────────────────────────────────────────
-          Edit Dialog
-      ───────────────────────────────────────── */}
-
       {isOwner &&
         editOpen && (
           <EditPostDialog
@@ -1794,10 +1681,6 @@ export default function PostDetailPage() {
             post={post}
           />
         )}
-
-      {/* ─────────────────────────────────────────
-          Toast
-      ───────────────────────────────────────── */}
 
       {toast && (
         <SuccessToast

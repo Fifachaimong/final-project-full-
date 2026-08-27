@@ -1,20 +1,16 @@
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 
-export async function GET(
-  request: Request,
-  {
-    params,
-  }: {
-    params: Promise<{
-      post_id: string
-    }>
-  }
-) {
+export async function GET(request, { params }) {
   try {
-    const { post_id } = await params
+    const { id } = await params
 
-    if (!post_id) {
+    console.log(
+      "[GET /api/members/[id]] post_id:",
+      id
+    )
+
+    if (!id) {
       return NextResponse.json(
         {
           message: "Post ID is required",
@@ -30,10 +26,16 @@ export async function GET(
     const cookie =
       headerList.get("cookie") ?? ""
 
+    const backendUrl =
+      `http://localhost:5000/hr/members/${encodeURIComponent(id)}`
+
+    console.log(
+      "[GET /api/members/[id]] Backend:",
+      backendUrl
+    )
+
     const response = await fetch(
-      `http://localhost:5000/hr/posts/${encodeURIComponent(
-        post_id
-      )}/members`,
+      backendUrl,
       {
         method: "GET",
         headers: {
@@ -53,8 +55,13 @@ export async function GET(
         ? JSON.parse(text)
         : null
     } catch {
-      data = null
+      data = text || null
     }
+
+    console.log(
+      "[GET /api/members/[id]] Backend status:",
+      response.status
+    )
 
     if (!response.ok) {
       return NextResponse.json(
@@ -63,6 +70,7 @@ export async function GET(
             data?.message ||
             data?.error ||
             `Backend error (${response.status})`,
+          data,
         },
         {
           status: response.status,
@@ -70,10 +78,15 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(data)
+    return NextResponse.json(
+      data,
+      {
+        status: 200,
+      }
+    )
   } catch (error) {
     console.error(
-      "GET api/hr/members/[post_id] error:",
+      "GET api/members/[id] error:",
       error
     )
 
@@ -81,6 +94,10 @@ export async function GET(
       {
         message:
           "Cannot connect to backend",
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error),
       },
       {
         status: 500,
