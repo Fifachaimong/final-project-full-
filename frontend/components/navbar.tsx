@@ -84,14 +84,14 @@ export function Navbar() {
         <nav className="hidden items-center gap-8 md:flex">
 
           <Link
-            href="#"
+            href={homeLink}
             className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-coral"
           >
-            Features
+            Home
 
-            <span className="rounded bg-coral px-1.5 py-0.5 text-[10px] font-semibold text-white">
+            {/* <span className="rounded bg-coral px-1.5 py-0.5 text-[10px] font-semibold text-white">
               NEW
-            </span>
+            </span> */}
           </Link>
 
           {/* Resume */}

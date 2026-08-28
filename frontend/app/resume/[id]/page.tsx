@@ -34,7 +34,7 @@ interface Post {
   description: string
   deadline: string
   icon?: string | null
-  posts_status: boolean
+  posts_status: string
   applicants?: Applicant[]
 }
 
@@ -46,27 +46,27 @@ interface CurrentUser {
   email: string
 }
 
-function normalizeBoolean(value: unknown): boolean {
+function normalizeStatus(value: unknown): "open" | "closed" {
   if (typeof value === "boolean") {
-    return value
+    return value ? "open" : "closed"
   }
 
   if (typeof value === "number") {
-    return value === 1
+    return value === 1 ? "open" : "closed"
   }
 
   if (typeof value === "string") {
     const normalized = value.trim().toLowerCase()
 
-    return (
-      normalized === "1" ||
+    return normalized === "1" ||
       normalized === "true" ||
       normalized === "yes" ||
       normalized === "open"
-    )
+      ? "open"
+      : "closed"
   }
 
-  return false
+  return "closed"
 }
 
 function getDeadlineDate(deadline: string): Date | null {
@@ -598,13 +598,6 @@ function EditPostDialog({
       post.deadline?.slice(0, 10) ?? ""
     )
 
-  const [isOpen, setIsOpen] =
-    useState(
-      normalizeBoolean(
-        post.posts_status
-      )
-    )
-
   const [logoFile, setLogoFile] =
     useState<File | null>(null)
 
@@ -629,12 +622,6 @@ function EditPostDialog({
 
     setDeadline(
       post.deadline?.slice(0, 10) ?? ""
-    )
-
-    setIsOpen(
-      normalizeBoolean(
-        post.posts_status
-      )
     )
 
     setLogoFile(null)
@@ -725,7 +712,9 @@ function EditPostDialog({
 
       formData.append(
         "posts_status",
-        isOpen ? "1" : "0"
+        isDeadlinePassed(deadline)
+          ? "closed"
+          : "open"
       )
 
       if (logoFile) {
@@ -937,28 +926,10 @@ function EditPostDialog({
               }
               className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
-          </div>
 
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-card-foreground">
-              สถานะ
-            </label>
-
-            <button
-              type="button"
-              onClick={() =>
-                setIsOpen((v) => !v)
-              }
-              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-                isOpen
-                  ? "bg-green-100 text-green-700 hover:bg-green-200"
-                  : "bg-red-100 text-red-700 hover:bg-red-200"
-              }`}
-            >
-              {isOpen
-                ? "เปิดรับสมัคร"
-                : "ปิดรับสมัคร"}
-            </button>
+            <p className="text-xs text-muted-foreground">
+              สถานะประกาศจะเปิด/ปิดอัตโนมัติตามวันที่นี้
+            </p>
           </div>
 
           {error && (
@@ -1181,7 +1152,7 @@ export default function PostDetailPage() {
         }
 
         const normalizedStatus =
-          normalizeBoolean(
+          normalizeStatus(
             rawData.posts_status
           )
 
@@ -1331,7 +1302,7 @@ export default function PostDetailPage() {
   const isPositionOpen =
     post
       ? post.posts_status ===
-          true &&
+          "open" &&
         !isDeadlinePassed(
           post.deadline
         )
