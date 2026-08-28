@@ -13,6 +13,7 @@ import {
   Send,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
+import { useUser } from "@/contexts/user-context"
 
 interface Applicant {
   user_id: string
@@ -1040,60 +1041,23 @@ export default function PostDetailPage() {
     String(post.owner_id) ===
       String(currentUser.id)
 
+  // Reuses the single /api/me call made in <UserProvider> instead of
+  // fetching it again on this page.
+  const { user: contextUser } = useUser()
+
   useEffect(() => {
-    let cancelled = false
-
-    const loadCurrentUser =
-      async () => {
-        try {
-          const res =
-            await fetch(
-              "/api/me",
-              {
-                method: "GET",
-                credentials:
-                  "include",
-                cache: "no-store",
-              }
-            )
-
-          if (!res.ok) {
-            return
-          }
-
-          const result =
-            await res.json()
-
-          const raw =
-            result?.data ?? result
-
-          if (
-            !cancelled &&
-            raw?.id
-          ) {
-            setCurrentUser({
-              id: String(raw.id),
-              role:
-                raw.role ?? "",
-              name:
-                raw.name ??
-                raw.firstname ??
-                "",
-              lastname:
-                raw.lastname ?? "",
-              email:
-                raw.email ?? "",
-            })
-          }
-        } catch {}
-      }
-
-    loadCurrentUser()
-
-    return () => {
-      cancelled = true
+    if (contextUser?.id) {
+      setCurrentUser({
+        id: String(contextUser.id),
+        role: contextUser.role ?? "",
+        name: contextUser.firstname ?? "",
+        lastname: contextUser.lastname ?? "",
+        email: contextUser.email ?? "",
+      })
+    } else {
+      setCurrentUser(null)
     }
-  }, [])
+  }, [contextUser])
 
   const fetchData =
     async () => {

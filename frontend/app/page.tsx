@@ -4,45 +4,36 @@ import Image from "next/image"
 import Link from "next/link"
 import { ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-interface User {
-  role_id: number;
-}
+import { useUser } from "@/contexts/user-context";
 
 export default function HomePage() {
 
   const router = useRouter();
 
-  const [user, setUser] = useState<User | null>(null);
+  // No more local fetch("/api/me") — reads the single fetch done once in
+  // <UserProvider> (app/layout.tsx).
+  const { user, loading } = useUser();
 
-useEffect(() => {
-  async function checkUser() {
-    const res = await fetch("/api/me");
+  useEffect(() => {
+    if (loading || !user) return; // ยังไม่ได้ Login ก็อยู่หน้า Login ต่อ
 
-    if (!res.ok) return; // ยังไม่ได้ Login ก็อยู่หน้า Login ต่อ
-
-    const user = await res.json();
-
-    if (user.role_id === 1) {
+    if (user.role === "admin") {
       router.replace("/home/admin");
-    } else if (user.role_id === 2) {
+    } else if (user.role === "hr") {
       router.replace("/home/hr");
-    } else if (user.role_id === 3) {
+    } else if (user.role === "applicant") {
       router.replace("/home/applicant");
     }
-  }
-
-    checkUser();
-  }, [router]);
+  }, [loading, user, router]);
 
   const homeLink =
-    user?.role_id === 1
+    user?.role === "admin"
       ? "/home/admin"
-      : user?.role_id === 2
+      : user?.role === "hr"
       ? "/home/hr"
-      : user?.role_id === 3
+      : user?.role === "applicant"
       ? "/home/applicant"
       : "/";
 

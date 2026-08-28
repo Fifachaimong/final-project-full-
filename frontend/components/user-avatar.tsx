@@ -4,25 +4,19 @@ import Link from "next/link"
 import Image from "next/image"
 import { ChevronDown } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
+import type { AppUser } from "@/contexts/user-context"
+
+const DEFAULT_AVATAR_URL =
+  "https://media.discordapp.net/attachments/1477220715974627492/1529431937264124024/iconresume.png?ex=6a61e9fd&is=6a60987d&hm=d57cfb00981769ffb0261db113c5e955129c7107533555435e086caa8a2c1ac9&=&format=webp&quality=lossless&width=944&height=944"
 
 interface UserAvatarProps {
-  avatarUrl?: string
+  // Passed straight from <Navbar/>, which already has it from useUser() —
+  // no more separate /api/me fetch in this component.
+  user: AppUser | null
 }
 
-interface User {
-  id: number
-  firstname: string
-  lastname: string
-  email: string
-  role_id: number
-  role: string
-}
-
-export function UserAvatar({
-  avatarUrl = "https://media.discordapp.net/attachments/1477220715974627492/1529431937264124024/iconresume.png?ex=6a61e9fd&is=6a60987d&hm=d57cfb00981769ffb0261db113c5e955129c7107533555435e086caa8a2c1ac9&=&format=webp&quality=lossless&width=944&height=944",
-}: UserAvatarProps) {
+export function UserAvatar({ user }: UserAvatarProps) {
   const [open, setOpen] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
 
   const ref = useRef<HTMLDivElement>(null)
 
@@ -40,23 +34,7 @@ export function UserAvatar({
     }
   }, [])
 
-  useEffect(() => {
-    async function getUser() {
-      try {
-        const res = await fetch("/api/me")
-
-        if (!res.ok) return
-
-        const result = await res.json()
-
-        setUser(result.data)
-      } catch (err) {
-        console.error(err)
-      }
-    }
-
-    getUser()
-  }, [])
+  const avatarUrl = user?.icon || DEFAULT_AVATAR_URL
 
   async function handleLogout() {
     try {
@@ -71,18 +49,11 @@ export function UserAvatar({
   }
 
   const fullName = user
-    ? `${user.firstname} ${user.lastname}`
+    ? `${user.firstname ?? ""} ${user.lastname ?? ""}`.trim() || "-"
     : "Loading..."
 
   const firstName = user?.firstname ?? ""
 
-  const homeLink =
-    user?.role_id === 1
-      ? "/home/admin"
-      : user?.role_id === 2
-      ? "/home/hr"
-      : "/home/applicant";
-  
   return (
     <div className="relative" ref={ref}>
       <button

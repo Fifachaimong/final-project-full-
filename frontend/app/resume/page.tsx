@@ -14,6 +14,7 @@ import {
   Pencil,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
+import { useUser } from "@/contexts/user-context"
 
 const POSTS_PER_PAGE = 12
 
@@ -1257,9 +1258,6 @@ export default function ResumePage() {
   const [loading, setLoading] =
     useState(true)
 
-  const [loadingUser, setLoadingUser] =
-    useState(true)
-
   const currentUserId =
     currentUser?.id ?? ""
 
@@ -1268,52 +1266,26 @@ export default function ResumePage() {
     currentUser?.role === "admin"
 
   // ──────────────────────────────────────────────
-  // Current User
+  // Current User — reuses the single /api/me call made in <UserProvider>
+  // instead of fetching it again on this page.
   // ──────────────────────────────────────────────
 
+  const { user: contextUser, loading: loadingUser } = useUser()
+
   useEffect(() => {
-    fetch("/api/me", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    })
-      .then((r) =>
-        r.ok ? r.json() : null
-      )
-      .then((result) => {
-        console.log(
-          "ME API:",
-          result
-        )
-
-        const user = result?.data
-
-        if (user?.id) {
-          setCurrentUser({
-            id: String(user.id),
-            name:
-              user.firstname ?? "",
-            lastname:
-              user.lastname ?? "",
-            email:
-              user.email ?? "",
-            role_id:
-              user.role_id ?? 0,
-            role:
-              user.role ?? "",
-          })
-        }
+    if (contextUser?.id) {
+      setCurrentUser({
+        id: String(contextUser.id),
+        name: contextUser.firstname ?? "",
+        lastname: contextUser.lastname ?? "",
+        email: contextUser.email ?? "",
+        role_id: contextUser.role_id ?? 0,
+        role: contextUser.role ?? "",
       })
-      .catch((error) => {
-        console.error(
-          "GET /api/me error:",
-          error
-        )
-      })
-      .finally(() => {
-        setLoadingUser(false)
-      })
-  }, [])
+    } else {
+      setCurrentUser(null)
+    }
+  }, [contextUser])
 
   // ──────────────────────────────────────────────
   // Fetch Posts

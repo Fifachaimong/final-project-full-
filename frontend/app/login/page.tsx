@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Lock, Mail, FileText, Loader2 } from "lucide-react"
+import { useUser } from "@/contexts/user-context"
 
 type Role = "admin" | "hr" | "applicant"
 
@@ -22,6 +23,7 @@ interface LoginErrorResponse {
 
 export default function LoginPage() {
   const router = useRouter()
+  const { refetchUser } = useUser()
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
   const [showPassword, setShowPassword] = useState<boolean>(false)
@@ -51,6 +53,12 @@ export default function LoginPage() {
 
     if (res.ok) {
       const data: LoginResponse = await res.json()
+
+      // Refresh the shared UserProvider context now that the auth cookie
+      // is set, so Navbar/UserAvatar show the logged-in user immediately
+      // on the page we redirect to, instead of them firing their own
+      // /api/me call on mount.
+      await refetchUser()
 
       if (data.role === "hr") {
         router.replace("/home/hr")

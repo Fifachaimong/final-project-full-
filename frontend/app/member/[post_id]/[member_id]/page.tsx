@@ -9,11 +9,7 @@ import {
   BarChart3,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
-
-interface CurrentUser {
-  id: string
-  role: string
-}
+import { useUser } from "@/contexts/user-context"
 
 interface MemberResume {
   resume_url: string | null
@@ -125,11 +121,9 @@ export default function MemberDetailPage() {
 
   const router = useRouter()
 
-  const [currentUser, setCurrentUser] =
-    useState<CurrentUser | null>(null)
-
-  const [checkingAuth, setCheckingAuth] =
-    useState(true)
+  // Auth/role check reuses the single /api/me call made in <UserProvider>
+  // instead of fetching it again just for this page's permission gate.
+  const { user, loading: checkingAuth } = useUser()
 
   const [resume, setResume] =
     useState<MemberResume | null>(null)
@@ -142,49 +136,8 @@ export default function MemberDetailPage() {
 
   const backHref = `/resume/${post_id}`
 
-  useEffect(() => {
-    let cancelled = false
-
-    const loadCurrentUser = async () => {
-      try {
-        const res = await fetch("/api/me", {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        })
-
-        if (!res.ok) return
-
-        const result = await res.json()
-        const raw = result?.data ?? result
-
-        if (!cancelled && raw?.id) {
-          setCurrentUser({
-            id: String(raw.id),
-            role: raw.role ?? "",
-          })
-        }
-      } catch (error) {
-        console.error(
-          "Load current user error:",
-          error
-        )
-      } finally {
-        if (!cancelled) {
-          setCheckingAuth(false)
-        }
-      }
-    }
-
-    loadCurrentUser()
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
   const normalizedRole =
-    currentUser?.role?.trim().toLowerCase()
+    user?.role?.trim().toLowerCase()
 
   const isHR =
     normalizedRole === "hr" ||

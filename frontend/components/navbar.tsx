@@ -3,47 +3,12 @@
 import Link from "next/link"
 import { ChevronDown } from "lucide-react"
 import { UserAvatar } from "@/components/user-avatar"
-import { useEffect, useState } from "react"
-
-interface User {
-  id: number
-  firstname: string | null
-  lastname: string | null
-  email: string | null
-  phone: string | null
-  icon: string | null
-  role: string
-}
+import { useUser } from "@/contexts/user-context"
 
 export function Navbar() {
-  const [user, setUser] = useState<User | null>(null)
-
-  useEffect(() => {
-    async function getUser() {
-      try {
-        const res = await fetch("/api/me", {
-          cache: "no-store",
-        })
-
-        if (!res.ok) {
-          setUser(null)
-          return
-        }
-
-        const result = await res.json()
-
-        // รองรับทั้งกรณี API ส่งตรง
-        // และกรณี API ห่อข้อมูลไว้ใน data
-        const data = result.data ?? result
-
-        setUser(data)
-      } catch (error) {
-        console.error("Get navbar user error:", error)
-      }
-    }
-
-    getUser()
-  }, [])
+  // Reads the single /api/me fetch done once in <UserProvider> (app/layout.tsx)
+  // instead of fetching it again here.
+  const { user } = useUser()
 
   const homeLink =
     user?.role === "admin"
@@ -177,9 +142,7 @@ export function Navbar() {
 
         {/* User Avatar */}
         <div className="flex items-center gap-4">
-          <UserAvatar
-            avatarUrl={user?.icon ?? undefined}
-          />
+          <UserAvatar user={user} />
         </div>
 
       </div>
