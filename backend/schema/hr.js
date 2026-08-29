@@ -76,7 +76,7 @@ const editPostSchema = {
 
 const updateCandidateStatusSchema = {
     status : {
-        type : ['pending', 'accepted', 'rejected'],
+        type : ['pending', 'approved', 'rejected'],
         required : false,
         default : 'pending'
     }

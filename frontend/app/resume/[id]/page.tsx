@@ -11,6 +11,7 @@ import {
   Upload,
   Pencil,
   Send,
+  Trash2,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { useUser } from "@/contexts/user-context"
@@ -128,19 +129,24 @@ function ApplicantRow({
   index,
   applicant,
   postId,
+  onDelete,
+  deleting,
 }: {
   index: number
   applicant: Applicant
   postId: string
+  onDelete: (applicant: Applicant) => void
+  deleting: boolean
 }) {
   const initials = `${applicant.user_firstname?.charAt(0) ?? ""}${
     applicant.user_lastname?.charAt(0) ?? ""
   }`
 
   return (
+    <div className="flex items-center gap-2">
       <Link
         href={`/member/${postId}/${applicant.user_id}`}
-        className="flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40 hover:border-primary/30 cursor-pointer"
+        className="flex flex-1 items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40 hover:border-primary/30 cursor-pointer"
       >
       <span className="w-6 flex-shrink-0 text-center text-sm font-medium text-muted-foreground">
         {index}
@@ -173,7 +179,18 @@ function ApplicantRow({
       <span className="flex-shrink-0 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
         {applicant.status ?? "-"}
       </span>
-    </Link>
+      </Link>
+
+      <button
+        type="button"
+        onClick={() => onDelete(applicant)}
+        disabled={deleting}
+        title="ลบผู้สมัครคนนี้ออกจากรายชื่อ"
+        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
   )
 }
 
@@ -965,6 +982,113 @@ function EditPostDialog({
   )
 }
 
+interface DeleteConfirmDialogProps {
+  open: boolean
+  applicant: Applicant | null
+  submitting: boolean
+  error: string
+  onClose: () => void
+  onConfirm: () => void
+}
+
+function DeleteConfirmDialog({
+  open,
+  applicant,
+  submitting,
+  error,
+  onClose,
+  onConfirm,
+}: DeleteConfirmDialogProps) {
+  if (!open || !applicant) return null
+
+  const fullName =
+    `${applicant.user_firstname ?? ""} ${
+      applicant.user_lastname ?? ""
+    }`.trim() || `User ID: ${applicant.user_id}`
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={() => {
+        if (!submitting) {
+          onClose()
+        }
+      }}
+    >
+      <div
+        className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+              <Trash2 className="h-5 w-5" />
+            </div>
+
+            <div>
+              <h2 className="text-base font-semibold text-card-foreground">
+                ลบผู้สมัครนี้ออก?
+              </h2>
+
+              <p className="text-xs text-muted-foreground">
+                การลบนี้ไม่สามารถย้อนกลับได้
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={onClose}
+            disabled={submitting}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mb-5 rounded-lg bg-muted/50 px-3 py-2.5">
+          <p className="text-sm font-medium text-foreground">
+            {fullName}
+          </p>
+
+          <p className="text-xs text-muted-foreground">
+            User ID: {applicant.user_id}
+          </p>
+        </div>
+
+        {error && (
+          <p className="mb-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+          >
+            ยกเลิก
+          </button>
+
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={submitting}
+            className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+
+            {submitting
+              ? "กำลังลบ..."
+              : "ยืนยันลบ"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function SuccessToast({
   message,
   onDone,
@@ -1023,6 +1147,15 @@ export default function PostDetailPage() {
     useState(false)
 
   const [toast, setToast] =
+    useState("")
+
+  const [deleteTarget, setDeleteTarget] =
+    useState<Applicant | null>(null)
+
+  const [deleting, setDeleting] =
+    useState(false)
+
+  const [deleteError, setDeleteError] =
     useState("")
 
   const normalizedRole =
@@ -1261,6 +1394,82 @@ export default function PostDetailPage() {
       )
 
       fetchData()
+    }
+
+  const openDeleteDialog = (
+    applicant: Applicant
+  ) => {
+    setDeleteTarget(applicant)
+    setDeleteError("")
+  }
+
+  const closeDeleteDialog = () => {
+    if (deleting) return
+
+    setDeleteTarget(null)
+    setDeleteError("")
+  }
+
+  const handleConfirmDelete =
+    async () => {
+      if (!post || !deleteTarget) return
+
+      setDeleting(true)
+      setDeleteError("")
+
+      try {
+        const res = await fetch(
+          `/api/member/${encodeURIComponent(
+            post.id
+          )}/${encodeURIComponent(
+            deleteTarget.user_id
+          )}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          }
+        )
+
+        const result =
+          await res.json().catch(
+            () => null
+          )
+
+        if (!res.ok) {
+          throw new Error(
+            result?.message ??
+              result?.error ??
+              `ลบไม่สำเร็จ (${res.status})`
+          )
+        }
+
+        setApplicants((prev) =>
+          prev.filter(
+            (a) =>
+              a.user_id !==
+              deleteTarget.user_id
+          )
+        )
+
+        setDeleteTarget(null)
+
+        setToast(
+          "ลบผู้สมัครออกจากรายชื่อเรียบร้อยแล้ว"
+        )
+      } catch (error) {
+        console.error(
+          "Delete applicant error:",
+          error
+        )
+
+        setDeleteError(
+          error instanceof Error
+            ? error.message
+            : "เกิดข้อผิดพลาด กรุณาลองใหม่"
+        )
+      } finally {
+        setDeleting(false)
+      }
     }
 
   const isPositionOpen =
@@ -1516,6 +1725,14 @@ export default function PostDetailPage() {
                           applicant
                         }
                         postId={post.id}
+                        onDelete={
+                          openDeleteDialog
+                        }
+                        deleting={
+                          deleting &&
+                          deleteTarget?.user_id ===
+                            applicant.user_id
+                        }
                       />
                     )
                   )}
@@ -1616,6 +1833,15 @@ export default function PostDetailPage() {
             post={post}
           />
         )}
+
+      <DeleteConfirmDialog
+        open={deleteTarget !== null}
+        applicant={deleteTarget}
+        submitting={deleting}
+        error={deleteError}
+        onClose={closeDeleteDialog}
+        onConfirm={handleConfirmDelete}
+      />
 
       {toast && (
         <SuccessToast

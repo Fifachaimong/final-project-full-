@@ -1,5 +1,5 @@
 import { GetUserByID } from "../models/auth.js";
-import { CreatePostModel, DeletePostModel, EditPostModel, GetMemberModel, GetMemberResumeResultModel, GetProfileByMemberModel, UpdateCandidateStatusModel } from "../models/hr.js";
+import { CreatePostModel, DeleteMemberInPostModel, DeletePostModel, EditPostModel, GetMemberModel, GetMemberResumeResultModel, GetProfileByMemberModel, UpdateCandidateStatusModel } from "../models/hr.js";
 import AppError from "../utils/AppError.js";
 import { UploadToSupabase } from "../utils/UploadToSupabase.js";
 
@@ -90,14 +90,12 @@ export const GetProfileByMemberService = async (member_id, owner_id) => {
 export const GetMemberResumeResultService = async (member_id, owner_id, post_id) => {
     const data = await GetMemberResumeResultModel(member_id, owner_id, post_id)
     
-    console.log(data)
-    
     if (!data) {
         throw new AppError('Member not found', 404)
     }
 
     return {
-        message : 'Get analysis of members resumes',
+        message : 'Get analysis of members resumes succeed',
         data : data
     }
 }
@@ -110,6 +108,18 @@ export const UpdateCandidateStatusService = async (member_status, member_id, own
     }
 
     return {
-        message : 'Update applicant status'
+        message : 'Update applicant status succeed'
+    }
+}
+
+export const DeleteMemberInPostService = async (member_id, owner_id, post_id) => {
+    const data = await DeleteMemberInPostModel(member_id, owner_id, post_id)
+
+    if (data.affectedRows === 0) {
+        throw new AppError('Member not found', 404)
+    }
+
+    return {
+        message : 'Delete member succeed'
     }
 }

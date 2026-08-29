@@ -3,7 +3,7 @@ import authMiddleware from '../middleware/authMiddleware.js'
 import { createPostSchema, editPostSchema, updateCandidateStatusSchema } from '../schema/hr.js'
 import { ValidateBody } from '../middleware/validate.js'
 import upload from "../middleware/upload.js";
-import { CreatePost, DeletePost, EditPost, GetMember, GetMemberResumeResult, GetProfileByMember, UpdateCandidateStatus } from '../controller/hr.js'
+import { CreatePost, DeleteMemberInPost, DeletePost, EditPost, GetMember, GetMemberResumeResult, GetProfileByMember, UpdateCandidateStatus } from '../controller/hr.js'
 
 const route = express.Router()
 
@@ -14,6 +14,7 @@ route.post('/posts', authMiddleware, upload.single('logo'), ValidateBody(createP
 route.put('/posts/:id', authMiddleware,upload.single('logo'), ValidateBody(editPostSchema), EditPost)
 route.put('/posts/:post_id/members/:id', authMiddleware, ValidateBody(updateCandidateStatusSchema), UpdateCandidateStatus)
 route.delete('/posts/:id', authMiddleware, DeletePost)
+route.delete('/posts/:post_id/members/:id', authMiddleware, DeleteMemberInPost)
 
 export default route
 

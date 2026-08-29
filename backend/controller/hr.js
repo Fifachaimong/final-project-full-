@@ -1,5 +1,5 @@
 import asyncHandler from "express-async-handler";
-import { CreatePostService, DeletePostService, EditPostService, GetMemberResumeResultService, GetMemberService, GetProfileByMemberService, UpdateCandidateStatusService } from "../service/hr.js";
+import { CreatePostService, DeleteMemberInPostService, DeletePostService, EditPostService, GetMemberResumeResultService, GetMemberService, GetProfileByMemberService, UpdateCandidateStatusService } from "../service/hr.js";
 
 export const CreatePost = asyncHandler(async (req, res) => {
     const data = req.body
@@ -35,5 +35,10 @@ export const GetMemberResumeResult = asyncHandler(async (req, res) => {
 
 export const UpdateCandidateStatus = asyncHandler(async (req, res) => {
     const result = await UpdateCandidateStatusService(req.body.status, req.params.id, req.user.id, req.params.post_id)
+    res.status(200).json(result)
+})
+
+export const DeleteMemberInPost = asyncHandler(async (req, res) => {
+    const result = await DeleteMemberInPostService(req.params.id, req.user.id, req.params.post_id)
     res.status(200).json(result)
 })
