@@ -88,7 +88,7 @@ export default function HomePage() {
                 <div className="flex items-start gap-4">
                   <div className="h-16 w-16 overflow-hidden rounded-full bg-neutral-700">
                     <Image
-                      src="https://media.discordapp.net/attachments/1477220715974627492/1529431937264124024/iconresume.png?ex=6a61e9fd&is=6a60987d&hm=d57cfb00981769ffb0261db113c5e955129c7107533555435e086caa8a2c1ac9&=&format=webp&quality=lossless&width=944&height=944"
+                      src="https://gknienyyavpewdiqfpmn.supabase.co/storage/v1/object/public/profile/iconresume.png"
                       alt="Profile"
                       width={64}
                       height={64}

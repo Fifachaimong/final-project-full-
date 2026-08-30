@@ -7,7 +7,7 @@ import { useState, useRef, useEffect } from "react"
 import type { AppUser } from "@/contexts/user-context"
 
 const DEFAULT_AVATAR_URL =
-  "https://media.discordapp.net/attachments/1477220715974627492/1529431937264124024/iconresume.png?ex=6a61e9fd&is=6a60987d&hm=d57cfb00981769ffb0261db113c5e955129c7107533555435e086caa8a2c1ac9&=&format=webp&quality=lossless&width=944&height=944"
+  "https://gknienyyavpewdiqfpmn.supabase.co/storage/v1/object/public/profile/iconresume.png"
 
 interface UserAvatarProps {
   // Passed straight from <Navbar/>, which already has it from useUser() —
@@ -147,7 +147,7 @@ export function UserAvatar({ user }: UserAvatarProps) {
               เรซูเม่ของฉัน
             </Link>
 
-            <Link
+            {/* <Link
               href="#"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted"
@@ -164,7 +164,7 @@ export function UserAvatar({ user }: UserAvatarProps) {
               </svg>
 
               ตั้งค่า
-            </Link>
+            </Link> */}
 
           </div>
 

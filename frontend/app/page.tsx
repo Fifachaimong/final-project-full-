@@ -61,13 +61,10 @@ export default function HomePage() {
           {/* Navigation */}
           <nav className="hidden items-center gap-8 md:flex">
             <Link
-              href="#"
+              href="/home"
               className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-coral"
             >
-              Features
-              <span className="rounded bg-coral px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                NEW
-              </span>
+              Home
             </Link>
             <Link
               href="#"
@@ -76,28 +73,28 @@ export default function HomePage() {
               Resume
               <ChevronDown className="h-4 w-4" />
             </Link>
-            <Link
+            {/* <Link
               href="#"
               className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               Cover Letter
               <ChevronDown className="h-4 w-4" />
-            </Link>
+            </Link> */}
             <Link
-              href="#"
+              href="/aboutus"
               className="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               About Us
             </Link>
-            <Link
+            {/* <Link
               href="#"
               className="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               Pricing
-            </Link>
+            </Link> */}
           </nav>
 
-          {/* Auth Buttons */}
+          {/* Auth Buttons - Top Right */}
           <div className="flex items-center gap-4">
             <Link
               href="/login"
@@ -135,19 +132,24 @@ export default function HomePage() {
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap items-center gap-4">
-              <Button
-                size="lg"
-                className="bg-coral px-8 text-white hover:bg-coral/90"
-              >
-                Create My Resume
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-coral px-8 text-coral hover:bg-coral/10"
-              >
-                See Examples
-              </Button>
+              <Link href="/register">
+                <Button
+                  size="lg"
+                  className="bg-coral px-8 text-white hover:bg-coral/90"
+                >
+                  Create My Resume
+                </Button>
+              </Link>
+
+              <Link href="/aboutus">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-coral px-8 text-coral hover:bg-coral/10"
+                >
+                  See Examples
+                </Button>
+              </Link>
             </div>
 
             {/* Trust Badges */}
@@ -191,7 +193,7 @@ export default function HomePage() {
                 <div className="flex items-start gap-4">
                   <div className="h-16 w-16 overflow-hidden rounded-full bg-neutral-700">
                     <Image
-                      src="https://media.discordapp.net/attachments/1477220715974627492/1529431937264124024/iconresume.png?ex=6a88257d&is=6a86d3fd&hm=ed722cd723f8c75e6ba538af99b5989bb3d200c583d6cf2010c0429591b1f354&=&format=webp&quality=lossless&width=384&height=384"
+                      src="https://gknienyyavpewdiqfpmn.supabase.co/storage/v1/object/public/profile/iconresume.png"
                       alt="Profile"
                       width={64}
                       height={64}
