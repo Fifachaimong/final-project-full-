@@ -4,6 +4,7 @@ import Link from "next/link"
 import { ChevronDown } from "lucide-react"
 import { UserAvatar } from "@/components/user-avatar"
 import { useUser } from "@/contexts/user-context"
+import { Button } from "@/components/ui/button"
 
 export function Navbar() {
   // Reads the single /api/me fetch done once in <UserProvider> (app/layout.tsx)
@@ -53,10 +54,6 @@ export function Navbar() {
             className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-coral"
           >
             Home
-
-            {/* <span className="rounded bg-coral px-1.5 py-0.5 text-[10px] font-semibold text-white">
-              NEW
-            </span> */}
           </Link>
 
           {/* Resume */}
@@ -128,7 +125,7 @@ export function Navbar() {
 
           {/* About Us */}
           <Link
-            href="#"
+            href="/about"
             className="
               text-sm font-medium
               text-muted-foreground
@@ -140,9 +137,25 @@ export function Navbar() {
 
         </nav>
 
-        {/* User Avatar */}
+        {/* Auth buttons (guest) or user avatar (logged in) — Top Right */}
         <div className="flex items-center gap-4">
-          <UserAvatar user={user} />
+          {user ? (
+            <UserAvatar user={user} />
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="hidden text-sm font-medium text-muted-foreground hover:text-foreground md:block"
+              >
+                เข้าสู่ระบบ
+              </Link>
+              <Link href="/register">
+                <Button className="bg-coral text-white hover:bg-coral/90">
+                  สมัครสมาชิก
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
       </div>

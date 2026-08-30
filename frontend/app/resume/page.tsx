@@ -1299,7 +1299,6 @@ export default function ResumePage() {
         const params =
           new URLSearchParams({
             search,
-            filter,
           })
 
         const res = await fetch(

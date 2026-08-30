@@ -81,7 +81,7 @@ export default function HomePage() {
               <ChevronDown className="h-4 w-4" />
             </Link> */}
             <Link
-              href="/aboutus"
+              href="/about"
               className="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               About Us
@@ -141,7 +141,7 @@ export default function HomePage() {
                 </Button>
               </Link>
 
-              <Link href="/aboutus">
+              <Link href="/about">
                 <Button
                   variant="outline"
                   size="lg"

@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Navbar } from "@/components/navbar"
+import Link from "next/dist/client/link"
 
 export default function HomePage() {
   return (
@@ -32,19 +33,24 @@ export default function HomePage() {
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap items-center gap-4">
-              <Button
-                size="lg"
-                className="bg-coral px-8 text-white hover:bg-coral/90"
-              >
-                Create My Resume
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-coral px-8 text-coral hover:bg-coral/10"
-              >
-                See Examples
-              </Button>
+              <Link href="/resume">
+                <Button
+                  size="lg"
+                  className="bg-coral px-8 text-white hover:bg-coral/90"
+                >
+                  Create My Resume
+                </Button>
+              </Link>
+
+              <Link href="/about">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-coral px-8 text-coral hover:bg-coral/10"
+                >
+                  See Examples
+                </Button>
+              </Link>
             </div>
 
             {/* Trust Badges */}
