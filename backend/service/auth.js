@@ -73,9 +73,24 @@ export const GetPostService = async (query) => {
 
     const result = await GetPostModel(setoff, limit, search, filter)
 
+    const total = await GetTotalPage('posts')
+    const totalPages = Math.ceil(total.total/limit)
+
+    let nextPage = page < totalPages ? page + 1 : null
+    let prevPage = page > 1 ? page - 1 : null
+
     return {
         message : 'Get post succeed',
-        data : result
+        data : result,
+        meta : {
+            total : total.total,
+            page,
+            limit,
+            hasnextPage : page < totalPages,
+            hasPrevPage : page > 1,
+            nextPage,
+            prevPage
+        }
     }
 } 
 

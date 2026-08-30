@@ -1,14 +1,38 @@
 import { CreateUserByAdminModel, DeleteUserByID, EditUserByIDModel, GetUserByAdminModel } from "../models/admin.js"
-import { GetUserByEmail } from "../models/auth.js"
+import { GetTotalPage, GetUserByEmail } from "../models/auth.js"
 import AppError from "../utils/AppError.js"
 import bcrypt from "bcryptjs"
 
-export const GetUserByAdminService = async () => {
-    const data = await GetUserByAdminModel()
+export const GetUserByAdminService = async (query) => {
+    let { page, limit } = query
+
+    page = Number(page)
+    limit = Number(limit)
+
+    page = page > 0 ? page : 1
+    limit = limit < 11 && limit > 0 ? limit : 10
+    const setoff = (page - 1) * limit 
+
+    const data = await GetUserByAdminModel(setoff, limit)
+
+    const total = await GetTotalPage('users')
+    const totalPages = Math.ceil(total.total/limit)
+
+    let nextPage = page < totalPages ? page + 1 : null
+    let prevPage = page > 1 ? page - 1 : null
 
     return {
         message : 'Get User succeed',
-        data : data
+        data : data,
+        meta : {
+            total : total.total,
+            page,
+            limit,
+            hasnextPage : page < totalPages,
+            hasPrevPage : page > 1,
+            nextPage,
+            prevPage
+        }
     }
 }
 
