@@ -3,7 +3,7 @@ import { CreateUserByAdminService, DeleteUserService, EditUserService, GetUserBy
 
 
 export const GetUserByAdmin = asyncHandler(async (req, res) => {
-    const result = await GetUserByAdminService()
+    const result = await GetUserByAdminService(req.query)
     res.status(200).json(result)
 })
 

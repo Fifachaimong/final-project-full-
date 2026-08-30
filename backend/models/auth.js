@@ -53,6 +53,22 @@ export const GetPostModel = async(setoff, limit, search, filter) => {
     return result
 }
 
+export const GetTotalPage = async(fromTable) => {
+    let query = 'SELECT COUNT(*) AS total FROM '
+
+    if (fromTable === 'posts') {
+        query += 'posts'
+    }
+
+    if (fromTable === 'users') {
+        query += 'users'
+    }
+
+    const [result] = await db.query(query)
+
+    return result[0]
+}
+
 export const GetMemberByUserAndPost = async (userId, postId) => {
     const [result] = await db.query(
         'SELECT id FROM members WHERE user_id = ? AND post_id = ?',
