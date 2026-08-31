@@ -2,7 +2,18 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { ArrowUpRight, BrainCircuit, ChevronRight, FileText, RefreshCw, Sparkles } from 'lucide-react'
+import {
+  ArrowUpRight,
+  BrainCircuit,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  FileText,
+  Mail,
+  RefreshCw,
+  Sparkles,
+  XCircle,
+} from 'lucide-react'
 import { Navbar } from '@/components/navbar'
 
 type Application = {
@@ -15,11 +26,44 @@ type Application = {
   ai_reason?: string
 }
 
-const statusMap: Record<string, { label: string; className: string }> = {
-  pending: { label: 'กำลังพิจารณา', className: 'bg-amber-100 text-amber-800' },
-  reviewing: { label: 'กำลังพิจารณา', className: 'bg-amber-100 text-amber-800' },
-  accepted: { label: 'ผ่านการคัดเลือก', className: 'bg-emerald-100 text-emerald-800' },
-  rejected: { label: 'ไม่ผ่านการคัดเลือก', className: 'bg-rose-100 text-rose-800' },
+function getStatusStyle(status: string | null | undefined): {
+  label: string
+  className: string
+  icon: React.ElementType
+  note?: string
+} {
+  const normalized = status?.trim().toLowerCase() ?? ''
+  switch (normalized) {
+    case 'approved':
+    case 'accepted':
+      return {
+        label: 'ผ่านการพิจารณา',
+        className: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+        icon: CheckCircle2,
+        note: 'กรุณารอการติดต่อผ่าน Email หรือ เบอร์โทร',
+      }
+    case 'rejected':
+      return {
+        label: 'ไม่ผ่านการพิจารณา',
+        className: 'border-rose-200 bg-rose-50 text-rose-700',
+        icon: XCircle,
+        note: 'ขอบคุณสำหรับความสนใจและการสมัครงานกับเรา',
+      }
+    case 'pending':
+    case 'reviewing':
+      return {
+        label: 'อยู่ระหว่างพิจารณา',
+        className: 'border-amber-200 bg-amber-50 text-amber-700',
+        icon: Clock,
+        note: 'กรุณารอผลการพิจารณาและการติดต่อจากบริษัท',
+      }
+    default:
+      return {
+        label: status ? status.charAt(0).toUpperCase() + status.slice(1) : 'ไม่ระบุสถานะ',
+        className: 'border-border bg-muted text-muted-foreground',
+        icon: Clock,
+      }
+  }
 }
 
 function normalizeApplications(payload: unknown): Application[] {
@@ -51,7 +95,7 @@ export default function Page() {
       const response = await fetch('/api/resumehistory/result', {
         credentials: 'include',
         headers: { Accept: 'application/json' },
-        })
+      })
       if (!response.ok) throw new Error('ไม่สามารถโหลดประวัติการสมัครได้')
       setApplications(normalizeApplications(await response.json()))
     } catch (err) {
@@ -87,7 +131,101 @@ export default function Page() {
               <div><h2 className="font-semibold">รายการสมัครของฉัน</h2><p className="mt-1 text-sm text-muted-foreground">กดที่รายการเพื่อดูประกาศงาน</p></div>
               <button onClick={() => void loadApplications()} className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" aria-label="โหลดข้อมูลใหม่"><RefreshCw aria-hidden="true" className="size-4" /> <span className="hidden sm:inline">รีเฟรช</span></button>
             </div>
-            {loading ? <div className="flex min-h-64 items-center justify-center text-sm text-muted-foreground"><RefreshCw className="mr-2 size-4 animate-spin" />กำลังโหลดข้อมูล...</div> : error ? <div className="flex min-h-64 flex-col items-center justify-center gap-3 text-center"><p className="text-sm text-destructive">{error}</p><button onClick={() => void loadApplications()} className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">ลองอีกครั้ง</button></div> : applications.length === 0 ? <div className="flex min-h-64 flex-col items-center justify-center text-center"><div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-muted"><FileText aria-hidden="true" className="size-6 text-muted-foreground" /></div><h3 className="font-medium">ยังไม่มีประวัติการสมัคร</h3><p className="mt-2 text-sm text-muted-foreground">เมื่อคุณสมัครงาน รายการจะแสดงที่นี่</p></div> : <div className="flex flex-col gap-3">{applications.map((application, index) => { const score = scoreValue(application.ai_score); const status = statusMap[String(application.status ?? '').toLowerCase()] ?? { label: application.status || 'ไม่ระบุสถานะ', className: 'bg-muted text-muted-foreground' }; const content = <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-6"><div className="flex min-w-0 flex-1 items-center gap-4"><div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-accent text-lg font-semibold text-accent-foreground">{application.icon ? <img src={application.icon} alt="" className="size-full object-cover" /> : (application.company_name || 'บริษัท').slice(0, 1)}</div><div className="min-w-0"><h3 className="truncate font-semibold">{application.title || 'ตำแหน่งงานไม่ระบุ'}</h3><p className="mt-1 truncate text-sm text-muted-foreground">{application.company_name || 'ไม่ระบุบริษัท'}</p><span className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}>{status.label}</span></div></div><div className="flex items-center gap-5 border-t border-border pt-4 sm:border-t-0 sm:pt-0"><div className="min-w-36"><div className="mb-2 flex items-center justify-between text-xs"><span className="flex items-center gap-1.5 text-muted-foreground"><BrainCircuit className="size-3.5" />AI score</span><strong>{score === null ? '—' : `${score}%`}</strong></div><div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${score ?? 0}%` }} /></div></div><ChevronRight aria-hidden="true" className="size-5 text-muted-foreground" /></div></div>; return application.post_id ? <Link key={String(application.post_id)} href={`/resume/${application.post_id}`} className="group rounded-2xl border border-border transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{content}</Link> : <div key={index} className="rounded-2xl border border-border">{content}</div> })}</div>}
+            {loading ? (
+              <div className="flex min-h-64 items-center justify-center text-sm text-muted-foreground"><RefreshCw className="mr-2 size-4 animate-spin" />กำลังโหลดข้อมูล...</div>
+            ) : error ? (
+              <div className="flex min-h-64 flex-col items-center justify-center gap-3 text-center"><p className="text-sm text-destructive">{error}</p><button onClick={() => void loadApplications()} className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">ลองอีกครั้ง</button></div>
+            ) : applications.length === 0 ? (
+              <div className="flex min-h-64 flex-col items-center justify-center text-center"><div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-muted"><FileText aria-hidden="true" className="size-6 text-muted-foreground" /></div><h3 className="font-medium">ยังไม่มีประวัติการสมัคร</h3><p className="mt-2 text-sm text-muted-foreground">เมื่อคุณสมัครงาน รายการจะแสดงที่นี่</p></div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {applications.map((application, index) => {
+                  const score = scoreValue(application.ai_score)
+                  const status = getStatusStyle(application.status)
+                  const StatusIcon = status.icon
+                  const content = (
+                    <div className="grid grid-cols-[1fr_auto] items-center gap-6 p-5 sm:p-6">
+                      {/* Left: job info + status */}
+                      <div className="flex min-w-0 items-center gap-6">
+                        {/* Company icon */}
+                        <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-accent text-lg font-semibold text-accent-foreground">
+                          {application.icon ? (
+                            <img
+                              src={application.icon}
+                              alt=""
+                              className="size-full object-cover"
+                            />
+                          ) : (
+                            (application.company_name || 'บริษัท').slice(0, 1)
+                          )}
+                        </div>
+
+                        {/* Company + Job title */}
+                        <div className="min-w-0 w-30">
+                          <p className="truncate font-semibold text-foreground">
+                            {application.company_name || 'ไม่ระบุบริษัท'}
+                          </p>
+
+                          <h3 className="mt-1 truncate text-sm font-normal text-muted-foreground">
+                            {application.title || 'ตำแหน่งงานไม่ระบุ'}
+                          </h3>
+                        </div>
+
+                        {/* Status */}
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                          <span
+                            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-sm ${status.className}`}
+                          >
+                            <StatusIcon aria-hidden="true" className="size-3.5" />
+                            {status.label}
+                          </span>
+
+                          {status.note && (
+                            <p className="ml-14 flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+                              <Mail className="size-3.5 shrink-0 text-primary" />
+                              <span className="truncate">{status.note}</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right: AI score */}
+                      <div className="flex items-center gap-5">
+                        <div className="w-40">
+                          <div className="mb-2 flex items-center justify-between text-xs">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <BrainCircuit className="size-3.5" />
+                              AI score
+                            </span>
+
+                            <strong>
+                              {score === null ? '—' : `${score}%`}
+                            </strong>
+                          </div>
+
+                          <div className="h-2 overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full rounded-full bg-primary transition-all"
+                              style={{ width: `${score ?? 0}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <ChevronRight
+                          aria-hidden="true"
+                          className="size-5 shrink-0 text-muted-foreground"
+                        />
+                      </div>
+                    </div>
+                  )
+                  return application.post_id ? (
+                    <Link key={String(application.post_id)} href={`/resume/${application.post_id}`} className="group rounded-2xl border border-border transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{content}</Link>
+                  ) : (
+                    <div key={index} className="rounded-2xl border border-border">{content}</div>
+                  )
+                })}
+              </div>
+            )}
           </div>
           <div className="mt-5 flex items-center justify-center gap-2 text-xs text-muted-foreground"><ArrowUpRight aria-hidden="true" className="size-3.5" />ข้อมูลอัปเดตจากระบบสมัครงานของคุณ</div>
         </section>

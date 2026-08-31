@@ -47,6 +47,7 @@ interface CurrentUser {
   name: string
   lastname: string
   email: string
+  phone: string | null
 }
 
 function normalizeStatus(value: unknown): "open" | "closed" {
@@ -70,6 +71,54 @@ function normalizeStatus(value: unknown): "open" | "closed" {
   }
 
   return "closed"
+}
+
+function getStatusStyle(status: string | null): {
+  label: string
+  className: string
+} {
+  const normalized = status?.trim().toLowerCase() ?? ""
+
+  switch (normalized) {
+    case "approved":
+      return {
+        label: "✅ ผ่านการพิจารณา",
+        className:
+          "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+      }
+    case "rejected":
+      return {
+        label: "❌ ไม่ผ่านการพิจารณา",
+        className:
+          "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+      }
+    case "pending":
+      return {
+        label: "🕐 อยู่ระหว่างพิจารณา",
+        className:
+          "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+      }
+    default:
+      return {
+        label: status
+          ? status.charAt(0).toUpperCase() + status.slice(1)
+          : "-",
+        className:
+          "bg-muted text-muted-foreground",
+      }
+  }
+}
+
+function formatPhoneNumber(phone: string | null | undefined): string {
+  if (!phone) return "-"
+
+  const digits = phone.replace(/\D/g, "")
+
+  if (digits.length !== 10) {
+    return phone
+  }
+
+  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`
 }
 
 function getDeadlineDate(deadline: string): Date | null {
@@ -173,10 +222,13 @@ function ApplicantRow({
           {applicant.ai_score ?? "-"}
         </span>
       </div>
-
-      <span className="flex-shrink-0 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-        {applicant.status ?? "-"}
-      </span>
+        <span
+          className={`flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+            getStatusStyle(applicant.status).className
+          }`}
+        >
+          {getStatusStyle(applicant.status).label}
+        </span>
       </Link>
 
       <button
@@ -1166,6 +1218,68 @@ function DeleteConfirmDialog({
   )
 }
 
+function PhoneRequiredDialog({
+  open,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean
+  onClose: () => void
+  onConfirm: () => void
+}) {
+  if (!open) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-card-foreground">
+              กรุณาใส่เบอร์โทร
+            </h2>
+
+            <p className="mt-1 text-xs text-muted-foreground">
+              คุณยังไม่ได้เพิ่มเบอร์โทรในโปรไฟล์
+              กรุณาเพิ่มก่อนสมัครงาน
+            </p>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            ยกเลิก
+          </button>
+
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            ไปที่โปรไฟล์
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function SuccessToast({
   message,
   onDone,
@@ -1249,6 +1363,9 @@ export default function PostDetailPage() {
   const [deleteError, setDeleteError] =
     useState("")
 
+  const [phoneDialogOpen, setPhoneDialogOpen] =
+    useState(false)
+
   const normalizedRole =
     currentUser?.role
       ?.trim()
@@ -1265,6 +1382,15 @@ export default function PostDetailPage() {
     String(post.owner_id) ===
       String(currentUser.id)
 
+  const hasApplied =
+  !isHR &&
+  currentUser?.id != null &&
+  applicants.some(
+    (a) =>
+      String(a.user_id) ===
+      String(currentUser.id)
+  )
+
   // Reuses the single /api/me call made in <UserProvider> instead of
   // fetching it again on this page.
   const { user: contextUser } = useUser()
@@ -1277,6 +1403,7 @@ export default function PostDetailPage() {
         name: contextUser.firstname ?? "",
         lastname: contextUser.lastname ?? "",
         email: contextUser.email ?? "",
+        phone: contextUser.phone ?? null,
       })
     } else {
       setCurrentUser(null)
@@ -1498,6 +1625,15 @@ export default function PostDetailPage() {
 
       fetchData()
     }
+  
+    const handleApplyClick = () => {
+    if (!currentUser?.phone || !currentUser.phone.trim()) {
+      setPhoneDialogOpen(true)
+      return
+    }
+
+    setApplyOpen(true)
+  }
 
   const openDeleteDialog = (
     applicant: Applicant
@@ -1686,7 +1822,7 @@ export default function PostDetailPage() {
 
             <div className="flex flex-col gap-3">
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="text-[14px] font-medium uppercase tracking-wide text-muted-foreground">
                   บริษัท
                 </p>
 
@@ -1696,7 +1832,7 @@ export default function PostDetailPage() {
               </div>
 
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="text-[14px] font-medium uppercase tracking-wide text-muted-foreground">
                   ตำแหน่ง
                 </p>
 
@@ -1706,7 +1842,7 @@ export default function PostDetailPage() {
               </div>
 
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="text-[14px] font-medium uppercase tracking-wide text-muted-foreground">
                   คณะ / หน่วยงาน
                 </p>
 
@@ -1716,7 +1852,7 @@ export default function PostDetailPage() {
               </div>
 
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="text-[14px] font-medium uppercase tracking-wide text-muted-foreground">
                   วันปิดรับสมัคร
                 </p>
 
@@ -1744,21 +1880,22 @@ export default function PostDetailPage() {
             <div className="flex flex-col gap-2">
               {!isHR && (
                 <button
-                  onClick={() =>
-                    setApplyOpen(true)
-                  }
-                  disabled={
-                    !isPositionOpen
-                  }
+                    onClick={handleApplyClick}
+                    disabled={
+                      !isPositionOpen ||
+                      hasApplied
+                    }
                   className={`flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
-                    isPositionOpen
+                    isPositionOpen && !hasApplied
                       ? "bg-primary text-primary-foreground shadow-sm hover:opacity-90 active:scale-[0.98]"
                       : "cursor-not-allowed bg-muted text-muted-foreground"
                   }`}
                 >
                   <Send className="h-4 w-4" />
 
-                  {isPositionOpen
+                  {hasApplied
+                    ? "คุณได้สมัครไปแล้ว"
+                    : isPositionOpen
                     ? "สมัครงานตำแหน่งนี้"
                     : "ปิดรับสมัครแล้ว"}
                 </button>
@@ -1955,8 +2092,7 @@ export default function PostDetailPage() {
                   </p>
 
                   <p className="break-words text-sm text-foreground">
-                    {post.owner_phone ||
-                      "-"}
+                    {formatPhoneNumber(post.owner_phone)}
                   </p>
                 </div>
               </div>
@@ -2002,6 +2138,16 @@ export default function PostDetailPage() {
         error={deleteError}
         onClose={closeDeleteDialog}
         onConfirm={handleConfirmDelete}
+      />
+
+      <PhoneRequiredDialog
+        open={phoneDialogOpen}
+        onClose={() =>
+          setPhoneDialogOpen(false)
+        }
+        onConfirm={() =>
+          router.push("/profile")
+        }
       />
 
       {toast && (
