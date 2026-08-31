@@ -3,14 +3,14 @@ import { CreateUserByAdmin, DeleteUser, EditUser, GetUserByAdmin } from '../cont
 import { createUserSchema, editUserSchema }from '../schema/admin.js'
 import { ValidateBody } from '../middleware/validate.js'
 
-const routess = express.Router()
+const router = express.Router()
 
-routess.get('/users', GetUserByAdmin)
-routess.post('/users', ValidateBody(createUserSchema), CreateUserByAdmin)
-routess.delete('/users/:id', DeleteUser)
-routess.put('/users/:id', ValidateBody(editUserSchema), EditUser)
+router.get('/users', GetUserByAdmin)
+router.post('/users', ValidateBody(createUserSchema), CreateUserByAdmin)
+router.delete('/users/:id', DeleteUser)
+router.put('/users/:id', ValidateBody(editUserSchema), EditUser)
 
-export default routess
+export default router
 
 
  /**

@@ -5,16 +5,16 @@ import { ValidateBody } from "../middleware/validate.js";
 import upload from "../middleware/upload.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
-const routes = express.Router()
+const router = express.Router()
 
-routes.post('/register', ValidateBody(registerSchema), Register)
-routes.post('/login', ValidateBody(loginSchema), Login)
-routes.put('/profile', authMiddleware, upload.single('icon'), ValidateBody(editMyProfileSchema), EditMyProfile)
-routes.get('/posts', authMiddleware, GetPost)
-routes.get('/posts/:id', authMiddleware, GetPostByID)
-routes.get('/profile', authMiddleware, GetMyProfile)
-routes.get('/result', authMiddleware, GetMyApplicationResult)
-routes.post("/apply/:postId", authMiddleware,
+router.post('/register', ValidateBody(registerSchema), Register)
+router.post('/login', ValidateBody(loginSchema), Login)
+router.put('/profile', authMiddleware, upload.single('icon'), ValidateBody(editMyProfileSchema), EditMyProfile)
+router.get('/posts', authMiddleware, GetPost)
+router.get('/posts/:id', authMiddleware, GetPostByID)
+router.get('/profile', authMiddleware, GetMyProfile)
+router.get('/result', authMiddleware, GetMyApplicationResult)
+router.post("/apply/:postId", authMiddleware,
   upload.fields([
     {
       name: "resume",
@@ -28,7 +28,7 @@ routes.post("/apply/:postId", authMiddleware,
   ApplyResume
 );
 
-export default routes
+export default router
 
 /**
  * @swagger

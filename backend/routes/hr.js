@@ -5,19 +5,19 @@ import { ValidateBody } from '../middleware/validate.js'
 import upload from "../middleware/upload.js";
 import { CreatePost, DeleteMemberInPost, DeletePost, EditPost, GetMember, GetMemberResumeResult, GetPostByHR, GetProfileByMember, UpdateCandidateStatus } from '../controller/hr.js'
 
-const route = express.Router()
+const router = express.Router()
 
-route.get('/posts', authMiddleware, GetPostByHR)
-route.get('/posts/:post_id/members', authMiddleware, GetMember)
-route.get('/members/profile/:id', authMiddleware, GetProfileByMember)
-route.get('/posts/:post_id/members/:id', authMiddleware, GetMemberResumeResult)
-route.post('/posts', authMiddleware, upload.single('logo'), ValidateBody(createPostSchema), CreatePost)
-route.put('/posts/:id', authMiddleware,upload.single('logo'), ValidateBody(editPostSchema), EditPost)
-route.put('/posts/:post_id/members/:id', authMiddleware, ValidateBody(updateCandidateStatusSchema), UpdateCandidateStatus)
-route.delete('/posts/:id', authMiddleware, DeletePost)
-route.delete('/posts/:post_id/members/:id', authMiddleware, DeleteMemberInPost)
+router.get('/posts', authMiddleware, GetPostByHR)
+router.get('/posts/:post_id/members', authMiddleware, GetMember)
+router.get('/members/profile/:id', authMiddleware, GetProfileByMember)
+router.get('/posts/:post_id/members/:id', authMiddleware, GetMemberResumeResult)
+router.post('/posts', authMiddleware, upload.single('logo'), ValidateBody(createPostSchema), CreatePost)
+router.put('/posts/:id', authMiddleware,upload.single('logo'), ValidateBody(editPostSchema), EditPost)
+router.put('/posts/:post_id/members/:id', authMiddleware, ValidateBody(updateCandidateStatusSchema), UpdateCandidateStatus)
+router.delete('/posts/:id', authMiddleware, DeletePost)
+router.delete('/posts/:post_id/members/:id', authMiddleware, DeleteMemberInPost)
 
-export default route
+export default router
 
 /**
  * @swagger

@@ -2,10 +2,10 @@ import "./config/env.js"
 import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
-import routes from './routes/auth.js'
-import route from "./routes/hr.js"
+import authRouter from './routes/auth.js'
+import hrRouter from "./routes/hr.js"
+import adminRouter from "./routes/admin.js"
 import ErrorMiddleware from './middleware/ErrorMiddleware.js'
-import routess from "./routes/admin.js"
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from "./docs/swaggerConfig.js"
 import cookieParser from "cookie-parser"
@@ -18,9 +18,9 @@ app.use(cors({
     credentials: true
 }))
 app.use(morgan('dev'))
-app.use('/auth', routes)
-app.use('/hr', route)
-app.use('/admin', routess)
+app.use('/auth', authRouter)
+app.use('/hr', hrRouter)
+app.use('/admin', adminRouter)
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 app.use(ErrorMiddleware)
 
