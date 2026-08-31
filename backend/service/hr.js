@@ -85,7 +85,7 @@ export const GetPostByHRService = async (owner_id, query = {}) => {
     let prevPage = page > 1 ? page - 1 : null
 
     return {
-        message : 'Get my member succeed',
+        message : 'Get posts succeed',
         data : data,
         meta : {
             total : total.total,
