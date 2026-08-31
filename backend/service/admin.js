@@ -3,7 +3,7 @@ import { GetTotalPage, GetUserByEmail } from "../models/auth.js"
 import AppError from "../utils/AppError.js"
 import bcrypt from "bcryptjs"
 
-export const GetUserByAdminService = async (query) => {
+export const GetUserByAdminService = async (query = {}) => {
     let { page, limit } = query
 
     page = Number(page)

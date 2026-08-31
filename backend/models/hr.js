@@ -47,7 +47,7 @@ export const DeletePostModel = async(owner_id, post_id, role) => {
     return result
 }
 
-export const GetMemberModel = async(owner_id, post_id) => {
+export const GetMemberModel = async(owner_id, post_id, setoff, limit) => {
     const [result] = await db.query(`
         SELECT u.id AS user_id, u.firstname AS user_firstname, u.lastname AS user_lastname, r.ai_score, m.status
         FROM posts p 
@@ -55,10 +55,25 @@ export const GetMemberModel = async(owner_id, post_id) => {
         JOIN users u ON m.user_id = u.id
         JOIN resume r ON m.id = r.member_id
         WHERE p.owner_id = ? AND p.id = ?
+        LIMIT ? OFFSET ?
     `, 
-    [Number(owner_id), post_id])
+    [Number(owner_id), post_id, limit, setoff])
 
     return result
+}
+
+export const GetMemberTotalCount = async(owner_id, post_id) => {
+    const [result] = await db.query(`
+        SELECT COUNT(*) AS total
+        FROM posts p 
+        JOIN members m ON m.post_id = p.id
+        JOIN users u ON m.user_id = u.id
+        JOIN resume r ON m.id = r.member_id
+        WHERE p.owner_id = ? AND p.id = ?
+    `,
+    [Number(owner_id), post_id])
+
+    return result[0]
 }
 
 export const GetProfileByMemberModel = async(member_id, owner_id) => {

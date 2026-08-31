@@ -24,8 +24,18 @@ export async function GET(request, { params }) {
     const headerList = await headers()
     const cookie = headerList.get("cookie") ?? ""
 
+    const { searchParams } = new URL(request.url)
+
+    const page = searchParams.get("page") ?? "1"
+    const limit = searchParams.get("limit") ?? "10"
+
+    const backendParams = new URLSearchParams({
+      page,
+      limit,
+    })
+
     const backendUrl =
-      `http://localhost:5000/hr/posts/${encodeURIComponent(post_id)}/members`
+      `http://localhost:5000/hr/posts/${encodeURIComponent(post_id)}/members?${backendParams.toString()}`
 
     console.log(
       "[GET /api/members/[post_id]] Backend:",

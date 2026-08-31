@@ -6,6 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import {
   ChevronLeft,
+  ChevronRight,
   Users,
   X,
   Upload,
@@ -1131,6 +1132,20 @@ export default function PostDetailPage() {
   const [applicants, setApplicants] =
     useState<Applicant[]>([])
 
+  const [applicantsPage, setApplicantsPage] =
+    useState(1)
+
+  const [applicantsMeta, setApplicantsMeta] =
+    useState<{
+      total: number
+      page: number
+      limit: number
+      hasnextPage: boolean
+      hasPrevPage: boolean
+      nextPage: number | null
+      prevPage: number | null
+    } | null>(null)
+
   const [currentUser, setCurrentUser] =
     useState<CurrentUser | null>(null)
 
@@ -1314,9 +1329,15 @@ export default function PostDetailPage() {
       }
 
       try {
+        const params =
+          new URLSearchParams({
+            page: String(applicantsPage),
+            limit: "10",
+          })
+
         const res =
           await fetch(
-            `/api/members/${encodeURIComponent(id)}`,
+            `/api/members/${encodeURIComponent(id)}?${params.toString()}`,
             {
               method: "GET",
               credentials:
@@ -1352,6 +1373,10 @@ export default function PostDetailPage() {
         } else {
           setApplicants([])
         }
+
+        setApplicantsMeta(
+          result?.meta ?? null
+        )
       } catch (error) {
         console.error(
           "Fetch applicants error:",
@@ -1359,6 +1384,7 @@ export default function PostDetailPage() {
         )
 
         setApplicants([])
+        setApplicantsMeta(null)
       }
     }
 
@@ -1376,6 +1402,7 @@ export default function PostDetailPage() {
   }, [
     isOwner,
     id,
+    applicantsPage,
   ])
 
   const handleApplied =
@@ -1688,7 +1715,7 @@ export default function PostDetailPage() {
                 </div>
 
                 <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                  {applicants.length} คน
+                  {applicantsMeta?.total ?? applicants.length} คน
                 </span>
               </div>
 
@@ -1710,33 +1737,91 @@ export default function PostDetailPage() {
                   </p>
                 </div>
               ) : (
-                <div className="flex max-h-[650px] flex-col gap-2 overflow-y-auto">
-                  {applicants.map(
-                    (
-                      applicant,
-                      index
-                    ) => (
-                      <ApplicantRow
-                        key={`${applicant.user_id}-${index}`}
-                        index={
-                          index + 1
-                        }
-                        applicant={
-                          applicant
-                        }
-                        postId={post.id}
-                        onDelete={
-                          openDeleteDialog
-                        }
-                        deleting={
-                          deleting &&
-                          deleteTarget?.user_id ===
-                            applicant.user_id
-                        }
-                      />
-                    )
-                  )}
-                </div>
+                <>
+                  <div className="flex max-h-[650px] flex-col gap-2 overflow-y-auto">
+                    {applicants.map(
+                      (
+                        applicant,
+                        index
+                      ) => (
+                        <ApplicantRow
+                          key={`${applicant.user_id}-${index}`}
+                          index={
+                            index + 1
+                          }
+                          applicant={
+                            applicant
+                          }
+                          postId={post.id}
+                          onDelete={
+                            openDeleteDialog
+                          }
+                          deleting={
+                            deleting &&
+                            deleteTarget?.user_id ===
+                              applicant.user_id
+                          }
+                        />
+                      )
+                    )}
+                  </div>
+
+                  {applicantsMeta &&
+                    applicantsMeta.total >
+                      applicantsMeta.limit && (
+                      <div className="flex items-center justify-center gap-2 pt-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setApplicantsPage(
+                              (p) =>
+                                Math.max(
+                                  1,
+                                  p - 1
+                                )
+                            )
+                          }
+                          disabled={
+                            !applicantsMeta.hasPrevPage
+                          }
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+
+                        <span className="px-2 text-xs text-muted-foreground">
+                          หน้า{" "}
+                          {
+                            applicantsMeta.page
+                          }{" "}
+                          จาก{" "}
+                          {Math.max(
+                            1,
+                            Math.ceil(
+                              applicantsMeta.total /
+                                applicantsMeta.limit
+                            )
+                          )}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setApplicantsPage(
+                              (p) =>
+                                p + 1
+                            )
+                          }
+                          disabled={
+                            !applicantsMeta.hasnextPage
+                          }
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                </>
               )}
             </div>
           ) : (

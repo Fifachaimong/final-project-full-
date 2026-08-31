@@ -19,7 +19,7 @@ export const DeletePost = asyncHandler(async (req, res) => {
 })
 
 export const GetMember = asyncHandler(async (req, res) => {
-    const result = await GetMemberService(req.user.id, req.params.post_id)
+    const result = await GetMemberService(req.user.id, req.params.post_id, req.query)
     res.status(200).json(result)
 })
 

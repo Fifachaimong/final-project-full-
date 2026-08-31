@@ -55,7 +55,7 @@ export const LoginService = async (data) => {
     }
 }
 
-export const GetPostService = async (query) => {
+export const GetPostService = async (query = {}) => {
     let { page, limit, filter = null } = query
     const { search = null } = query
 
