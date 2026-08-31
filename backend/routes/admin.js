@@ -2,13 +2,15 @@ import express from 'express'
 import { CreateUserByAdmin, DeleteUser, EditUser, GetUserByAdmin } from '../controller/admin.js'
 import { createUserSchema, editUserSchema }from '../schema/admin.js'
 import { ValidateBody } from '../middleware/validate.js'
+import roleMiddleware from '../middleware/role.js'
+import authMiddleware from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
-router.get('/users', GetUserByAdmin)
-router.post('/users', ValidateBody(createUserSchema), CreateUserByAdmin)
-router.delete('/users/:id', DeleteUser)
-router.put('/users/:id', ValidateBody(editUserSchema), EditUser)
+router.get('/users', authMiddleware, roleMiddleware('admin'), GetUserByAdmin)
+router.post('/users', authMiddleware, roleMiddleware('admin'), ValidateBody(createUserSchema), CreateUserByAdmin)
+router.delete('/users/:id', authMiddleware, roleMiddleware('admin'), DeleteUser)
+router.put('/users/:id', authMiddleware, roleMiddleware('admin'), ValidateBody(editUserSchema), EditUser)
 
 export default router
 

@@ -2,20 +2,21 @@ import express from 'express'
 import authMiddleware from '../middleware/authMiddleware.js'
 import { createPostSchema, editPostSchema, updateCandidateStatusSchema } from '../schema/hr.js'
 import { ValidateBody } from '../middleware/validate.js'
+import roleMiddleware from '../middleware/role.js'
 import upload from "../middleware/upload.js";
 import { CreatePost, DeleteMemberInPost, DeletePost, EditPost, GetMember, GetMemberResumeResult, GetPostByHR, GetProfileByMember, UpdateCandidateStatus } from '../controller/hr.js'
 
 const router = express.Router()
 
-router.get('/posts', authMiddleware, GetPostByHR)
-router.get('/posts/:post_id/members', authMiddleware, GetMember)
-router.get('/members/profile/:id', authMiddleware, GetProfileByMember)
-router.get('/posts/:post_id/members/:id', authMiddleware, GetMemberResumeResult)
-router.post('/posts', authMiddleware, upload.single('logo'), ValidateBody(createPostSchema), CreatePost)
-router.put('/posts/:id', authMiddleware,upload.single('logo'), ValidateBody(editPostSchema), EditPost)
-router.put('/posts/:post_id/members/:id', authMiddleware, ValidateBody(updateCandidateStatusSchema), UpdateCandidateStatus)
-router.delete('/posts/:id', authMiddleware, DeletePost)
-router.delete('/posts/:post_id/members/:id', authMiddleware, DeleteMemberInPost)
+router.get('/posts', authMiddleware, roleMiddleware('hr', 'admin'), GetPostByHR)
+router.get('/posts/:post_id/members', authMiddleware, roleMiddleware('hr', 'admin'), GetMember)
+router.get('/members/profile/:id', authMiddleware, roleMiddleware('hr', 'admin'), GetProfileByMember)
+router.get('/posts/:post_id/members/:id', authMiddleware, roleMiddleware('hr', 'admin'), GetMemberResumeResult)
+router.post('/posts', authMiddleware, roleMiddleware('hr', 'admin'), upload.single('logo'), ValidateBody(createPostSchema), CreatePost)
+router.put('/posts/:id', authMiddleware, roleMiddleware('hr', 'admin'), upload.single('logo'), ValidateBody(editPostSchema), EditPost)
+router.put('/posts/:post_id/members/:id', authMiddleware, roleMiddleware('hr', 'admin'), ValidateBody(updateCandidateStatusSchema), UpdateCandidateStatus)
+router.delete('/posts/:id', authMiddleware, roleMiddleware('hr', 'admin'), DeletePost)
+router.delete('/posts/:post_id/members/:id', authMiddleware, roleMiddleware('hr', 'admin'), DeleteMemberInPost)
 
 export default router
 
