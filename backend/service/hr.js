@@ -78,7 +78,7 @@ export const GetPostByHRService = async (owner_id, query = {}) => {
 
     const data = await GetPostByHRModel(owner_id, setoff, limit)
 
-    const total = await GetPostTotalCountByHR(owner_id, post_id)
+    const total = await GetPostTotalCountByHR(owner_id)
     const totalPages = Math.ceil(total.total / limit)
     
     let nextPage = page < totalPages ? page + 1 : null
