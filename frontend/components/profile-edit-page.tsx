@@ -223,7 +223,11 @@ function ViewCard({
         <div className="grid grid-cols-2 gap-4">
           <DisplayField
             label="โทรศัพท์"
-            value={data.phone}
+            value={
+              data.phone
+                ? data.phone.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")
+                : "-"
+            }
             icon={<Phone className="h-3 w-3" />}
           />
 
