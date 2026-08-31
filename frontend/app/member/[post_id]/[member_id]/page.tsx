@@ -13,6 +13,7 @@ import {
   Gauge,
   BookOpenText,
   ShieldCheck,
+  UserRound,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { useUser } from "@/contexts/user-context"
@@ -26,6 +27,13 @@ interface MemberResume {
   skills: string[] | string | null
   ai_reason: string | null
   status: string | null
+}
+
+interface MemberProfile {
+  user_firstname: string | null
+  user_lastname: string | null
+  user_email: string | null
+  user_phone: string | null
 }
 
 function parseSkills(
@@ -232,6 +240,66 @@ function StatusActions({
   )
 }
 
+function ProfileHeader({
+  profile,
+}: {
+  profile: MemberProfile | null
+}) {
+  if (!profile) return null
+
+  return (
+    <div className="mb-5 overflow-hidden rounded-3xl border border-border bg-card/80 px-6 py-6 shadow-sm shadow-black/[0.03] backdrop-blur-sm sm:px-8">
+      <div className="mb-4 flex items-center gap-2">
+        <UserRound className="h-4 w-4 text-muted-foreground" />
+
+        <h2 className="text-sm font-semibold text-foreground">
+          ข้อมูลผู้สมัคร
+        </h2>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            ชื่อ
+          </p>
+          <p className="mt-0.5 text-sm font-semibold text-foreground">
+            {profile.user_firstname ?? "-"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            นามสกุล
+          </p>
+          <p className="mt-0.5 text-sm font-semibold text-foreground">
+            {profile.user_lastname ?? "-"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            เบอร์โทร
+          </p>
+          <p className="mt-0.5 text-sm font-semibold text-foreground">
+            {profile.user_phone
+              ? profile.user_phone.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")
+              : "-"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            อีเมล
+          </p>
+          <p className="mt-0.5 text-sm font-semibold text-foreground">
+            {profile.user_email ?? "-"}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function MemberDetailPage() {
   const { post_id, member_id } = useParams<{
     post_id: string
@@ -246,6 +314,9 @@ export default function MemberDetailPage() {
 
   const [resume, setResume] =
     useState<MemberResume | null>(null)
+
+  const [profile, setProfile] =
+    useState<MemberProfile | null>(null)
 
   const [loading, setLoading] =
     useState(true)
@@ -294,11 +365,23 @@ export default function MemberDetailPage() {
             post_id
           )}/${encodeURIComponent(member_id)}`
 
-        const res = await fetch(apiUrl, {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        })
+        const profileApiUrl =
+          `/api/member/profile/${encodeURIComponent(
+            member_id
+          )}`
+
+        const [res, profileRes] = await Promise.all([
+          fetch(apiUrl, {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+          }),
+          fetch(profileApiUrl, {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+          }),
+        ])
 
         const result =
           await res.json().catch(() => null)
@@ -327,8 +410,18 @@ export default function MemberDetailPage() {
           )
         }
 
+        // โปรไฟล์ (ชื่อ/นามสกุล/เบอร์โทร/อีเมล) ไม่ใช่ตัวบล็อกหลัก
+        // ถ้าโหลดไม่สำเร็จ ให้ปล่อยเป็น null และแสดงผลวิเคราะห์ resume ต่อไปได้
+        const profileResult = profileRes.ok
+          ? await profileRes.json().catch(() => null)
+          : null
+
+        const profileData =
+          profileResult?.data ?? null
+
         if (!cancelled) {
           setResume(data)
+          setProfile(profileData)
         }
       } catch (err) {
         console.error(
@@ -338,6 +431,7 @@ export default function MemberDetailPage() {
 
         if (!cancelled) {
           setResume(null)
+          setProfile(null)
 
           setError(
             err instanceof Error
@@ -501,6 +595,8 @@ export default function MemberDetailPage() {
             {actionError}
           </div>
         )}
+
+        <ProfileHeader profile={profile} />
 
         {/* กรอบหลักรวมทุก section เป็นชิ้นเดียว ให้ดูเป็นการ์ดเดียวที่ทันสมัยแทนหลายกล่องแยก */}
         <div className="overflow-hidden rounded-3xl border border-border bg-card/80 shadow-sm shadow-black/[0.03] backdrop-blur-sm">
