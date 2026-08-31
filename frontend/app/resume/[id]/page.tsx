@@ -521,8 +521,8 @@ function ApplyDialog({
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-card-foreground">
               Transcript{" "}
-              <span className="text-xs font-normal text-muted-foreground">
-                (ถ้ามี)
+              <span className="text-destructive">
+                *
               </span>
             </label>
 
@@ -614,6 +614,12 @@ function EditPostDialog({
       post.deadline?.slice(0, 10) ?? ""
     )
 
+  // สถานะประกาศ (เปิด/ปิดรับสมัคร) ที่ผู้ใช้เลือกเองในฟอร์มแก้ไข
+  const [postsStatus, setPostsStatus] =
+    useState<"open" | "closed">(
+      normalizeStatus(post.posts_status)
+    )
+
   const [logoFile, setLogoFile] =
     useState<File | null>(null)
 
@@ -638,6 +644,10 @@ function EditPostDialog({
 
     setDeadline(
       post.deadline?.slice(0, 10) ?? ""
+    )
+
+    setPostsStatus(
+      normalizeStatus(post.posts_status)
     )
 
     setLogoFile(null)
@@ -726,11 +736,10 @@ function EditPostDialog({
         deadline
       )
 
+      // ใช้สถานะที่ผู้ใช้เลือกเองแทนการคำนวณจาก deadline อัตโนมัติ
       formData.append(
         "posts_status",
-        isDeadlinePassed(deadline)
-          ? "closed"
-          : "open"
+        postsStatus
       )
 
       if (logoFile) {
@@ -942,9 +951,79 @@ function EditPostDialog({
               }
               className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
+          </div>
+
+          {/* Status */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-card-foreground">
+              สถานะ
+            </label>
+
+            <div className="flex w-full gap-2">
+              {/* เปิดรับสมัคร */}
+              <button
+                type="button"
+                onClick={() =>
+                  setPostsStatus("open")
+                }
+                disabled={
+                  submitting ||
+                  (() => {
+                    if (!deadline) return false
+
+                    const selectedDeadline =
+                      new Date(
+                        `${deadline}T00:00:00`
+                      )
+
+                    const now = new Date()
+
+                    const today = new Date(
+                      now.getFullYear(),
+                      now.getMonth(),
+                      now.getDate()
+                    )
+
+                    const deadlineDate =
+                      new Date(
+                        selectedDeadline.getFullYear(),
+                        selectedDeadline.getMonth(),
+                        selectedDeadline.getDate()
+                      )
+
+                    return (
+                      deadlineDate < today
+                    )
+                  })()
+                }
+                className={`flex-1 rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
+                  postsStatus === "open"
+                    ? "border-green-500 bg-green-500/15 text-green-600 ring-1 ring-green-500/40 dark:text-green-400"
+                    : "border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                } disabled:cursor-not-allowed disabled:opacity-40`}
+              >
+                เปิดรับสมัคร
+              </button>
+
+              {/* ปิดรับสมัคร */}
+              <button
+                type="button"
+                onClick={() =>
+                  setPostsStatus("closed")
+                }
+                disabled={submitting}
+                className={`flex-1 rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
+                  postsStatus === "closed"
+                    ? "border-red-500 bg-red-500/15 text-red-600 ring-1 ring-red-500/40 dark:text-red-400"
+                    : "border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                } disabled:cursor-not-allowed disabled:opacity-40`}
+              >
+                ปิดรับสมัคร
+              </button>
+            </div>
 
             <p className="text-xs text-muted-foreground">
-              สถานะประกาศจะเปิด/ปิดอัตโนมัติตามวันที่นี้
+              เลือกสถานะของประกาศรับสมัคร
             </p>
           </div>
 
