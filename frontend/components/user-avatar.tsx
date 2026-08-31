@@ -129,6 +129,7 @@ export function UserAvatar({ user }: UserAvatarProps) {
               โปรไฟล์ของฉัน
             </Link>
 
+            {user?.role === "applicant" && (
             <Link
               href="/resumehistory"
               onClick={() => setOpen(false)}
@@ -146,6 +147,7 @@ export function UserAvatar({ user }: UserAvatarProps) {
 
               เรซูเม่ของฉัน
             </Link>
+)}
 
             {/* <Link
               href="#"
