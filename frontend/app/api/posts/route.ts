@@ -10,9 +10,18 @@ export async function GET(request: Request) {
 
     const search = searchParams.get("search") ?? ""
     const filter = searchParams.get("filter") ?? "all"
+    const page = searchParams.get("page") ?? "1"
+    const limit = searchParams.get("limit") ?? "10"
+
+    const backendParams = new URLSearchParams({
+      search,
+      filter,
+      page,
+      limit,
+    })
 
     const response = await fetch(
-      `http://localhost:5000/auth/posts?search=${encodeURIComponent(search)}&filter=${encodeURIComponent(filter)}`,
+      `http://localhost:5000/auth/posts?${backendParams.toString()}`,
       {
         method: "GET",
         headers: {

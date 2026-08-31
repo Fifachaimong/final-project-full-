@@ -16,7 +16,7 @@ import {
 import { Navbar } from "@/components/navbar"
 import { useUser } from "@/contexts/user-context"
 
-const POSTS_PER_PAGE = 12
+const POSTS_PER_PAGE = 10
 
 // ──────────────────────────────────────────────
 // Types
@@ -1258,6 +1258,17 @@ export default function ResumePage() {
   const [loading, setLoading] =
     useState(true)
 
+  const [meta, setMeta] =
+    useState<{
+      total: number
+      page: number
+      limit: number
+      hasnextPage: boolean
+      hasPrevPage: boolean
+      nextPage: number | null
+      prevPage: number | null
+    } | null>(null)
+
   const currentUserId =
     currentUser?.id ?? ""
 
@@ -1299,6 +1310,8 @@ export default function ResumePage() {
         const params =
           new URLSearchParams({
             search,
+            page: String(page),
+            limit: String(POSTS_PER_PAGE),
           })
 
         const res = await fetch(
@@ -1356,6 +1369,7 @@ export default function ResumePage() {
           data.map(normalizePostStatus)
 
         setPosts(normalizedData)
+        setMeta(result?.meta ?? null)
       } catch (error) {
         console.error(
           "Fetch posts error:",
@@ -1363,10 +1377,11 @@ export default function ResumePage() {
         )
 
         setPosts([])
+        setMeta(null)
       } finally {
         setLoading(false)
       }
-    }, [search, filter])
+    }, [search, page])
 
   useEffect(() => {
     fetchPosts()
@@ -1379,23 +1394,6 @@ export default function ResumePage() {
   // ──────────────────────────────────────────────
   // Pagination
   // ──────────────────────────────────────────────
-
-  const totalPages =
-    Math.max(
-      1,
-      Math.ceil(
-        posts.length /
-          POSTS_PER_PAGE
-      )
-    )
-
-  const paginatedPosts =
-    posts.slice(
-      (page - 1) *
-        POSTS_PER_PAGE,
-      page *
-        POSTS_PER_PAGE
-    )
 
   // ──────────────────────────────────────────────
   // Create
@@ -1481,22 +1479,19 @@ export default function ResumePage() {
       return true
     })
 
-  const filteredTotalPages =
-    Math.max(
-      1,
-      Math.ceil(
-        filteredPosts.length /
-          POSTS_PER_PAGE
-      )
-    )
-
-  const filteredPaginatedPosts =
-    filteredPosts.slice(
-      (page - 1) *
-        POSTS_PER_PAGE,
-      page *
-        POSTS_PER_PAGE
-    )
+  // จำนวนหน้าจริงมาจาก backend (meta.total / meta.limit) เพราะ backend
+  // เป็นคนตัดหน้าให้แล้ว (LIMIT/OFFSET) — ตัวกรองสถานะเปิด/ปิดข้างบนเป็นแค่
+  // การกรองที่แสดงผลของหน้านั้น ๆ เพิ่มเติมฝั่ง client เท่านั้น (เพราะต้อง
+  // เช็ค deadline ประกอบด้วย ซึ่ง backend filter ธรรมดายังไม่รองรับ)
+  const totalPages =
+    meta
+      ? Math.max(
+          1,
+          Math.ceil(
+            meta.total / meta.limit
+          )
+        )
+      : 1
 
   return (
     <main className="min-h-screen bg-background">
@@ -1596,7 +1591,7 @@ export default function ResumePage() {
               />
             ))}
           </div>
-        ) : filteredPaginatedPosts.length ===
+        ) : filteredPosts.length ===
           0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
@@ -1616,7 +1611,7 @@ export default function ResumePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {filteredPaginatedPosts.map(
+            {filteredPosts.map(
               (post) => (
                 <PostCard
                   key={post.id}
@@ -1639,7 +1634,7 @@ export default function ResumePage() {
 
         {/* Pagination */}
 
-        {filteredTotalPages > 1 && (
+        {totalPages > 1 && (
           <div className="mt-8 flex items-center justify-center gap-2 pb-10">
             <button
               type="button"
@@ -1651,7 +1646,9 @@ export default function ResumePage() {
                   )
                 )
               }
-              disabled={page === 1}
+              disabled={
+                !meta?.hasPrevPage
+              }
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -1660,7 +1657,7 @@ export default function ResumePage() {
             {Array.from(
               {
                 length:
-                  filteredTotalPages,
+                  totalPages,
               },
               (_, i) => i + 1
             ).map((p) => (
@@ -1685,14 +1682,13 @@ export default function ResumePage() {
               onClick={() =>
                 setPage((p) =>
                   Math.min(
-                    filteredTotalPages,
+                    totalPages,
                     p + 1
                   )
                 )
               }
               disabled={
-                page ===
-                filteredTotalPages
+                !meta?.hasnextPage
               }
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
             >

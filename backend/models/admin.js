@@ -5,7 +5,7 @@ export const GetUserByAdminModel = async(setoff, limit) => {
     
     query += ' LIMIT ? OFFSET ?'
     
-    const [result] = await db.query(query, limit, setoff)
+    const [result] = await db.query(query, [limit, setoff])
     
     return result
 }

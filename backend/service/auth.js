@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs"
-import { CreateMember, CreateResume, CreateUser, EditMyProfileModel, GetMemberByUserAndPost, GetMyApplicationResultModel, GetMyProfileModel, GetPostByIDModel, GetDataPostById, GetPostModel, GetUserByEmail } from "../models/auth.js"
+import { CreateMember, CreateResume, CreateUser, EditMyProfileModel, GetMemberByUserAndPost, GetMyApplicationResultModel, GetMyProfileModel, GetPostByIDModel, GetDataPostById, GetPostModel, GetUserByEmail, GetTotalPage } from "../models/auth.js"
 import AppError from '../utils/AppError.js'
 import jwt from 'jsonwebtoken'
 import { UploadToSupabase } from "../utils/UploadToSupabase.js";

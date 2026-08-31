@@ -11,6 +11,8 @@ import {
   Eye,
   ChevronUp,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   RefreshCw,
   X,
   User,
@@ -35,7 +37,24 @@ interface Member {
 
 type SortKey = "id" | "firstname" | "email" | "role" | "created_at"
 
+interface MembersMeta {
+  total: number
+  page: number
+  limit: number
+  hasnextPage: boolean
+  hasPrevPage: boolean
+  nextPage: number | null
+  prevPage: number | null
+}
+
+interface MembersResponse {
+  data: Member[]
+  meta: MembersMeta | null
+}
+
 // ─── Constants ───────────────────────────────────────────────────────────────
+
+const MEMBERS_PER_PAGE = 10
 
 const ROLES: Record<string, { label: string; className: string }> = {
   admin: { label: "Admin", className: "bg-violet-500/15 text-violet-400 border-violet-500/30" },
@@ -43,7 +62,7 @@ const ROLES: Record<string, { label: string; className: string }> = {
   applicant: { label: "Applicant", className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
 }
 
-const fetcher = async (url: string) => {
+const fetcher = async (url: string): Promise<MembersResponse> => {
   const r = await fetch(url)
   const data = await r.json()
 
@@ -55,7 +74,10 @@ const fetcher = async (url: string) => {
     throw new Error("Unexpected response format")
   }
 
-  return data.data as Member[]
+  return {
+    data: data.data as Member[],
+    meta: data.meta ?? null,
+  }
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -336,7 +358,20 @@ function DeleteConfirm({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminMembersPage() {
-  const { data: members, isLoading, error: fetchError, mutate } = useSWR<Member[]>("/api/admin/members", fetcher)
+  const [page, setPage] = useState(1)
+
+  const {
+    data: membersResponse,
+    isLoading,
+    error: fetchError,
+    mutate,
+  } = useSWR<MembersResponse>(
+    `/api/admin/members?page=${page}&limit=${MEMBERS_PER_PAGE}`,
+    fetcher
+  )
+
+  const members = membersResponse?.data
+  const meta = membersResponse?.meta ?? null
 
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState<string | "all">("all")
@@ -348,6 +383,21 @@ export default function AdminMembersPage() {
   const [viewMember, setViewMember] = useState<Member | null>(null)
   const [deleteMember, setDeleteMember] = useState<Member | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+
+  // ค้นหา/กรอง role ทำแค่ฝั่ง client ภายในข้อมูลของ "หน้านี้" เท่านั้น
+  // (backend /admin/users ยังไม่รองรับ search param ข้ามหน้า) — สลับหน้าแล้ว
+  // เริ่มค้นหาใหม่ที่หน้า 1 เพื่อไม่ให้งงว่าทำไมเห็นรายการไม่ครบ
+  useEffect(() => {
+    setPage(1)
+  }, [search, roleFilter])
+
+  const totalPages =
+    meta
+      ? Math.max(
+          1,
+          Math.ceil(meta.total / meta.limit)
+        )
+      : 1
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -442,7 +492,7 @@ export default function AdminMembersPage() {
               <div>
                 <h1 className="text-xl font-semibold text-foreground">Members</h1>
                 <p className="text-sm text-muted-foreground">
-                  {isLoading ? "Loading..." : fetchError ? "Error" : `${memberList.length} total`}
+                  {isLoading ? "Loading..." : fetchError ? "Error" : `${meta?.total ?? memberList.length} total`}
                 </p>
               </div>
             </div>
@@ -626,10 +676,53 @@ export default function AdminMembersPage() {
 
             {!isLoading && filtered.length > 0 && (
               <div className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
-                Showing {filtered.length} of {members?.length ?? 0} members
+                Showing {filtered.length} of {meta?.total ?? memberList.length} members
+                {meta && totalPages > 1 && ` — page ${meta.page} of ${totalPages}`}
               </div>
             )}
           </div>
+
+          {/* Pagination */}
+
+          {totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={!meta?.hasPrevPage}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              {Array.from(
+                { length: totalPages },
+                (_, i) => i + 1
+              ).map((p) => (
+                <button
+                  type="button"
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                    p === page
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={!meta?.hasnextPage}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
