@@ -89,13 +89,13 @@ export const CreateMember = async (userId, postId) => {
 }
 
 
-export const CreateResume = async (memberId, resumeUrl, transcriptUrl, aiScore, skills, storytelling_score, ai_reason, overall_confidence, specific_strengths)=>{
+export const CreateResume = async (memberId, resumeUrl, transcriptUrl, aiScore, skills, storytelling_score, ai_reason, overall_confidence)=>{
     const [result] = await db.query(`
         INSERT INTO resume
-        (member_id, resume_url, transcript_url, ai_score, storytelling_score, overall_confidence, skills, ai_reason, specific_strengths)
+        (member_id, resume_url, transcript_url, ai_score, storytelling_score, overall_confidence, skills, ai_reason)
         VALUES(? ,? ,? ,? ,? ,? ,? ,?)   
         `,
-        [ memberId, resumeUrl, transcriptUrl, aiScore,  storytelling_score, overall_confidence, skills, ai_reason, specific_strengths]
+        [ memberId, resumeUrl, transcriptUrl, aiScore,  storytelling_score, overall_confidence, skills, ai_reason]
     );
 
     return result;
