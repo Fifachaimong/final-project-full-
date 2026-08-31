@@ -89,13 +89,13 @@ export const CreateMember = async (userId, postId) => {
 }
 
 
-export const CreateResume = async (memberId, resumeUrl, transcriptUrl, aiScore, skills, storytelling_score, ai_reason, overall_confidence)=>{
+export const CreateResume = async (memberId, resumeUrl, transcriptUrl, aiScore, skills, storytelling_score, ai_reason, overall_confidence, specific_strengths)=>{
     const [result] = await db.query(`
         INSERT INTO resume
-        (member_id, resume_url, transcript_url, ai_score, storytelling_score, overall_confidence, skills, ai_reason)
+        (member_id, resume_url, transcript_url, ai_score, storytelling_score, overall_confidence, skills, ai_reason, specific_strengths)
         VALUES(? ,? ,? ,? ,? ,? ,? ,?)   
         `,
-        [ memberId, resumeUrl, transcriptUrl, aiScore,  storytelling_score, overall_confidence, skills, ai_reason]
+        [ memberId, resumeUrl, transcriptUrl, aiScore,  storytelling_score, overall_confidence, skills, ai_reason, specific_strengths]
     );
 
     return result;
@@ -139,7 +139,7 @@ export const GetPostByIDModel = async (post_id) => {
 
 export const GetDataPostById = async (post_id) => {
     const [result] = await db.query(`
-        SELECT description, model_provider FROM posts WHERE id = ?
+        SELECT description, faculty, model_provider FROM posts WHERE id = ?
     `,[ post_id ])
 
     return result[0]
@@ -147,7 +147,7 @@ export const GetDataPostById = async (post_id) => {
 
 export const GetMyApplicationResultModel = async (id) => {
     const [result] = await db.query(`
-        SELECT p.icon, p.title, p.company_name, m.status, r.ai_score, r.ai_reason
+        SELECT p.icon, p.title, p.company_name, m.status, r.ai_score, r.ai_reason, r.specific_strengths
         FROM members m
         JOIN posts p ON p.id = m.post_id
         JOIN resume r ON r.member_id = m.id

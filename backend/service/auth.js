@@ -203,7 +203,8 @@ export const ApplyResumeService = async (
         `${aiResult.data.skills.hard}`,
         aiResult.data.storytelling_score,
         aiResult.data.ai_reason,
-        aiResult.data.overall_confidence
+        aiResult.data.overall_confidence,
+        aiResult.data.specific_strengths
     );
 
     return {
