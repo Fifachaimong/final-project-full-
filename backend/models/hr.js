@@ -47,6 +47,24 @@ export const DeletePostModel = async(owner_id, post_id, role) => {
     return result
 }
 
+export const GetPostByHRModel = async(owner_id, setoff, limit) => {
+    const [result] = await db.query(`
+        SELECT posts.id, posts.company_name, posts.title, posts.faculty, posts.deadline,
+        posts.icon, posts.posts_status,
+        CASE
+            WHEN posts.posts_status = 'open' THEN true
+            ELSE false
+        END AS is_open,
+        CONCAT(users.firstname, ' ', users.lastname) AS owner_name
+        FROM posts
+        JOIN users ON posts.owner_id = users.id
+        WHERE posts.owner_id = ?
+        LIMIT ? OFFSET ?
+    `,[owner_id, limit, setoff])
+
+    return result
+}
+
 export const GetMemberModel = async(owner_id, post_id, setoff, limit) => {
     const [result] = await db.query(`
         SELECT u.id AS user_id, u.firstname AS user_firstname, u.lastname AS user_lastname, r.ai_score, m.status
@@ -60,6 +78,16 @@ export const GetMemberModel = async(owner_id, post_id, setoff, limit) => {
     [Number(owner_id), post_id, limit, setoff])
 
     return result
+}
+
+export const GetPostTotalCountByHR = async(owner_id) => {
+    const [result] = await db.query(`
+        SELECT COUNT(*) AS total
+        FROM posts
+        WHERE p.owner_id = ?
+    `,[owner_id])
+
+    return result[0]
 }
 
 export const GetMemberTotalCount = async(owner_id, post_id) => {

@@ -1,5 +1,5 @@
 import { GetUserByID } from "../models/auth.js";
-import { CreatePostModel, DeleteMemberInPostModel, DeletePostModel, EditPostModel, GetMemberModel, GetMemberResumeResultModel, GetMemberTotalCount, GetProfileByMemberModel, UpdateCandidateStatusModel } from "../models/hr.js";
+import { CreatePostModel, DeleteMemberInPostModel, DeletePostModel, EditPostModel, GetMemberModel, GetMemberResumeResultModel, GetMemberTotalCount, GetPostByHRModel, GetPostTotalCountByHR, GetProfileByMemberModel, UpdateCandidateStatusModel } from "../models/hr.js";
 import AppError from "../utils/AppError.js";
 import { UploadToSupabase } from "../utils/UploadToSupabase.js";
 
@@ -63,6 +63,39 @@ export const DeletePostService = async (id, post_id, role) => {
 
     return {
         message : 'Delete post succeed'
+    }
+}
+
+export const GetPostByHRService = async (owner_id, query = {}) => {
+    let { page, limit } = query
+
+    page = Number(page)
+    limit = Number(limit)
+
+    page = page > 0 ? page : 1
+    limit = limit < 11 && limit > 0 ? limit : 10
+    const setoff = (page - 1) * limit
+
+    const data = await GetPostByHRModel(owner_id, setoff, limit)
+
+    const total = await GetPostTotalCountByHR(owner_id, post_id)
+    const totalPages = Math.ceil(total.total / limit)
+    
+    let nextPage = page < totalPages ? page + 1 : null
+    let prevPage = page > 1 ? page - 1 : null
+
+    return {
+        message : 'Get my member succeed',
+        data : data,
+        meta : {
+            total : total.total,
+            page,
+            limit,
+            hasnextPage : page < totalPages,
+            hasPrevPage : page > 1,
+            nextPage,
+            prevPage
+        }
     }
 }
 

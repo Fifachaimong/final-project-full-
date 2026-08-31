@@ -1,11 +1,10 @@
 import db from "../lib/db.js"
 
-export const GetUserByAdminModel = async(setoff, limit) => {
-    let query = 'SELECT id, firstname, lastname, email, role, created_at FROM users'
-    
-    query += ' LIMIT ? OFFSET ?'
-    
-    const [result] = await db.query(query, [limit, setoff])
+export const GetUserByAdminModel = async(setoff, limit) => {    
+    const [result] = await db.query(`
+        SELECT id, firstname, lastname, email, role, created_at FROM users
+        LIMIT ? OFFSET ?
+    `, [limit, setoff])
     
     return result
 }

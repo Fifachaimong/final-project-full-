@@ -3,10 +3,11 @@ import authMiddleware from '../middleware/authMiddleware.js'
 import { createPostSchema, editPostSchema, updateCandidateStatusSchema } from '../schema/hr.js'
 import { ValidateBody } from '../middleware/validate.js'
 import upload from "../middleware/upload.js";
-import { CreatePost, DeleteMemberInPost, DeletePost, EditPost, GetMember, GetMemberResumeResult, GetProfileByMember, UpdateCandidateStatus } from '../controller/hr.js'
+import { CreatePost, DeleteMemberInPost, DeletePost, EditPost, GetMember, GetMemberResumeResult, GetPostByHR, GetProfileByMember, UpdateCandidateStatus } from '../controller/hr.js'
 
 const route = express.Router()
 
+route.get('/posts', authMiddleware, GetPostByHR)
 route.get('/posts/:post_id/members', authMiddleware, GetMember)
 route.get('/members/profile/:id', authMiddleware, GetProfileByMember)
 route.get('/posts/:post_id/members/:id', authMiddleware, GetMemberResumeResult)
