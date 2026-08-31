@@ -162,9 +162,6 @@ function ApplicantRow({
           {applicant.user_firstname} {applicant.user_lastname}
         </span>
 
-        <span className="truncate text-xs text-muted-foreground">
-          User ID: {applicant.user_id}
-        </span>
       </div>
 
       <div className="flex flex-shrink-0 flex-col items-end">
