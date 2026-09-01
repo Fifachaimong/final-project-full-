@@ -100,7 +100,7 @@ export const GetPostByHRService = async (owner_id, query = {}) => {
 }
 
 export const GetMemberService = async (owner_id, post_id, query = {}) => {
-    let { page, limit } = query
+    let { page, limit, filter } = query
 
     page = Number(page)
     limit = Number(limit)
@@ -109,7 +109,9 @@ export const GetMemberService = async (owner_id, post_id, query = {}) => {
     limit = limit < 11 && limit > 0 ? limit : 10
     const setoff = (page - 1) * limit
 
-    const data = await GetMemberModel(owner_id, post_id, setoff, limit)
+    filter = ['pending', 'approved', 'rejected'].includes.filter ? filter : null
+
+    const data = await GetMemberModel(owner_id, post_id, setoff, limit, filter)
 
     const total = await GetMemberTotalCount(owner_id, post_id)
     const totalPages = Math.ceil(total.total / limit)

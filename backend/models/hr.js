@@ -65,18 +65,27 @@ export const GetPostByHRModel = async(owner_id, setoff, limit) => {
     return result
 }
 
-export const GetMemberModel = async(owner_id, post_id, setoff, limit) => {
-    const [result] = await db.query(`
+export const GetMemberModel = async(owner_id, post_id, setoff, limit, filter) => {
+    let query = `
         SELECT u.id AS user_id, u.firstname AS user_firstname, u.lastname AS user_lastname, r.ai_score, m.status
         FROM posts p 
         JOIN members m ON m.post_id = p.id
         JOIN users u ON m.user_id = u.id
         JOIN resume r ON m.id = r.member_id
         WHERE p.owner_id = ? AND p.id = ?
-        LIMIT ? OFFSET ?
-    `, 
-    [Number(owner_id), post_id, limit, setoff])
+    `
 
+    const value = [owner_id, post_id]
+
+    if (filter) {
+        query += ' AND m.status'
+        value.push(filter)
+    }
+
+    query += 'LIMIT ? OFFSET ?'
+    value.push(limit, setoff)
+
+    const [result] = await db.query(query, value)
     return result
 }
 
