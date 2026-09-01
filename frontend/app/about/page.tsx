@@ -10,12 +10,16 @@ import {
   UserCog,
   Briefcase,
   GraduationCap,
+  Mail,
+  RefreshCw,
+  ChevronRight,
+  BrainCircuit,
 } from 'lucide-react'
 import { Navbar } from '@/components/navbar'
 
 /* ---------- Types ---------- */
 
-type HistoryStatus = 'reviewing' | 'accepted' | 'rejected'
+type HistoryStatus = 'approved' | 'rejected' | 'pending'
 
 type HistoryExample = {
   title: string
@@ -27,43 +31,70 @@ type HistoryExample = {
 type ApplicantExample = {
   name: string
   score: number
-  status: string
+  status: HistoryStatus
 }
 
 /* ---------- ตัวอย่างข้อมูล (mock data สำหรับประกอบคำอธิบายเท่านั้น) ---------- */
 
 const historyExamples: HistoryExample[] = [
   {
-    title: 'นักศึกษาฝึกงาน Frontend Developer',
-    company: 'บริษัท เทคโนวา จำกัด',
-    status: 'reviewing',
-    score: 82,
+    title: 'Frontend',
+    company: 'บริษัทคนดี',
+    status: 'rejected',
+    score: 23.4,
   },
   {
     title: 'นักศึกษาฝึกงาน Data Analyst',
     company: 'บริษัท บลูปรินต์ อนาลิติกส์ จำกัด',
-    status: 'accepted',
+    status: 'approved',
     score: 91,
   },
   {
     title: 'ผู้ช่วยฝ่ายการตลาด',
     company: 'ริเวอร์ไลน์ สตูดิโอ',
-    status: 'rejected',
-    score: 44,
+    status: 'pending',
+    score: 68,
   },
 ]
 
-const statusMap: Record<HistoryStatus, { label: string; className: string }> = {
-  reviewing: { label: 'กำลังพิจารณา', className: 'bg-amber-100 text-amber-800' },
-  accepted: { label: 'ผ่านการคัดเลือก', className: 'bg-emerald-100 text-emerald-800' },
-  rejected: { label: 'ไม่ผ่านการคัดเลือก', className: 'bg-rose-100 text-rose-800' },
-}
-
 const applicantExamples: ApplicantExample[] = [
-  { name: 'ณัฐวุฒิ ใจดี', score: 88, status: 'รอพิจารณา' },
-  { name: 'พิมพ์ชนก แสงทอง', score: 95, status: 'ผ่านการคัดเลือก' },
-  { name: 'ธนกร วงศ์สุวรรณ', score: 63, status: 'ไม่ผ่าน' },
+  { name: 'Applicant User', score: 23.4, status: 'rejected' },
+  { name: 'applicant user', score: 23.4, status: 'approved' },
+  { name: 'www asdasd', score: 23.4, status: 'pending' },
 ]
+
+/* ---------- สถานะ: ใช้รูปแบบเดียวกับระบบจริง (badge วงรี + ไอคอน + note) ---------- */
+
+function getStatusStyle(status: HistoryStatus): {
+  label: string
+  className: string
+  emoji: string
+  note?: string
+} {
+  switch (status) {
+    case 'approved':
+      return {
+        label: 'ผ่านการพิจารณา',
+        className: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+        emoji: '✅',
+        note: 'ขอบคุณสำหรับความสนใจและการสมัครงานกับเรา',
+      }
+    case 'rejected':
+      return {
+        label: 'ไม่ผ่านการพิจารณา',
+        className: 'border-rose-200 bg-rose-50 text-rose-600',
+        emoji: '❌',
+        note: 'ขอบคุณสำหรับความสนใจและการสมัครงานกับเรา',
+      }
+    case 'pending':
+      return {
+        label: 'อยู่ระหว่างพิจารณา',
+        className: 'border-amber-200 bg-amber-50 text-amber-700',
+        emoji: '🕐',
+        note: 'กรุณารอผลการพิจารณาและการติดต่อจากบริษัท',
+      }
+  }
+}
 
 /* ---------- กรอบ "หน้าจอตัวอย่าง" ใช้ห่อ mockup แต่ละอัน ---------- */
 
@@ -82,59 +113,91 @@ function PreviewFrame({
         <span className="size-2 rounded-full bg-emerald-300" />
         <span className="ml-2 text-xs font-medium text-muted-foreground">{label}</span>
       </div>
-      <div className="p-4">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </div>
   )
 }
 
-/* ---------- ตัวอย่างที่ 1: ประวัติการสมัครของผู้สมัคร ---------- */
+/* ---------- ตัวอย่างที่ 1: ประวัติการสมัครของผู้สมัคร (อิงหน้า resumehistory จริง) ---------- */
 
 function ResumeHistoryExample() {
   return (
     <PreviewFrame label="ตัวอย่าง · ประวัติการสมัคร (มุมมองผู้สมัคร)">
+      <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+        <div>
+          <p className="text-sm font-semibold text-foreground">รายการสมัครของฉัน</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">กดที่รายการเพื่อดูประกาศงาน</p>
+        </div>
+        <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
+          <RefreshCw className="size-3.5" /> รีเฟรช
+        </span>
+      </div>
+
       <div className="flex flex-col gap-3">
         {historyExamples.map((item) => {
-          const status = statusMap[item.status]
+          const status = getStatusStyle(item.status)
           return (
             <div
               key={item.title}
-              className="flex flex-col gap-3 rounded-xl border border-border p-3 sm:flex-row sm:items-center sm:justify-between"
+              className="flex items-center gap-4 rounded-2xl border border-border px-4 py-3.5 sm:gap-6"
             >
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-sm font-semibold text-orange-700">
-                  {item.company.charAt(0)}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                  <p className="text-xs text-muted-foreground">{item.company}</p>
-                </div>
+              {/* Company icon */}
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-sm font-semibold text-accent-foreground">
+                {item.company.charAt(0)}
               </div>
-              <div className="flex items-center gap-4">
-                <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}>
-                  {status.label}
-                </span>
+
+              {/* Company + title */}
+              <div className="w-28 shrink-0 sm:w-36">
+                <p className="truncate text-sm font-semibold text-foreground">{item.company}</p>
+                <p className="truncate text-xs text-muted-foreground">{item.title}</p>
+              </div>
+
+              {/* Status badge */}
+              <span
+                className={`hidden shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium sm:inline-flex ${status.className}`}
+              >
+                {status.emoji} {status.label}
+              </span>
+
+              {/* Note */}
+              {status.note && (
+                <p className="hidden min-w-0 flex-1 items-center gap-1.5 truncate text-xs text-muted-foreground md:flex">
+                  <Mail className="size-3.5 shrink-0 text-primary" />
+                  <span className="truncate">{status.note}</span>
+                </p>
+              )}
+
+              {/* AI score */}
+              <div className="ml-auto flex shrink-0 items-center gap-4">
                 <div className="w-24">
-                  <div className="mb-1 flex justify-between text-[11px] text-muted-foreground">
-                    <span>AI score</span>
+                  <div className="mb-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <BrainCircuit className="size-3" /> AI score
+                    </span>
                     <span className="font-semibold text-foreground">{item.score}%</span>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-orange-500"
+                      className="h-full rounded-full bg-foreground"
                       style={{ width: `${item.score}%` }}
                     />
                   </div>
                 </div>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </div>
             </div>
           )
         })}
       </div>
+
+      <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+        ข้อมูลอัปเดตจากระบบสมัครงานของคุณ
+      </p>
     </PreviewFrame>
   )
 }
 
-/* ---------- ตัวอย่างที่ 2: มุมมองของ HR ที่เห็นรายชื่อผู้สมัคร ---------- */
+/* ---------- ตัวอย่างที่ 2: มุมมองของ HR ที่เห็นรายชื่อผู้สมัคร (อิงหน้ารายละเอียดประกาศจริง) ---------- */
 
 function HrApplicantViewExample() {
   return (
@@ -143,29 +206,50 @@ function HrApplicantViewExample() {
         <p className="text-sm font-semibold text-foreground">
           นักศึกษาฝึกงานฝ่ายออกแบบ UX/UI — บริษัท คราฟท์ ดีไซน์ จำกัด
         </p>
-        <span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+        <span className="hidden items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground sm:flex">
           <Users className="size-3.5" /> {applicantExamples.length} คน
         </span>
       </div>
-      <div className="flex flex-col gap-2">
-        {applicantExamples.map((a) => (
-          <div
-            key={a.name}
-            className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5"
-          >
-            <div className="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
-              {a.name.charAt(0)}
+
+      <div className="flex flex-col gap-2 border-t border-border pt-3">
+        {applicantExamples.map((a, index) => {
+          const status = getStatusStyle(a.status)
+          const initials = a.name
+            .split(' ')
+            .map((part) => part.charAt(0))
+            .join('')
+            .slice(0, 2)
+
+          return (
+            <div
+              key={`${a.name}-${index}`}
+              className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5 sm:gap-4"
+            >
+              <span className="w-4 shrink-0 text-center text-xs font-medium text-muted-foreground">
+                {index + 1}
+              </span>
+
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+                {initials.toUpperCase()}
+              </div>
+
+              <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                {a.name}
+              </span>
+
+              <div className="shrink-0 text-right">
+                <p className="text-[10px] text-muted-foreground">AI Score</p>
+                <p className="text-sm font-semibold text-foreground">{a.score.toFixed(2)}</p>
+              </div>
+
+              <span
+                className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium ${status.className}`}
+              >
+                {status.emoji} {status.label}
+              </span>
             </div>
-            <span className="flex-1 truncate text-sm text-foreground">{a.name}</span>
-            <div className="text-right">
-              <p className="text-[10px] text-muted-foreground">AI score</p>
-              <p className="text-sm font-semibold text-foreground">{a.score}</p>
-            </div>
-            <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-              {a.status}
-            </span>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </PreviewFrame>
   )
@@ -229,7 +313,7 @@ export default function AboutPage() {
       <Navbar />
 
       <main className="min-h-[calc(100vh-73px)] bg-background">
-        <section className="mx-auto max-w-4xl px-5 py-14 lg:px-8">
+        <section className="mx-auto max-w-5xl px-5 py-14 lg:px-8">
           {/* Hero */}
           <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700">
             <Sparkles className="size-3.5" /> เกี่ยวกับเรา
