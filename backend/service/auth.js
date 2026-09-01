@@ -163,6 +163,7 @@ export const ApplyResumeService = async (
             resume_url : resumeUpload.publicUrl,
             job_text : post.description,
             model_provider: post.model_provider,
+            faculty_match: post.faculty
         }
     );
 
@@ -204,6 +205,8 @@ export const ApplyResumeService = async (
         aiResult.data.storytelling_score,
         aiResult.data.ai_reason,
         aiResult.data.overall_confidence,
+        aiResult.data.specific_strengths,
+        aiResult.data.faculty_match
     );
 
     return {
