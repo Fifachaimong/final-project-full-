@@ -1,6 +1,7 @@
 import { CreatePostModel, DeleteMemberInPostModel, DeletePostModel, EditPostModel, GetMemberFileUrlsByOwnerAndPostID, GetMemberModel, GetMemberResumeResultModel, GetMemberTotalCount, GetPostByHRModel, GetPostTotalCountByHR, GetProfileByMemberModel, UpdateCandidateStatusModel } from "../models/hr.js";
 import AppError from "../utils/AppError.js";
 import { UploadToSupabase } from "../utils/UploadToSupabase.js";
+import supabase from "../config/supabase.js"
 
 export const CreatePostService = async (id, data, file) => {
     if (check.length === 0) {
