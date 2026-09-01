@@ -473,7 +473,6 @@ export default function AdminMembersPage() {
   const roleCounts = Object.entries(ROLES).map(([id, r]) => ({
     id,
     label: r.label,
-    count: memberList.filter((m) => m.role === id).length,
   }))
 
   return (
@@ -508,7 +507,7 @@ export default function AdminMembersPage() {
           {/* Stats row */}
           {memberList.length > 0 && (
             <div className="mb-5 flex flex-wrap gap-3">
-              {roleCounts.map(({ id, label, count }) => {
+              {roleCounts.map(({ id, label }) => {
                 const role = ROLES[id]
                 return (
                   <button
@@ -521,9 +520,6 @@ export default function AdminMembersPage() {
                     }`}
                   >
                     <span>{label}</span>
-                    <span className={`rounded-full px-1.5 py-0.5 text-xs ${roleFilter === id ? "bg-white/20" : "bg-muted"}`}>
-                      {count}
-                    </span>
                   </button>
                 )
               })}

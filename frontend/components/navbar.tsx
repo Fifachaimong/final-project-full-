@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronDown } from "lucide-react"
 import { UserAvatar } from "@/components/user-avatar"
 import { useUser } from "@/contexts/user-context"
 import { Button } from "@/components/ui/button"
@@ -57,75 +56,26 @@ export function Navbar() {
             href={homeLink}
             className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-coral"
           >
-            Home
+            หน้าหลัก
           </Link>
 
-          {/* Resume */}
-          <div className="group relative">
+          {/* ประกาศงาน — เดิมเป็น dropdown ที่ยัด "จัดการผู้ใช้งาน" ไว้ข้างในด้วย
+              ทั้งที่ไม่เกี่ยวกันเลย เลยแยกออกมาเป็นลิงก์เดี่ยว ๆ แทน */}
+          <Link
+            href="/resume"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            {browseLabel}
+          </Link>
 
-            <button
-              className="
-                flex items-center gap-1 rounded-md px-3 py-2
-                text-sm font-medium text-gray-700
-                transition-all duration-200
-                hover:bg-gray-100 hover:text-black
-              "
+          {user?.role === "admin" && (
+            <Link
+              href="/application"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-              Resume
-
-              <ChevronDown
-                className="
-                  h-4 w-4
-                  transition-transform duration-200
-                  group-hover:rotate-180
-                "
-              />
-            </button>
-
-            <div
-              className="
-                invisible absolute left-0 top-full z-50 mt-2 w-52
-                translate-y-2 rounded-xl border border-gray-200
-                bg-white p-2 opacity-0 shadow-xl
-                transition-all duration-200
-                group-hover:visible
-                group-hover:translate-y-0
-                group-hover:opacity-100
-              "
-            >
-
-              <Link
-                href="/resume"
-                className="
-                  flex items-center rounded-lg px-4 py-3 text-sm
-                  text-gray-700 transition-colors
-                  hover:bg-blue-50 hover:text-blue-600
-                "
-              >
-                📄
-                <span className="ml-3">
-                  {browseLabel}
-                </span>
-              </Link>
-
-              {user?.role === "admin" && (
-                <Link
-                  href="/application"
-                  className="
-                    mt-1 flex items-center rounded-lg px-4 py-3 text-sm
-                    text-gray-700 transition-colors
-                    hover:bg-blue-50 hover:text-blue-600
-                  "
-                >
-                  📁
-                  <span className="ml-3">
-                    My Applications
-                  </span>
-                </Link>
-              )}
-
-            </div>
-          </div>
+              จัดการผู้ใช้งาน
+            </Link>
+          )}
 
           {/* About Us */}
           <Link
@@ -136,7 +86,7 @@ export function Navbar() {
               hover:text-foreground
             "
           >
-            About Us
+            เกี่ยวกับเรา
           </Link>
 
         </nav>
