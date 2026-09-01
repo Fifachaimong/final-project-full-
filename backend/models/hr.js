@@ -99,16 +99,24 @@ export const GetPostTotalCountByHR = async(owner_id) => {
     return result[0]
 }
 
-export const GetMemberTotalCount = async(owner_id, post_id) => {
-    const [result] = await db.query(`
+export const GetMemberTotalCount = async(owner_id, post_id, filter) => {
+    let query = `
         SELECT COUNT(*) AS total
         FROM posts p 
         JOIN members m ON m.post_id = p.id
         JOIN users u ON m.user_id = u.id
         JOIN resume r ON m.id = r.member_id
         WHERE p.owner_id = ? AND p.id = ?
-    `,
-    [Number(owner_id), post_id])
+    `
+
+    const value = [Number(owner_id), post_id]
+
+    if (filter) {
+        query += ' AND m.status = ?'
+        value.push(filter)
+    }
+
+    const [result] = await db.query(query, value)
 
     return result[0]
 }

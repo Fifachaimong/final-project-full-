@@ -7,8 +7,7 @@ import { useUser } from "@/contexts/user-context"
 import { Button } from "@/components/ui/button"
 
 export function Navbar() {
-  // Reads the single /api/me fetch done once in <UserProvider> (app/layout.tsx)
-  // instead of fetching it again here.
+  
   const { user } = useUser()
 
   const homeLink =
@@ -19,6 +18,11 @@ export function Navbar() {
       : user?.role === "applicant"
       ? "/home/applicant"
       : "/"
+
+  const browseLabel =
+    user?.role === "hr"
+      ? "ดูประกาศของตัวเอง"
+      : "ดูประกาศทั้งหมด"
 
   return (
     <header className="border-b border-border">
@@ -100,7 +104,7 @@ export function Navbar() {
               >
                 📄
                 <span className="ml-3">
-                  Browse
+                  {browseLabel}
                 </span>
               </Link>
 
