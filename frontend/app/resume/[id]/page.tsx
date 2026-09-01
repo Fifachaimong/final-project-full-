@@ -1311,6 +1311,35 @@ function SuccessToast({
 }
 
 export default function PostDetailPage() {
+
+  const [statusFilters, setStatusFilters] = useState<Array<"approved" | "rejected" | "pending">>([])
+
+  const [filterOpen, setFilterOpen] = useState(false)
+
+  const filterHoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const openFilter = () => {
+    if (filterHoverTimeout.current) {
+      clearTimeout(filterHoverTimeout.current)
+    }
+    setFilterOpen(true)
+  }
+
+  const closeFilterDelayed = () => {
+    filterHoverTimeout.current = setTimeout(() => {
+      setFilterOpen(false)
+    }, 150)
+  }
+
+  const toggleStatusFilter = (
+    status: "approved" | "rejected" | "pending"
+  ) => {
+    setStatusFilters((prev) =>
+      prev.includes(status)
+        ? prev.filter((s) => s !== status)
+        : [...prev, status]
+    )
+  }
   const { id } =
     useParams<{ id: string }>()
 
@@ -1719,6 +1748,17 @@ export default function PostDetailPage() {
           post.deadline
         )
       : false
+  
+  const filteredApplicants = statusFilters.length
+  ? applicants.filter((a) =>
+      statusFilters.includes(
+        (a.status?.trim().toLowerCase() ?? "") as
+          | "approved"
+          | "rejected"
+          | "pending"
+      )
+    )
+  : applicants
 
   if (loading) {
     return (
@@ -1928,35 +1968,109 @@ export default function PostDetailPage() {
                 </div>
 
                 <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                  {applicantsMeta?.total ?? applicants.length} คน
+                  {filteredApplicants.length} คน
                 </span>
-              </div>
+                </div>
 
+                <div
+                  className="relative"
+                  onMouseEnter={openFilter}
+                  onMouseLeave={closeFilterDelayed}
+                >
+                  <button
+                    type="button"
+                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      statusFilters.length > 0
+                        ? "border-primary/40 bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                    }`}
+                  >
+                    สถานะ
+                    {statusFilters.length > 0 && (
+                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+                        {statusFilters.length}
+                      </span>
+                    )}
+                    <ChevronRight
+                      className={`h-3.5 w-3.5 transition-transform ${
+                        filterOpen ? "rotate-90" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {filterOpen && (
+                    <div className="absolute left-0 top-full z-20 mt-1 w-56 rounded-xl border border-border bg-card p-2 shadow-lg">
+                      {(
+                        [
+                          {
+                            value: "approved" as const,
+                            label: "✅ ผ่านการพิจารณา",
+                          },
+                          {
+                            value: "rejected" as const,
+                            label: "❌ ไม่ผ่านการพิจารณา",
+                          },
+                          {
+                            value: "pending" as const,
+                            label: "🕐 อยู่ระหว่างพิจารณา",
+                          },
+                        ]
+                      ).map((item) => (
+                        <label
+                          key={item.value}
+                          className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-accent"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={statusFilters.includes(item.value)}
+                            onChange={() => toggleStatusFilter(item.value)}
+                            className="h-4 w-4 rounded border-input accent-primary"
+                          />
+                          {item.label}
+                        </label>
+                      ))}
+
+                      {statusFilters.length > 0 && (
+                        <>
+                          <div className="my-1 h-px bg-border" />
+
+                          <button
+                            type="button"
+                            onClick={() => setStatusFilters([])}
+                            className="w-full rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                          >
+                            ล้างตัวกรองทั้งหมด
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
               <div className="h-px bg-border" />
 
-              {applicants.length === 0 ? (
+              {filteredApplicants.length === 0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
                   <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
                     <Users className="h-6 w-6 text-muted-foreground" />
                   </div>
 
                   <p className="text-sm font-medium text-foreground">
-                    ขณะนี้ไม่มีคนสมัครอยู่
+                    {statusFilters.length > 0
+                      ? "ไม่พบผู้สมัครในสถานะที่เลือก"
+                      : "ขณะนี้ไม่มีคนสมัครอยู่"}
                   </p>
 
                   <p className="mt-1 text-xs text-muted-foreground">
-                    เมื่อมีผู้สมัครงาน
-                    รายชื่อจะปรากฏที่นี่
+                    {statusFilters.length > 0
+                      ? "ลองเลือกสถานะอื่น หรือล้างตัวกรอง"
+                      : "เมื่อมีผู้สมัครงาน รายชื่อจะปรากฏที่นี่"}
                   </p>
                 </div>
               ) : (
                 <>
                   <div className="flex max-h-[650px] flex-col gap-2 overflow-y-auto">
-                    {applicants.map(
-                      (
-                        applicant,
-                        index
-                      ) => (
+                    {filteredApplicants.map(
+                      (applicant, index) => (
                         <ApplicantRow
                           key={`${applicant.user_id}-${index}`}
                           index={

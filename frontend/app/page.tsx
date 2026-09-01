@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/user-context";
+import { Navbar } from "@/components/navbar"
 
 export default function HomePage() {
 
@@ -40,76 +41,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          {/* Logo */}
-          <Link href={homeLink} className="flex items-center gap-2">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              className="h-6 w-6"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M12 2L2 7l10 5 10-5-10-5z" />
-              <path d="M2 17l10 5 10-5" />
-              <path d="M2 12l10 5 10-5" />
-            </svg>
-            <span className="text-xl font-semibold">ResumeAnalysis</span>
-          </Link>
-
-          {/* Navigation */}
-          <nav className="hidden items-center gap-8 md:flex">
-            <Link
-              href="/home"
-              className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-coral"
-            >
-              Home
-            </Link>
-            <Link
-              href="#"
-              className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              Resume
-              <ChevronDown className="h-4 w-4" />
-            </Link>
-            {/* <Link
-              href="#"
-              className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              Cover Letter
-              <ChevronDown className="h-4 w-4" />
-            </Link> */}
-            <Link
-              href="/about"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              About Us
-            </Link>
-            {/* <Link
-              href="#"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              Pricing
-            </Link> */}
-          </nav>
-
-          {/* Auth Buttons - Top Right */}
-          <div className="flex items-center gap-4">
-            <Link
-              href="/login"
-              className="hidden text-sm font-medium text-muted-foreground hover:text-foreground md:block"
-            >
-              เข้าสู่ระบบ
-            </Link>
-            <Link href="/register">
-              <Button className="bg-coral text-white hover:bg-coral/90">
-                สมัครสมาชิก
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <main className="mx-auto max-w-7xl px-6 py-16 lg:py-24">
