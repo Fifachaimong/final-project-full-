@@ -78,11 +78,11 @@ export const GetMemberModel = async(owner_id, post_id, setoff, limit, filter) =>
     const value = [owner_id, post_id]
 
     if (filter) {
-        query += ' AND m.status'
+        query += ' AND m.status = ?'
         value.push(filter)
     }
 
-    query += 'LIMIT ? OFFSET ?'
+    query += ' LIMIT ? OFFSET ?'
     value.push(limit, setoff)
 
     const [result] = await db.query(query, value)

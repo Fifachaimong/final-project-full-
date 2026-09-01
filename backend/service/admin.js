@@ -4,7 +4,7 @@ import AppError from "../utils/AppError.js"
 import bcrypt from "bcryptjs"
 
 export const GetUserByAdminService = async (query = {}) => {
-    let { page, limit } = query
+    let { page, limit, filter } = query
 
     page = Number(page)
     limit = Number(limit)
@@ -13,7 +13,9 @@ export const GetUserByAdminService = async (query = {}) => {
     limit = limit < 11 && limit > 0 ? limit : 10
     const setoff = (page - 1) * limit 
 
-    const data = await GetUserByAdminModel(setoff, limit)
+    filter = ['applicant', 'hr', 'admin'].includes.filter ? filter : null
+
+    const data = await GetUserByAdminModel(setoff, limit, filter)
 
     const total = await GetTotalPage('users')
     const totalPages = Math.ceil(total.total/limit)
