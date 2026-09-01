@@ -1,13 +1,15 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { UserAvatar } from "@/components/user-avatar"
 import { useUser } from "@/contexts/user-context"
 import { Button } from "@/components/ui/button"
 
 export function Navbar() {
-  
+
   const { user } = useUser()
+  const pathname = usePathname()
 
   const homeLink =
     user?.role === "admin"
@@ -22,6 +24,28 @@ export function Navbar() {
     user?.role === "hr"
       ? "ดูประกาศของตัวเอง"
       : "ดูประกาศทั้งหมด"
+
+  // เช็คว่าลิงก์นี้ตรงกับหน้าที่เปิดอยู่ไหม — ใช้ prefix match สำหรับ
+  // /resume เพราะมีหน้าลูกด้วย (เช่น /resume/123) อยากให้ยังไฮไลต์ค้างไว้
+  const isActive = (href: string, matchChildren = false) => {
+    if (!pathname) return false
+
+    if (matchChildren) {
+      return (
+        pathname === href || pathname.startsWith(`${href}/`)
+      )
+    }
+
+    return pathname === href
+  }
+
+  // active = ตัวเข้ม (พื้นดำ ตัวหนังสือขาว), ไม่ active = จาง ๆ (ตัวหนังสือเทา)
+  const linkClass = (active: boolean) =>
+    `rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+      active
+        ? "bg-foreground text-background"
+        : "text-muted-foreground hover:text-foreground"
+    }`
 
   return (
     <header className="border-b border-border">
@@ -54,7 +78,7 @@ export function Navbar() {
 
           <Link
             href={homeLink}
-            className="flex items-center gap-1 text-sm font-medium text-foreground hover:text-coral"
+            className={linkClass(isActive(homeLink))}
           >
             หน้าหลัก
           </Link>
@@ -63,7 +87,7 @@ export function Navbar() {
               ทั้งที่ไม่เกี่ยวกันเลย เลยแยกออกมาเป็นลิงก์เดี่ยว ๆ แทน */}
           <Link
             href="/resume"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            className={linkClass(isActive("/resume", true))}
           >
             {browseLabel}
           </Link>
@@ -71,7 +95,7 @@ export function Navbar() {
           {user?.role === "admin" && (
             <Link
               href="/application"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+              className={linkClass(isActive("/application"))}
             >
               จัดการผู้ใช้งาน
             </Link>
@@ -80,11 +104,7 @@ export function Navbar() {
           {/* About Us */}
           <Link
             href="/about"
-            className="
-              text-sm font-medium
-              text-muted-foreground
-              hover:text-foreground
-            "
+            className={linkClass(isActive("/about"))}
           >
             เกี่ยวกับเรา
           </Link>
