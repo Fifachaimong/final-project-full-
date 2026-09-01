@@ -145,7 +145,15 @@ export const GetMemberService = async (owner_id, post_id, query = {}) => {
     limit = limit < 11 && limit > 0 ? limit : 10
     const setoff = (page - 1) * limit
 
-    filter = ['pending', 'approved', 'rejected'].includes(filter) ? filter : null
+    const allowedStatuses = ['pending', 'approved', 'rejected']
+
+    const filterArray = Array.isArray(filter)
+        ? filter
+        : filter
+        ? [filter]
+        : []
+
+    filter = filterArray.filter((f) => allowedStatuses.includes(f))
 
     const data = await GetMemberModel(owner_id, post_id, setoff, limit, filter)
 

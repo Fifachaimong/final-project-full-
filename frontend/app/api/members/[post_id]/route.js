@@ -29,10 +29,16 @@ export async function GET(request, { params }) {
     const page = searchParams.get("page") ?? "1"
     const limit = searchParams.get("limit") ?? "10"
 
+    const filters = searchParams.getAll("filter")
+
     const backendParams = new URLSearchParams({
       page,
       limit,
     })
+
+    for (const f of filters) {
+      backendParams.append("filter", f)
+    }
 
     const backendUrl =
       `http://localhost:5000/hr/posts/${encodeURIComponent(post_id)}/members?${backendParams.toString()}`

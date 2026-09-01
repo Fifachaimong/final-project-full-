@@ -98,8 +98,11 @@ export const GetMemberModel = async(owner_id, post_id, setoff, limit, filter) =>
 
     const value = [owner_id, post_id]
 
-    if (filter) {
-        query += ' AND m.status = ?'
+    // filter เป็น array เสมอ (normalize มาจาก service แล้ว) — เช็คถูก HR ติ๊ก
+    // มาหลายสถานะพร้อมกันได้ (เช่น approved + rejected) ใช้ IN (?) ซึ่ง mysql2
+    // จะขยาย array เป็น IN (?, ?, ...) ให้อัตโนมัติ
+    if (filter && filter.length > 0) {
+        query += ' AND m.status IN (?)'
         value.push(filter)
     }
 
@@ -132,8 +135,8 @@ export const GetMemberTotalCount = async(owner_id, post_id, filter) => {
 
     const value = [Number(owner_id), post_id]
 
-    if (filter) {
-        query += ' AND m.status = ?'
+    if (filter && filter.length > 0) {
+        query += ' AND m.status IN (?)'
         value.push(filter)
     }
 

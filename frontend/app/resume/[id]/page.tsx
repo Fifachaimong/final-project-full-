@@ -1567,6 +1567,13 @@ export default function PostDetailPage() {
             limit: "10",
           })
 
+        // ส่งทุกสถานะที่ติ๊กไว้ไปให้ backend กรอง+นับ meta.total ให้ถูกต้อง
+        // (เดิมกรองแค่ฝั่ง client บนข้อมูล 10 คนของหน้าปัจจุบัน ทำให้เห็น
+        // ไม่ครบและตัวเลขหน้า/ทั้งหมดผิดเพี้ยนไปตามหน้าที่เปิดอยู่)
+        for (const status of statusFilters) {
+          params.append("filter", status)
+        }
+
         const res =
           await fetch(
             `/api/members/${encodeURIComponent(id)}?${params.toString()}`,
@@ -1635,7 +1642,14 @@ export default function PostDetailPage() {
     isOwner,
     id,
     applicantsPage,
+    statusFilters,
   ])
+
+  // ติ๊ก/ยกเลิกติ๊กสถานะแล้วรีเซ็ตกลับไปหน้า 1 เสมอ กันกรณีอยู่หน้า 3
+  // แล้ว filter ใหม่มีแค่ 1 หน้า ทำให้ค้างอยู่หน้าว่าง ๆ
+  useEffect(() => {
+    setApplicantsPage(1)
+  }, [statusFilters])
 
   const handleApplied =
     () => {
@@ -1748,18 +1762,9 @@ export default function PostDetailPage() {
           post.deadline
         )
       : false
-  
-  const filteredApplicants = statusFilters.length
-  ? applicants.filter((a) =>
-      statusFilters.includes(
-        (a.status?.trim().toLowerCase() ?? "") as
-          | "approved"
-          | "rejected"
-          | "pending"
-      )
-    )
-  : applicants
 
+  // ไม่ต้องกรองฝั่ง client อีกแล้ว — backend กรอง + paginate ให้ตรงกับ
+  // statusFilters ที่เลือกไว้แล้วผ่าน query "filter" ที่ fetchApplicants ส่งไป
   if (loading) {
     return (
       <main className="min-h-screen bg-background">
@@ -1968,7 +1973,7 @@ export default function PostDetailPage() {
                 </div>
 
                 <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                  {filteredApplicants.length} คน
+                  {applicantsMeta?.total ?? applicants.length} คน
                 </span>
                 </div>
 
@@ -2048,7 +2053,7 @@ export default function PostDetailPage() {
                 </div>
               <div className="h-px bg-border" />
 
-              {filteredApplicants.length === 0 ? (
+              {applicants.length === 0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
                   <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
                     <Users className="h-6 w-6 text-muted-foreground" />
@@ -2069,7 +2074,7 @@ export default function PostDetailPage() {
               ) : (
                 <>
                   <div className="flex max-h-[650px] flex-col gap-2 overflow-y-auto">
-                    {filteredApplicants.map(
+                    {applicants.map(
                       (applicant, index) => (
                         <ApplicantRow
                           key={`${applicant.user_id}-${index}`}
