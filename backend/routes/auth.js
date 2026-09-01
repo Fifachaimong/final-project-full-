@@ -1,5 +1,5 @@
 import express from "express";
-import { ApplyResume, EditMyProfile, GetMyApplicationResult, GetMyProfile, GetPost, GetPostByID, Login, Register } from "../controller/auth.js";
+import { EditMyProfile, GetMyProfile, GetPostByID, Login, Register } from "../controller/auth.js";
 import { registerSchema, loginSchema, editMyProfileSchema } from "../schema/auth.js";
 import { ValidateBody } from "../middleware/validate.js";
 import roleMiddleware from "../middleware/role.js";
@@ -11,23 +11,8 @@ const router = express.Router()
 router.post('/register', ValidateBody(registerSchema), Register)
 router.post('/login', ValidateBody(loginSchema), Login)
 router.put('/profile', authMiddleware, roleMiddleware('applicant', 'hr', 'admin'), upload.single('icon'), ValidateBody(editMyProfileSchema), EditMyProfile)
-router.get('/posts', authMiddleware, roleMiddleware('applicant', 'admin'), GetPost)
 router.get('/posts/:id', authMiddleware, roleMiddleware('applicant', 'hr', 'admin'), GetPostByID)
 router.get('/profile', authMiddleware, roleMiddleware('applicant', 'hr', 'admin'), GetMyProfile)
-router.get('/result', authMiddleware, roleMiddleware('applicant'), GetMyApplicationResult)
-router.post("/apply/:postId", authMiddleware, roleMiddleware('applicant'),
-  upload.fields([
-    {
-      name: "resume",
-      maxCount: 1,
-    },
-    {
-      name: "transcript",
-      maxCount: 1,
-    },
-  ]),
-  ApplyResume
-);
 
 export default router
 

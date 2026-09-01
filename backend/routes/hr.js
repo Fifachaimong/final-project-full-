@@ -8,7 +8,7 @@ import { CreatePost, DeleteMemberInPost, DeletePost, EditPost, GetMember, GetMem
 
 const router = express.Router()
 
-router.get('/posts', authMiddleware, roleMiddleware('hr', 'admin'), GetPostByHR)
+router.get('/posts', authMiddleware, roleMiddleware('hr'), GetPostByHR)
 router.get('/posts/:post_id/members', authMiddleware, roleMiddleware('hr', 'admin'), GetMember)
 router.get('/members/profile/:id', authMiddleware, roleMiddleware('hr', 'admin'), GetProfileByMember)
 router.get('/posts/:post_id/members/:id', authMiddleware, roleMiddleware('hr', 'admin'), GetMemberResumeResult)

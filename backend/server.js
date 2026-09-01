@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
 import authRouter from './routes/auth.js'
+import applicantRouter from './routes/applicant.js'
 import hrRouter from "./routes/hr.js"
 import adminRouter from "./routes/admin.js"
 import ErrorMiddleware from './middleware/ErrorMiddleware.js'
@@ -19,6 +20,7 @@ app.use(cors({
 }))
 app.use(morgan('dev'))
 app.use('/auth', authRouter)
+app.use('/applicant', applicantRouter)
 app.use('/hr', hrRouter)
 app.use('/admin', adminRouter)
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))

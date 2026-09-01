@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     })
 
     const response = await fetch(
-      `http://localhost:5000/auth/posts?${backendParams.toString()}`,
+      `http://localhost:5000/applicant/posts?${backendParams.toString()}`,
       {
         method: "GET",
         headers: {

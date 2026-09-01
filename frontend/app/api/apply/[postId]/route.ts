@@ -33,7 +33,7 @@ export async function POST(
     const formData = await request.formData()
 
     const response = await fetch(
-      `${BACKEND_URL}/auth/apply/${encodeURIComponent(postId)}`,
+      `${BACKEND_URL}/applicant/apply/${encodeURIComponent(postId)}`,
       {
         method: "POST",
         headers: {

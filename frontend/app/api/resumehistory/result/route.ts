@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const cookieHeader = request.headers.get("cookie") || "";
 
-    const res = await fetch(`${BACKEND_URL}/auth/result`, {
+    const res = await fetch(`${BACKEND_URL}/applicant/result`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
