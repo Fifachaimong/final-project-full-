@@ -37,3 +37,16 @@ export const EditUserByIDModel = async (data) => {
     )
     return result
 }
+
+export const GetUserFileUrlsByUserID = async (id) => {
+    const [result] = await db.query(`
+        SELECT u.icon AS profile, p.icon AS logo_company, r.resume_url AS resume, r.transcript_url AS transcript
+        FROM user u
+        JOIN members m ON m.user_id = u.id
+        JOIN posts p ON p.owner_id = u.id
+        JOIN resume r ON r.member_id = m.id
+        WHERE u.id = ?
+    `,[id])
+
+    return result
+}

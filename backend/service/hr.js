@@ -1,4 +1,4 @@
-import { CreatePostModel, DeleteMemberInPostModel, DeletePostModel, EditPostModel, GetMemberModel, GetMemberResumeResultModel, GetMemberTotalCount, GetPostByHRModel, GetPostTotalCountByHR, GetProfileByMemberModel, UpdateCandidateStatusModel } from "../models/hr.js";
+import { CreatePostModel, DeleteMemberInPostModel, DeletePostModel, EditPostModel, GetMemberFileUrlsByOwnerAndPostID, GetMemberModel, GetMemberResumeResultModel, GetMemberTotalCount, GetPostByHRModel, GetPostTotalCountByHR, GetProfileByMemberModel, UpdateCandidateStatusModel } from "../models/hr.js";
 import AppError from "../utils/AppError.js";
 import { UploadToSupabase } from "../utils/UploadToSupabase.js";
 
@@ -52,8 +52,46 @@ export const EditPostService = async (data, owner_id, post_id, file, role) => {
     }
 }
 
-export const DeletePostService = async (id, post_id, role) => {
-    const check = await DeletePostModel(id, post_id, role)
+export const DeletePostService = async (owner_id, post_id, role) => {
+    const data = await GetPostFileUrlsByOwnerAndPostID(owner_id, post_id, role)
+
+    const logoCompanyPaths = []
+    const resumePaths = []
+    const transcriptPaths = []
+
+    const getUrl = (url) => {
+        return url.split('/').pop()
+    }
+
+    for (const item of data) {
+
+        if (item.logo_company) {
+            logoCompanyPaths.push(getUrl(item.logo_company))
+        }
+
+        if (item.resume) {
+            resumePaths.push(getUrl(item.resume))
+        }
+
+        if (item.transcript) {
+            transcriptPaths.push(getUrl(item.transcript))
+        }
+
+    }
+
+    if (logoCompanyPaths.length > 0) {
+        await supabase.storage.from("logo_company").remove(logoCompanyPaths)
+    }
+
+    if (resumePaths.length > 0) {
+        await supabase.storage.from("resume").remove(resumePaths)
+    }
+
+    if (transcriptPaths.length > 0) {
+        await supabase.storage.from("transcript").remove(transcriptPaths)
+    }
+
+    const check = await DeletePostModel(owner_id, post_id, role)
     if (check.affectedRows === 0) {
         throw new AppError('Post not found', 404)
     }
@@ -169,9 +207,38 @@ export const UpdateCandidateStatusService = async (member_status, member_id, own
 }
 
 export const DeleteMemberInPostService = async (member_id, owner_id, post_id) => {
-    const data = await DeleteMemberInPostModel(member_id, owner_id, post_id)
+    const data = await GetMemberFileUrlsByOwnerAndPostID(member_id, owner_id, post_id)
 
-    if (data.affectedRows === 0) {
+    const resumePaths = []
+    const transcriptPaths = []
+
+    const getUrl = (url) => {
+        return url.split('/').pop()
+    }
+
+    for (const item of data) {
+
+        if (item.resume) {
+            resumePaths.push(getUrl(item.resume))
+        }
+
+        if (item.transcript) {
+            transcriptPaths.push(getUrl(item.transcript))
+        }
+
+    }
+
+    if (resumePaths.length > 0) {
+        await supabase.storage.from("resume").remove(resumePaths)
+    }
+
+    if (transcriptPaths.length > 0) {
+        await supabase.storage.from("transcript").remove(transcriptPaths)
+    }
+
+    const result = await DeleteMemberInPostModel(member_id, owner_id, post_id)
+
+    if (result.affectedRows === 0) {
         throw new AppError('Member not found', 404)
     }
 

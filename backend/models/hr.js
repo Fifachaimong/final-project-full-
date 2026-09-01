@@ -33,6 +33,27 @@ export const EditPostModel = async(data, owner_id, post_id, icon, role) => {
     return result
 }
 
+export const GetPostFileUrlsByOwnerAndPostID = async (owner_id, post_id, role) => {
+    let query = `
+        SELECT p.icon AS logo_company, r.resume_url AS resume, r.transcript_url AS transcript
+        FROM posts p
+        JOIN members m ON m.post_id = p.id
+        JOIN resume r ON r.member_id = m.id
+        WHERE p.id = ?
+    `
+
+    const value = [post_id]
+
+    if (role !== 'admin') {
+        query += ' AND p.owner_id = ?'
+        value.push(owner_id)
+    }
+
+    const [result] = await db.query(query, value)
+
+    return result
+}
+
 export const DeletePostModel = async(owner_id, post_id, role) => {
     let query = 'DELETE FROM posts WHERE id = ?'
     let value = [post_id]
@@ -153,8 +174,20 @@ export const UpdateCandidateStatusModel = async (member_status, member_id, owner
         UPDATE members m
         JOIN posts p ON p.id = m.post_id
         SET m.status = COALESCE(?, m.status)
-        WHERE m.user_id = ? AND p.owner_id = ? AND p.id = ?
+        WHERE m.user_id = ? AND p.owner_id = ? AND m.post_id = ?
     `,[member_status, member_id, owner_id, post_id])
+
+    return result
+}
+
+export const GetMemberFileUrlsByOwnerAndPostID = async (member_id, owner_id, post_id) => {
+    const [result] = await db.query(`
+        SELECT r.resume_url AS resume, r.transcript_url AS transcript
+        FROM members m
+        JOIN resume r ON m.id = r.member_id
+        JOIN posts p ON p.id = m.post_id
+        WHERE m.user_id = ? AND p.owner_id = ? AND m.post_id = ?
+    `,[member_id, Number(owner_id), post_id])
 
     return result
 }
@@ -165,7 +198,7 @@ export const DeleteMemberInPostModel = async (member_id, owner_id, post_id) => {
         FROM members AS m
         JOIN posts AS p ON p.id = m.post_id
         WHERE m.user_id = ? AND p.owner_id = ? AND p.id = ?
-    `, [member_id, Number(owner_id), post_id])
+    `,[member_id, Number(owner_id), post_id])
 
     return result
 }
