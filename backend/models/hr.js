@@ -84,7 +84,7 @@ export const GetPostTotalCountByHR = async(owner_id) => {
     const [result] = await db.query(`
         SELECT COUNT(*) AS total
         FROM posts
-        WHERE p.owner_id = ?
+        WHERE owner_id = ?
     `,[owner_id])
 
     return result[0]

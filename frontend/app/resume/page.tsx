@@ -1321,6 +1321,12 @@ export default function ResumePage() {
 
   const { user: contextUser, loading: loadingUser } = useUser()
 
+  // hr ใช้ /api/hr/posts (เห็นแค่โพสต์ของตัวเอง) เพราะ backend ปิดสิทธิ์
+  // role "hr" ออกจาก /auth/posts แล้ว — ส่วน applicant/admin ใช้ /api/posts
+  // (เห็นโพสต์ของทุกคน) เหมือนเดิม
+  const isHrOwnPostsView =
+    contextUser?.role === "hr"
+
   useEffect(() => {
     if (contextUser?.id) {
       setCurrentUser({
@@ -1342,18 +1348,33 @@ export default function ResumePage() {
 
   const fetchPosts =
     useCallback(async () => {
+      // รอให้รู้ role ก่อนค่อยยิง — เพราะตอนนี้ backend บล็อก role "hr"
+      // ไม่ให้เรียก /auth/posts แล้ว (403) ถ้ายิงไปก่อนรู้ role จะพลาดฟรี
+      if (loadingUser) return
+
       setLoading(true)
 
+      // hr ต้องใช้ /api/hr/posts (เห็นแค่โพสต์ของตัวเอง) เพราะ backend
+      // ปิดสิทธิ์ role "hr" ออกจาก /auth/posts แล้ว ส่วน applicant/admin
+      // (หรือยังไม่ login) ใช้ /api/posts (เห็นโพสต์ของทุกคน) เหมือนเดิม
       try {
-        const params =
-          new URLSearchParams({
-            search,
-            page: String(page),
-            limit: String(POSTS_PER_PAGE),
-          })
+        const params = isHrOwnPostsView
+          ? new URLSearchParams({
+              page: String(page),
+              limit: String(POSTS_PER_PAGE),
+            })
+          : new URLSearchParams({
+              search,
+              page: String(page),
+              limit: String(POSTS_PER_PAGE),
+            })
+
+        const endpoint = isHrOwnPostsView
+          ? "/api/hr/posts"
+          : "/api/posts"
 
         const res = await fetch(
-          `/api/posts?${params.toString()}`,
+          `${endpoint}?${params.toString()}`,
           {
             method: "GET",
             credentials: "include",
@@ -1419,7 +1440,7 @@ export default function ResumePage() {
       } finally {
         setLoading(false)
       }
-    }, [search, page])
+    }, [search, page, contextUser?.role, loadingUser])
 
   useEffect(() => {
     fetchPosts()
@@ -1506,12 +1527,25 @@ export default function ResumePage() {
 
   const filteredPosts =
     posts.filter((post) => {
-      if (filter === "open") {
-        return isPostActuallyOpen(post)
+      if (filter === "open" && !isPostActuallyOpen(post)) {
+        return false
       }
 
-      if (filter === "closed") {
-        return !isPostActuallyOpen(post)
+      if (filter === "closed" && isPostActuallyOpen(post)) {
+        return false
+      }
+
+      // /api/hr/posts ไม่รองรับ search ฝั่ง backend (ต่างจาก /api/posts)
+      // เลยกรองข้อความค้นหาฝั่ง client เพิ่มเฉพาะตอนเป็นมุมมอง HR
+      if (isHrOwnPostsView && search.trim()) {
+        const keyword = search.trim().toLowerCase()
+
+        const matches =
+          post.title?.toLowerCase().includes(keyword) ||
+          post.faculty?.toLowerCase().includes(keyword) ||
+          post.company_name?.toLowerCase().includes(keyword)
+
+        if (!matches) return false
       }
 
       return true
