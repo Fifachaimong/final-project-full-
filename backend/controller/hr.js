@@ -18,7 +18,7 @@ export const DeletePost = asyncHandler(async (req, res) => {
     res.status(200).json(result)
 })
 
-export const GetPostByHR = asyncHandler(async (req, res) => {
+export const GetMyPost = asyncHandler(async (req, res) => {
     const result = await GetPostByHRService(req.user.id, req.query)
     res.status(200).json(result)
 })

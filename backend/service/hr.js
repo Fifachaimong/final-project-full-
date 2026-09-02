@@ -1,4 +1,4 @@
-import { CreatePostModel, DeleteMemberInPostModel, DeletePostModel, EditPostModel, GetMemberFileUrlsByOwnerAndPostID, GetMemberModel, GetMemberResumeResultModel, GetMemberTotalCount, GetPostByHRModel, GetPostTotalCountByHR, GetProfileByMemberModel, UpdateCandidateStatusModel } from "../models/hr.js";
+import { CreatePostModel, DeleteMemberInPostModel, DeletePostModel, EditPostModel, GetMemberFileUrlsByOwnerAndPostID, GetMemberModel, GetMemberResumeResultModel, GetMemberTotalCount, GetMyPostModel, GetMyPostTotalCount, GetPostFileUrlsByOwnerAndPostID, GetProfileByMemberModel, UpdateCandidateStatusModel } from "../models/hr.js";
 import AppError from "../utils/AppError.js";
 import { UploadToSupabase } from "../utils/UploadToSupabase.js";
 import supabase from "../config/supabase.js"
@@ -102,7 +102,7 @@ export const DeletePostService = async (owner_id, post_id, role) => {
     }
 }
 
-export const GetPostByHRService = async (owner_id, query = {}) => {
+export const GetMyPostService = async (owner_id, query = {}) => {
     let { page, limit, search = null } = query
 
     page = Number(page)
@@ -112,9 +112,9 @@ export const GetPostByHRService = async (owner_id, query = {}) => {
     limit = limit < 11 && limit > 0 ? limit : 10
     const setoff = (page - 1) * limit
 
-    const data = await GetPostByHRModel(owner_id, setoff, limit, search)
+    const data = await GetMyPostModel(owner_id, setoff, limit, search)
 
-    const total = await GetPostTotalCountByHR(owner_id, search)
+    const total = await GetMyPostTotalCount(owner_id, search)
     const totalPages = Math.ceil(total.total / limit)
     
     let nextPage = page < totalPages ? page + 1 : null

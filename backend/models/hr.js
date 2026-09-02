@@ -68,7 +68,7 @@ export const DeletePostModel = async(owner_id, post_id, role) => {
     return result
 }
 
-export const GetPostByHRModel = async(owner_id, setoff, limit, search) => {
+export const GetMyPostModel = async(owner_id, setoff, limit, search) => {
     let query = `
         SELECT posts.id, posts.company_name, posts.title, posts.faculty, posts.deadline,
         posts.icon, posts.posts_status,
@@ -121,7 +121,7 @@ export const GetMemberModel = async(owner_id, post_id, setoff, limit, filter) =>
     return result
 }
 
-export const GetPostTotalCountByHR = async(owner_id, search) => {
+export const GetMyPostTotalCount = async(owner_id, search) => {
     let query = `
         SELECT COUNT(*) AS total
         FROM posts
