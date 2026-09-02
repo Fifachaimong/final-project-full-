@@ -4,11 +4,11 @@ import { createPostSchema, editPostSchema, updateCandidateStatusSchema } from '.
 import { ValidateBody } from '../middleware/validate.js'
 import roleMiddleware from '../middleware/role.js'
 import upload from "../middleware/upload.js";
-import { CreatePost, DeleteMemberInPost, DeletePost, EditPost, GetMember, GetMemberResumeResult, GetPostByHR, GetProfileByMember, UpdateCandidateStatus } from '../controller/hr.js'
+import { CreatePost, DeleteMemberInPost, DeletePost, EditPost, GetMember, GetMemberResumeResult, GetMyPost, GetProfileByMember, UpdateCandidateStatus } from '../controller/hr.js'
 
 const router = express.Router()
 
-router.get('/posts', authMiddleware, roleMiddleware('hr'), GetPostByHR)
+router.get('/posts', authMiddleware, roleMiddleware('hr'), GetMyPost)
 router.get('/posts/:post_id/members', authMiddleware, roleMiddleware('hr', 'admin'), GetMember)
 router.get('/members/:id/profile/', authMiddleware, roleMiddleware('hr', 'admin'), GetProfileByMember)
 router.get('/posts/:post_id/members/:id', authMiddleware, roleMiddleware('hr', 'admin'), GetMemberResumeResult)
