@@ -121,18 +121,36 @@ function formatPhoneNumber(phone: string | null | undefined): string {
   return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`
 }
 
-function getDeadlineDate(deadline: string): Date | null {
-  if (!deadline) return null
+function getDeadlineInputValue(deadline: string): string {
+  if (!deadline) return ""
 
-  const dateOnly = deadline.slice(0, 10)
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
-    const parsed = new Date(deadline)
-
-    return Number.isNaN(parsed.getTime()) ? null : parsed
+  // ถ้าเป็น YYYY-MM-DD อยู่แล้ว ไม่ต้องแปลง timezone
+  if (/^\d{4}-\d{2}-\d{2}$/.test(deadline)) {
+    return deadline
   }
 
-  const [year, month, day] = dateOnly.split("-").map(Number)
+  const date = new Date(deadline)
+
+  if (Number.isNaN(date.getTime())) {
+    return ""
+  }
+
+  // แปลงเป็นวันที่ประเทศไทย
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date)
+}
+
+function getDeadlineDate(deadline: string): Date | null {
+  const dateOnly = getDeadlineInputValue(deadline)
+
+  if (!dateOnly) return null
+
+  const [year, month, day] =
+    dateOnly.split("-").map(Number)
 
   const date = new Date(
     year,
@@ -144,7 +162,9 @@ function getDeadlineDate(deadline: string): Date | null {
     999
   )
 
-  return Number.isNaN(date.getTime()) ? null : date
+  return Number.isNaN(date.getTime())
+    ? null
+    : date
 }
 
 function isDeadlinePassed(deadline: string): boolean {
@@ -663,7 +683,7 @@ function EditPostDialog({
 
   const [deadline, setDeadline] =
     useState(
-      post.deadline?.slice(0, 10) ?? ""
+      getDeadlineInputValue(post.deadline)
     )
 
   // สถานะประกาศ (เปิด/ปิดรับสมัคร) ที่ผู้ใช้เลือกเองในฟอร์มแก้ไข
@@ -695,7 +715,7 @@ function EditPostDialog({
     setDescription(post.description)
 
     setDeadline(
-      post.deadline?.slice(0, 10) ?? ""
+      getDeadlineInputValue(post.deadline)
     )
 
     setPostsStatus(
@@ -1023,29 +1043,15 @@ function EditPostDialog({
                   (() => {
                     if (!deadline) return false
 
-                    const selectedDeadline =
-                      new Date(
-                        `${deadline}T00:00:00`
-                      )
-
                     const now = new Date()
 
-                    const today = new Date(
+                    const today = [
                       now.getFullYear(),
-                      now.getMonth(),
-                      now.getDate()
-                    )
+                      String(now.getMonth() + 1).padStart(2, "0"),
+                      String(now.getDate()).padStart(2, "0"),
+                    ].join("-")
 
-                    const deadlineDate =
-                      new Date(
-                        selectedDeadline.getFullYear(),
-                        selectedDeadline.getMonth(),
-                        selectedDeadline.getDate()
-                      )
-
-                    return (
-                      deadlineDate < today
-                    )
+                    return deadline < today
                   })()
                 }
                 className={`flex-1 rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
@@ -1903,18 +1909,15 @@ export default function PostDetailPage() {
 
                 <p className="mt-0.5 text-sm text-foreground">
                   {deadlineDate
-                    ? deadlineDate.toLocaleDateString(
+                    ? `${deadlineDate.toLocaleDateString(
                         "th-TH",
                         {
-                          weekday:
-                            "long",
+                          weekday: "long",
                           day: "numeric",
-                          month:
-                            "long",
-                          year:
-                            "numeric",
+                          month: "long",
+                          year: "numeric",
                         }
-                      )
+                      )}`
                     : "-"}
                 </p>
               </div>

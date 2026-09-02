@@ -52,15 +52,61 @@ interface CurrentUser {
 // Helpers
 // ──────────────────────────────────────────────
 
+function getDeadlineDate(deadline: string): Date | null {
+  if (!deadline) return null
+
+  const dateOnly = String(deadline).slice(0, 10)
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
+    return null
+  }
+
+  const [year, month, day] = dateOnly.split("-").map(Number)
+
+  return new Date(
+    year,
+    month - 1,
+    day,
+    23,
+    59,
+    59,
+    999
+  )
+}
+
+function getDeadlineInputValue(deadline: string): string {
+  if (!deadline) return ""
+
+  // ถ้า Backend ส่ง YYYY-MM-DD มาอยู่แล้ว
+  if (/^\d{4}-\d{2}-\d{2}$/.test(deadline)) {
+    return deadline
+  }
+
+  const date = new Date(deadline)
+
+  if (Number.isNaN(date.getTime())) {
+    return ""
+  }
+
+  // แปลงเป็นวันที่ประเทศไทย
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date)
+}
+
+function isDeadlinePassed(deadline: string): boolean {
+  const deadlineDate = getDeadlineDate(deadline)
+
+  if (!deadlineDate) return false
+
+  return new Date() > deadlineDate
+}
+
 /**
  * ตรวจสอบว่าโพสต์ยังเปิดรับสมัครจริงหรือไม่
- *
- * ต้องผ่าน 2 เงื่อนไข:
- * 1. posts_status === "open"
- * 2. deadline >= วันนี้
- *
- * deadline = วันนี้ -> ยังเปิดรับสมัคร
- * deadline < วันนี้ -> ปิดรับสมัคร
  */
 function isPostActuallyOpen(post: Post): boolean {
   if (post.posts_status !== "open") {
@@ -71,27 +117,28 @@ function isPostActuallyOpen(post: Post): boolean {
     return false
   }
 
-  const deadlineDate = new Date(post.deadline)
+  const dateOnly = getDeadlineInputValue(
+    String(post.deadline)
+  )
 
-  if (Number.isNaN(deadlineDate.getTime())) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
     return false
   }
 
-  const now = new Date()
+  const [year, month, day] =
+    dateOnly.split("-").map(Number)
 
-  const today = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
+  const deadlineDate = new Date(
+    year,
+    month - 1,
+    day,
+    23,
+    59,
+    59,
+    999
   )
 
-  const deadline = new Date(
-    deadlineDate.getFullYear(),
-    deadlineDate.getMonth(),
-    deadlineDate.getDate()
-  )
-
-  return deadline >= today
+  return new Date() <= deadlineDate
 }
 
 /**
@@ -242,7 +289,7 @@ function PostDialog({
 
         setDeadline(
           post.deadline
-            ? String(post.deadline).slice(0, 10)
+            ? getDeadlineInputValue(String(post.deadline))
             : ""
         )
 
@@ -362,26 +409,15 @@ function PostDialog({
       // ตรวจสอบ Deadline
       // ────────────────────────────────────────
 
-      const selectedDeadline = new Date(
-        `${deadline}T00:00:00`
-      )
-
       const now = new Date()
 
-      const today = new Date(
+      const today = [
         now.getFullYear(),
-        now.getMonth(),
-        now.getDate()
-      )
+        String(now.getMonth() + 1).padStart(2, "0"),
+        String(now.getDate()).padStart(2, "0"),
+      ].join("-")
 
-      const deadlineOnlyDate = new Date(
-        selectedDeadline.getFullYear(),
-        selectedDeadline.getMonth(),
-        selectedDeadline.getDate()
-      )
-
-      const deadlineExpired =
-        deadlineOnlyDate < today
+      const deadlineExpired = deadline < today
 
       // ────────────────────────────────────────
       // EDIT
@@ -948,25 +984,15 @@ function PostDialog({
                       (() => {
                         if (!deadline) return false
 
-                        const selectedDeadline = new Date(
-                          `${deadline}T00:00:00`
-                        )
-
                         const now = new Date()
 
-                        const today = new Date(
+                        const today = [
                           now.getFullYear(),
-                          now.getMonth(),
-                          now.getDate()
-                        )
+                          String(now.getMonth() + 1).padStart(2, "0"),
+                          String(now.getDate()).padStart(2, "0"),
+                        ].join("-")
 
-                        const deadlineDate = new Date(
-                          selectedDeadline.getFullYear(),
-                          selectedDeadline.getMonth(),
-                          selectedDeadline.getDate()
-                        )
-
-                        return deadlineDate < today
+                        return deadline < today
                       })()
                     }
                     className={`flex-1 rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
@@ -1125,8 +1151,30 @@ function PostCard({
   onDelete,
   onEdit,
 }: PostCardProps) {
-  const deadlineDate =
-    new Date(post.deadline)
+  const deadlineInput = getDeadlineInputValue(
+    String(post.deadline)
+  )
+
+  const [year, month, day] = deadlineInput
+    .split("-")
+    .map(Number)
+
+  const thaiMonths = [
+    "ม.ค.",
+    "ก.พ.",
+    "มี.ค.",
+    "เม.ย.",
+    "พ.ค.",
+    "มิ.ย.",
+    "ก.ค.",
+    "ส.ค.",
+    "ก.ย.",
+    "ต.ค.",
+    "พ.ย.",
+    "ธ.ค.",
+  ]
+
+const deadlineText = `${day} ${thaiMonths[month - 1]} ${year + 543}`
 
   // ──────────────────────────────────────────────
   // IMPORTANT
@@ -1244,17 +1292,8 @@ function PostCard({
               ? "เปิดรับสมัคร"
               : "ปิดรับสมัคร"}
           </span>
-
           <span className="text-[10px] text-muted-foreground">
-            ถึง{" "}
-            {deadlineDate.toLocaleDateString(
-              "th-TH",
-              {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              }
-            )}
+            ถึง {deadlineText}
           </span>
         </div>
       </div>
