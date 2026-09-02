@@ -68,8 +68,8 @@ export const DeletePostModel = async(owner_id, post_id, role) => {
     return result
 }
 
-export const GetPostByHRModel = async(owner_id, setoff, limit) => {
-    const [result] = await db.query(`
+export const GetPostByHRModel = async(owner_id, setoff, limit, search) => {
+    let query = `
         SELECT posts.id, posts.company_name, posts.title, posts.faculty, posts.deadline,
         posts.icon, posts.posts_status,
         CASE
@@ -80,8 +80,19 @@ export const GetPostByHRModel = async(owner_id, setoff, limit) => {
         FROM posts
         JOIN users ON posts.owner_id = users.id
         WHERE posts.owner_id = ?
-        LIMIT ? OFFSET ?
-    `,[owner_id, limit, setoff])
+    `
+
+    const value = [owner_id]
+
+    if (search) {
+        query += ' AND posts.title LIKE ?'
+        value.push(`%${search}%`)
+    }
+
+    query += ' LIMIT ? OFFSET ?'
+    value.push(limit, setoff)
+
+    const [result] = await db.query(query, value)
 
     return result
 }
@@ -98,9 +109,6 @@ export const GetMemberModel = async(owner_id, post_id, setoff, limit, filter) =>
 
     const value = [owner_id, post_id]
 
-    // filter เป็น array เสมอ (normalize มาจาก service แล้ว) — เช็คถูก HR ติ๊ก
-    // มาหลายสถานะพร้อมกันได้ (เช่น approved + rejected) ใช้ IN (?) ซึ่ง mysql2
-    // จะขยาย array เป็น IN (?, ?, ...) ให้อัตโนมัติ
     if (filter && filter.length > 0) {
         query += ' AND m.status IN (?)'
         value.push(filter)
@@ -113,12 +121,21 @@ export const GetMemberModel = async(owner_id, post_id, setoff, limit, filter) =>
     return result
 }
 
-export const GetPostTotalCountByHR = async(owner_id) => {
-    const [result] = await db.query(`
+export const GetPostTotalCountByHR = async(owner_id, search) => {
+    let query = `
         SELECT COUNT(*) AS total
         FROM posts
         WHERE owner_id = ?
-    `,[owner_id])
+    `
+
+    const value = [owner_id]
+
+    if (search) {
+        query += ' AND title LIKE ?'
+        value.push(`%${search}%`)
+    }
+
+    const [result] = await db.query(query, value)
 
     return result[0]
 }

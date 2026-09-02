@@ -103,7 +103,7 @@ export const DeletePostService = async (owner_id, post_id, role) => {
 }
 
 export const GetPostByHRService = async (owner_id, query = {}) => {
-    let { page, limit } = query
+    let { page, limit, search = null } = query
 
     page = Number(page)
     limit = Number(limit)
@@ -112,9 +112,9 @@ export const GetPostByHRService = async (owner_id, query = {}) => {
     limit = limit < 11 && limit > 0 ? limit : 10
     const setoff = (page - 1) * limit
 
-    const data = await GetPostByHRModel(owner_id, setoff, limit)
+    const data = await GetPostByHRModel(owner_id, setoff, limit, search)
 
-    const total = await GetPostTotalCountByHR(owner_id)
+    const total = await GetPostTotalCountByHR(owner_id, search)
     const totalPages = Math.ceil(total.total / limit)
     
     let nextPage = page < totalPages ? page + 1 : null

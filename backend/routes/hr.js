@@ -10,7 +10,7 @@ const router = express.Router()
 
 router.get('/posts', authMiddleware, roleMiddleware('hr'), GetPostByHR)
 router.get('/posts/:post_id/members', authMiddleware, roleMiddleware('hr', 'admin'), GetMember)
-router.get('/members/profile/:id', authMiddleware, roleMiddleware('hr', 'admin'), GetProfileByMember)
+router.get('/members/:id/profile/', authMiddleware, roleMiddleware('hr', 'admin'), GetProfileByMember)
 router.get('/posts/:post_id/members/:id', authMiddleware, roleMiddleware('hr', 'admin'), GetMemberResumeResult)
 router.post('/posts', authMiddleware, roleMiddleware('hr', 'admin'), upload.single('logo'), ValidateBody(createPostSchema), CreatePost)
 router.put('/posts/:id', authMiddleware, roleMiddleware('hr', 'admin'), upload.single('logo'), ValidateBody(editPostSchema), EditPost)

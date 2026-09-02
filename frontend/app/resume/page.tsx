@@ -1358,16 +1358,11 @@ export default function ResumePage() {
       // ปิดสิทธิ์ role "hr" ออกจาก /auth/posts แล้ว ส่วน applicant/admin
       // (หรือยังไม่ login) ใช้ /api/posts (เห็นโพสต์ของทุกคน) เหมือนเดิม
       try {
-        const params = isHrOwnPostsView
-          ? new URLSearchParams({
-              page: String(page),
-              limit: String(POSTS_PER_PAGE),
-            })
-          : new URLSearchParams({
-              search,
-              page: String(page),
-              limit: String(POSTS_PER_PAGE),
-            })
+        const params = new URLSearchParams({
+          search,
+          page: String(page),
+          limit: String(POSTS_PER_PAGE),
+        })
 
         const endpoint = isHrOwnPostsView
           ? "/api/hr/posts"
@@ -1533,19 +1528,6 @@ export default function ResumePage() {
 
       if (filter === "closed" && isPostActuallyOpen(post)) {
         return false
-      }
-
-      // /api/hr/posts ไม่รองรับ search ฝั่ง backend (ต่างจาก /api/posts)
-      // เลยกรองข้อความค้นหาฝั่ง client เพิ่มเฉพาะตอนเป็นมุมมอง HR
-      if (isHrOwnPostsView && search.trim()) {
-        const keyword = search.trim().toLowerCase()
-
-        const matches =
-          post.title?.toLowerCase().includes(keyword) ||
-          post.faculty?.toLowerCase().includes(keyword) ||
-          post.company_name?.toLowerCase().includes(keyword)
-
-        if (!matches) return false
       }
 
       return true

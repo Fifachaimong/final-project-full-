@@ -10,7 +10,7 @@ export async function GET(
 
   try {
     const backendRes = await fetch(
-      `${BACKEND_URL}/hr/members/profile/${encodeURIComponent(id)}`,
+      `${BACKEND_URL}/hr/members/${encodeURIComponent(id)}/profile`,
       {
         method: "GET",
         headers: {

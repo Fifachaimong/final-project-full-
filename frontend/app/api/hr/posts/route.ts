@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 
-// เฉพาะ HR/Admin ที่ login แล้วเท่านั้น — คืนแค่โพสต์ที่ตัวเอง (owner_id) สร้างไว้
-// ต่างจาก /api/posts (-> /auth/posts) ที่คืนโพสต์ของทุกคน และตอนนี้ backend
-// บล็อก role "hr" ไม่ให้เรียก /auth/posts แล้ว (roleMiddleware('applicant', 'admin'))
 export async function GET(request: Request) {
   try {
     const headerList = await headers()
@@ -13,10 +10,12 @@ export async function GET(request: Request) {
 
     const page = searchParams.get("page") ?? "1"
     const limit = searchParams.get("limit") ?? "10"
+    const search = searchParams.get("search") ?? ""
 
     const backendParams = new URLSearchParams({
       page,
       limit,
+      search,
     })
 
     const response = await fetch(
