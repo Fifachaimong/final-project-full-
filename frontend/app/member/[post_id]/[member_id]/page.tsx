@@ -14,6 +14,8 @@ import {
   BookOpenText,
   ShieldCheck,
   UserRound,
+  GraduationCap,
+  Star,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { useUser } from "@/contexts/user-context"
@@ -26,6 +28,8 @@ interface MemberResume {
   overall_confidence: number | null
   skills: string[] | string | null
   ai_reason: string | null
+  faculty_match: string | null
+  specific_strengths: string | null
   status: string | null
 }
 
@@ -658,6 +662,38 @@ export default function MemberDetailPage() {
                   </span>
                 ))}
               </div>
+            </div>
+          )}
+
+          {resume.specific_strengths && (
+            <div className="border-b border-border px-6 py-6 sm:px-8">
+              <div className="mb-3 flex items-center gap-2">
+                <Star className="h-4 w-4 text-muted-foreground" />
+
+                <h2 className="text-sm font-semibold text-foreground">
+                  จุดเด่นเฉพาะตัว
+                </h2>
+              </div>
+
+              <p className="whitespace-pre-wrap rounded-xl bg-muted/40 p-4 text-sm leading-relaxed text-foreground">
+                {resume.specific_strengths}
+              </p>
+            </div>
+          )}
+
+          {resume.faculty_match && (
+            <div className="border-b border-border px-6 py-6 sm:px-8">
+              <div className="mb-3 flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 text-muted-foreground" />
+
+                <h2 className="text-sm font-semibold text-foreground">
+                  ความสอดคล้องกับสาขา/คณะ
+                </h2>
+              </div>
+
+              <p className="whitespace-pre-wrap rounded-xl bg-muted/40 p-4 text-sm leading-relaxed text-foreground">
+                {resume.faculty_match}
+              </p>
             </div>
           )}
 
