@@ -26,12 +26,14 @@ type HistoryExample = {
   company: string
   status: HistoryStatus
   score: number
+  reason: string
 }
 
 type ApplicantExample = {
   name: string
   score: number
   status: HistoryStatus
+  reason: string
 }
 
 /* ---------- ตัวอย่างข้อมูล (mock data สำหรับประกอบคำอธิบายเท่านั้น) ---------- */
@@ -42,25 +44,43 @@ const historyExamples: HistoryExample[] = [
     company: 'บริษัทคนดี',
     status: 'rejected',
     score: 23.4,
+    reason: 'ทักษะยังไม่ตรงกับตำแหน่งที่สมัคร',
   },
   {
     title: 'นักศึกษาฝึกงาน Data Analyst',
     company: 'บริษัท บลูปรินต์ อนาลิติกส์ จำกัด',
     status: 'approved',
     score: 91,
+    reason: 'ทักษะและประสบการณ์สอดคล้องกับตำแหน่ง',
   },
   {
     title: 'ผู้ช่วยฝ่ายการตลาด',
     company: 'ริเวอร์ไลน์ สตูดิโอ',
     status: 'pending',
     score: 68,
+    reason: 'มีทักษะพื้นฐานตรงตามความต้องการ',
   },
 ]
 
 const applicantExamples: ApplicantExample[] = [
-  { name: 'Applicant User', score: 23.4, status: 'rejected' },
-  { name: 'applicant user', score: 23.4, status: 'approved' },
-  { name: 'www asdasd', score: 23.4, status: 'pending' },
+  {
+    name: 'Applicant User',
+    score: 23.4,
+    status: 'rejected',
+    reason: 'ประสบการณ์ยังไม่ครอบคลุมงานที่ระบุ',
+  },
+  {
+    name: 'applicant user',
+    score: 23.4,
+    status: 'approved',
+    reason: 'มีทักษะหลักที่ตรงกับความต้องการ',
+  },
+  {
+    name: 'www asdasd',
+    score: 23.4,
+    status: 'pending',
+    reason: 'ควรพิจารณารายละเอียดประสบการณ์เพิ่มเติม',
+  },
 ]
 
 /* ---------- สถานะ: ใช้รูปแบบเดียวกับระบบจริง (badge วงรี + ไอคอน + note) ---------- */
@@ -139,7 +159,7 @@ function ResumeHistoryExample() {
           return (
             <div
               key={item.title}
-              className="flex items-center gap-4 rounded-2xl border border-border px-4 py-3.5 sm:gap-6"
+              className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-border px-4 py-3.5 sm:gap-x-6"
             >
               {/* Company icon */}
               <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-sm font-semibold text-accent-foreground">
@@ -185,6 +205,10 @@ function ResumeHistoryExample() {
                 </div>
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </div>
+
+              <div className="basis-full border-t border-border pt-2.5 text-xs leading-5 text-muted-foreground">
+                <span className="font-medium text-foreground">เหตุผลจาก AI:</span> {item.reason}
+              </div>
             </div>
           )
         })}
@@ -223,7 +247,7 @@ function HrApplicantViewExample() {
           return (
             <div
               key={`${a.name}-${index}`}
-              className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5 sm:gap-4"
+              className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-border px-3 py-2.5 sm:gap-x-4"
             >
               <span className="w-4 shrink-0 text-center text-xs font-medium text-muted-foreground">
                 {index + 1}
@@ -247,6 +271,10 @@ function HrApplicantViewExample() {
               >
                 {status.emoji} {status.label}
               </span>
+
+              <div className="basis-full rounded-lg bg-muted/50 px-3 py-2 text-xs leading-5 text-muted-foreground">
+                <span className="font-medium text-foreground">เหตุผลจาก AI:</span> {a.reason}
+              </div>
             </div>
           )
         })}

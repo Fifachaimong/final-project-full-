@@ -88,8 +88,13 @@ export const EditMyProfileService = async (id, data, file) => {
         throw new AppError('User not found', 404)
     }
 
+    // Return the saved profile. The frontend uses icon from this result rather
+    // than retaining its temporary browser-only preview URL.
+    const updatedProfile = await GetMyProfileModel(id)
+
     return {
-        message : 'Edit my profile succeed'
+        message : 'Edit my profile succeed',
+        data : updatedProfile
     }
 }
 

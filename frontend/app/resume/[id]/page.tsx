@@ -22,6 +22,7 @@ interface Applicant {
   user_firstname: string
   user_lastname: string
   ai_score: number | null
+  ai_reason: string | null
   status: string | null
 }
 
@@ -216,7 +217,7 @@ function ApplicantRow({
     <div className="flex items-center gap-2">
       <Link
         href={`/member/${postId}/${applicant.user_id}`}
-        className="flex flex-1 items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40 hover:border-primary/30 cursor-pointer"
+        className="flex flex-1 flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-accent/40 hover:border-primary/30 cursor-pointer"
       >
       <span className="w-6 flex-shrink-0 text-center text-sm font-medium text-muted-foreground">
         {index}
@@ -249,6 +250,13 @@ function ApplicantRow({
         >
           {getStatusStyle(applicant.status).label}
         </span>
+
+        {applicant.ai_reason?.trim() && (
+          <p className="basis-full border-t border-border pt-2 text-xs leading-5 text-muted-foreground">
+            <span className="font-medium text-foreground">เหตุผลจาก AI:</span>{' '}
+            {applicant.ai_reason.trim()}
+          </p>
+        )}
       </Link>
 
       <button

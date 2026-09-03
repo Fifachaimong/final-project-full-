@@ -216,6 +216,13 @@ export default function Page() {
                           className="size-5 shrink-0 text-muted-foreground"
                         />
                       </div>
+
+                      {application.ai_reason?.trim() && (
+                        <div className="col-span-2 border-t border-border pt-3 text-sm leading-6 text-muted-foreground">
+                          <span className="font-medium text-foreground">เหตุผลจาก AI:</span>{' '}
+                          {application.ai_reason.trim()}
+                        </div>
+                      )}
                     </div>
                   )
                   return application.post_id ? (

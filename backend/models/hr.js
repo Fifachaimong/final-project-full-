@@ -99,7 +99,7 @@ export const GetMyPostModel = async(owner_id, setoff, limit, search) => {
 
 export const GetMemberModel = async(owner_id, post_id, setoff, limit, filter) => {
     let query = `
-        SELECT u.id AS user_id, u.firstname AS user_firstname, u.lastname AS user_lastname, r.ai_score, m.status
+        SELECT u.id AS user_id, u.firstname AS user_firstname, u.lastname AS user_lastname, r.ai_score, r.ai_reason, m.status
         FROM posts p 
         JOIN members m ON m.post_id = p.id
         JOIN users u ON m.user_id = u.id
