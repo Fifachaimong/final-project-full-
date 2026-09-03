@@ -132,6 +132,7 @@ function InputField({
   icon,
   type = "text",
   disabled = false,
+  maxLength,
 }: {
   label: string
   value: string
@@ -140,6 +141,7 @@ function InputField({
   icon: React.ReactNode
   type?: string
   disabled?: boolean
+  maxLength?: number
 }) {
   return (
     <div className="space-y-1.5">
@@ -152,13 +154,13 @@ function InputField({
         type={type}
         value={value}
         disabled={disabled}
+        maxLength={maxLength}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`h-10 w-full rounded-lg border px-3 text-sm shadow-sm outline-none transition ${
-          disabled
+        className={`h-10 w-full rounded-lg border px-3 text-sm shadow-sm outline-none transition ${disabled
             ? "cursor-not-allowed bg-slate-100 text-slate-500"
             : "border-slate-300 bg-white text-slate-800 focus:border-[#E8614A] focus:ring-2 focus:ring-[#E8614A]/20"
-        }`}
+          }`}
       />
     </div>
   )
@@ -319,11 +321,12 @@ function EditCard({
             label="โทรศัพท์"
             value={formatPhone(draft.phone)}
             onChange={(v) =>
-              onChange("phone", v.replace(/\D/g, ""))
+              onChange("phone", v.replace(/\D/g, "").slice(0, 10))
             }
             placeholder="081-234-5678"
             icon={<Phone className="h-3 w-3" />}
             type="tel"
+            maxLength={12}
           />
 
           <InputField
@@ -441,7 +444,7 @@ export default function ProfileEditPage({
       const response = await updateProfile({
         firstname: String(draft.firstName ?? ""),
         lastname: String(draft.surname ?? ""),
-        phone: String(draft.phone ?? "").replace(/\D/g, ""),
+        phone: String(draft.phone ?? "").replace(/\D/g, "").slice(0, 10),
       })
 
       if (!response) {
@@ -452,7 +455,7 @@ export default function ProfileEditPage({
 
       setSaved({
         ...draft,
-        phone: String(draft.phone ?? "").replace(/\D/g, ""),
+        phone: String(draft.phone ?? "").replace(/\D/g, "").slice(0, 10),
         avatarFile: null,
       })
 
@@ -513,11 +516,10 @@ export default function ProfileEditPage({
         <div
           role="status"
           aria-live="polite"
-          className={`fixed right-6 top-20 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-white shadow-lg transition-all ${
-            toast.type === "success"
+          className={`fixed right-6 top-20 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-white shadow-lg transition-all ${toast.type === "success"
               ? "bg-emerald-500"
               : "bg-slate-600"
-          }`}
+            }`}
         >
           {toast.type === "success" ? (
             <Check className="h-4 w-4" />
@@ -545,11 +547,10 @@ export default function ProfileEditPage({
         <div className="flex flex-col gap-6 md:flex-row md:items-stretch">
           {/* LEFT — View */}
           <div
-            className={`flex ${
-              isEditing
+            className={`flex ${isEditing
                 ? "flex-1"
                 : "mx-auto w-full max-w-sm"
-            }`}
+              }`}
           >
             <ViewCard
               data={saved}
