@@ -83,14 +83,15 @@ export function Navbar() {
             หน้าหลัก
           </Link>
 
-          {/* ประกาศงาน — เดิมเป็น dropdown ที่ยัด "จัดการผู้ใช้งาน" ไว้ข้างในด้วย
-              ทั้งที่ไม่เกี่ยวกันเลย เลยแยกออกมาเป็นลิงก์เดี่ยว ๆ แทน */}
-          <Link
-            href="/resume"
-            className={linkClass(isActive("/resume", true))}
-          >
-            {browseLabel}
-          </Link>
+          {/* แสดงเมนูประกาศงานเฉพาะผู้ใช้ที่เข้าสู่ระบบแล้ว */}
+          {user && (
+            <Link
+              href="/resume"
+              className={linkClass(isActive("/resume", true))}
+            >
+              {browseLabel}
+            </Link>
+          )}
 
           {user?.role === "admin" && (
             <Link
