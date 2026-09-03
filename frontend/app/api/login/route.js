@@ -1,92 +1,50 @@
-import pool from "@/lib/db";
-import { NextResponse } from "next/server";
-import { SignJWT } from "jose";
-import bcrypt from "bcryptjs";
+import { NextResponse } from "next/server"
 
-const secret = new TextEncoder().encode(process.env.JWT_TOKEN);
+const BACKEND_URL = "http://localhost:5000"
 
-export async function POST(req) {
+export async function POST(request) {
   try {
-    const formData = await req.formData();
+    const body = await request.json()
 
-    const email = formData.get("email");
-    const password = formData.get("password");
-
-    const result = await pool.query(
-      `
-      SELECT
-        users.id,
-        users.name,
-        users.lastname,
-        users.email,
-        users.password,
-        users.role_id,
-        roles.role_name AS role
-      FROM users
-      JOIN roles
-        ON users.role_id = roles.id
-      WHERE users.email = $1
-      `,
-      [email]
-    );
-
-    if (result.rows.length === 0) {
-      return NextResponse.json(
-        { message: "Login failed" },
-        { status: 401 }
-      );
-    }
-
-    const user = result.rows[0];
-
-    const isValidPassword = await bcrypt.compare(
-      password,
-      user.password
-    );
-
-    if (!isValidPassword) {
-      return NextResponse.json(
-        { message: "Login failed" },
-        { status: 401 }
-      );
-    }
-
-    const token = await new SignJWT({
-      id: user.id,
-      email: user.email,
-      role: user.role,
+    const backendRes = await fetch(`${BACKEND_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
     })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime("1d")
-      .sign(secret);
 
-    const response = NextResponse.json({
-      id: user.id,
-      name: user.name,
-      lastname: user.lastname,
-      email: user.email,
-      role_id: user.role_id,
-      role: user.role,
-    });
+    const text = await backendRes.text()
 
-    response.cookies.set({
-      name: "token",
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24,
-    });
+    let data = null
 
-    return response;
+    try {
+      data = text ? JSON.parse(text) : null
+    } catch {
+      data = null
+    }
+
+    const response = NextResponse.json(
+      data ?? { message: "Invalid backend response" },
+      { status: backendRes.status }
+    )
+
+    // fetch() ที่ทำจาก server ฝั่ง Next.js ไปหา backend เป็นการคุยกัน
+    // server-to-server ไม่ได้ทำให้ Set-Cookie ที่ backend ส่งมาไปถึง
+    // browser จริงโดยอัตโนมัติ ต้องดึงมาแปะบน response ของเราเองตรงนี้
+    const setCookie = backendRes.headers.get("set-cookie")
+
+    if (setCookie) {
+      response.headers.set("set-cookie", setCookie)
+    }
+
+    return response
   } catch (error) {
-    console.error(error);
+    console.error("POST /api/login error:", error)
 
     return NextResponse.json(
-      { message: "Server error" },
+      { message: "Cannot connect to backend" },
       { status: 500 }
-    );
+    )
   }
 }
