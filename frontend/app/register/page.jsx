@@ -41,7 +41,7 @@ export default function RegisterPage() {
     try {
       const dbRole = role === "HR" ? "hr" : "applicant"
 
-      const response = await fetch("http://localhost:5000/auth/register", {
+      const response = await fetch("/api/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
