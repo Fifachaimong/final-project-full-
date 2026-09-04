@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs"
 import { CreateUser, EditMyProfileModel, GetMyProfileModel, GetPostByIDModel, GetUserByEmail } from "../models/auth.js"
 import AppError from '../utils/AppError.js'
 import jwt from 'jsonwebtoken'
-import { UploadToSupabase } from "../utils/UploadToSupabase.js";
+import { UploadToCloudinary } from "../utils/UploadToCloudinary.js";
 
 export const RegisterService = async (data) => {
     const { firstname, lastname, email, password, role } = data
@@ -72,7 +72,7 @@ export const EditMyProfileService = async (id, data, file) => {
     let icon = null
 
     if (file) {
-        const upload = await UploadToSupabase(
+        const upload = await UploadToCloudinary(
             file.buffer,
             file.mimetype,
             "profile",
@@ -88,13 +88,8 @@ export const EditMyProfileService = async (id, data, file) => {
         throw new AppError('User not found', 404)
     }
 
-    // Return the saved profile. The frontend uses icon from this result rather
-    // than retaining its temporary browser-only preview URL.
-    const updatedProfile = await GetMyProfileModel(id)
-
     return {
-        message : 'Edit my profile succeed',
-        data : updatedProfile
+        message : 'Edit my profile succeed'
     }
 }
 

@@ -1,7 +1,7 @@
 import { CreateMember, CreateResume, GetMemberByUserAndPost, GetMyApplicationResultModel, GetDataPostById, GetPostModel } from "../models/applicant.js"
 import { GetTotalPage } from "../models/auth.js";
 import AppError from '../utils/AppError.js'
-import { UploadToSupabase } from "../utils/UploadToSupabase.js";
+import { UploadToCloudinary } from "../utils/UploadToCloudinary.js";
 import axios from "axios"
 
 export const GetPostService = async (query = {}) => {
@@ -76,7 +76,7 @@ export const ApplyResumeService = async (
     }
 
 
-    const resumeUpload = await UploadToSupabase(
+    const resumeUpload = await UploadToCloudinary(
         resume.buffer,
         resume.mimetype,
         "resume",
@@ -85,7 +85,7 @@ export const ApplyResumeService = async (
 
     console.log("show public url")
     console.log(resumeUpload.publicUrl)
-    const transcriptUpload = await UploadToSupabase(
+    const transcriptUpload = await UploadToCloudinary(
         transcript.buffer,
         transcript.mimetype,
         "transcript",

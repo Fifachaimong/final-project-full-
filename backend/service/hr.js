@@ -1,17 +1,14 @@
 import { CreatePostModel, DeleteMemberInPostModel, DeletePostModel, EditPostModel, GetMemberFileUrlsByOwnerAndPostID, GetMemberModel, GetMemberResumeResultModel, GetMemberTotalCount, GetMyPostModel, GetMyPostTotalCount, GetPostFileUrlsByOwnerAndPostID, GetProfileByMemberModel, UpdateCandidateStatusModel } from "../models/hr.js";
+import { GetPostByIDModel } from "../models/auth.js";
 import AppError from "../utils/AppError.js";
-import { UploadToSupabase } from "../utils/UploadToSupabase.js";
-import supabase from "../config/supabase.js"
+import { UploadToCloudinary } from "../utils/UploadToCloudinary.js";
+import { DeleteManyFromCloudinary, ExtractPublicId } from "../utils/DeleteFromCloudinary.js";
 
 export const CreatePostService = async (id, data, file) => {
-    if (check.length === 0) {
-        throw new AppError('User not found', 404)
-    }
-
     let icon = null
 
     if (file) {
-        const upload = await UploadToSupabase(
+        const upload = await UploadToCloudinary(
             file.buffer,
             file.mimetype,
             "logo_company",
@@ -30,9 +27,15 @@ export const CreatePostService = async (id, data, file) => {
 
 export const EditPostService = async (data, owner_id, post_id, file, role) => {
     let icon = null
+    let oldIconUrl = null
 
     if (file) {
-        const upload = await UploadToSupabase(
+        // ดึงโลโก้เก่าไว้ก่อน จะได้รู้ว่าต้องลบอันไหนทิ้งหลังอัปโหลดใหม่
+        // สำเร็จ (ถ้าไม่มีการอัปโหลดไฟล์ใหม่ ก็ไม่ต้องยุ่งกับโลโก้เดิมเลย)
+        const currentPost = await GetPostByIDModel(post_id)
+        oldIconUrl = currentPost?.icon ?? null
+
+        const upload = await UploadToCloudinary(
             file.buffer,
             file.mimetype,
             "logo_company",
@@ -48,6 +51,16 @@ export const EditPostService = async (data, owner_id, post_id, file, role) => {
         throw new AppError('Post not found', 404)
     }
 
+    // อัปเดต DB สำเร็จแล้วค่อยลบโลโก้เก่าทิ้ง (ทำหลังบันทึกสำเร็จเสมอ กัน
+    // กรณี DB อัปเดตล้มเหลวแล้วดันลบโลโก้เก่าที่ยังใช้อยู่จริงไปแล้ว)
+    if (oldIconUrl) {
+        const oldPublicId = ExtractPublicId(oldIconUrl)
+
+        if (oldPublicId) {
+            await DeleteManyFromCloudinary([oldPublicId], "image")
+        }
+    }
+
     return {
         message : 'Edit posts succeed'
     }
@@ -60,37 +73,26 @@ export const DeletePostService = async (owner_id, post_id, role) => {
     const resumePaths = []
     const transcriptPaths = []
 
-    const getUrl = (url) => {
-        return url.split('/').pop()
-    }
-
     for (const item of data) {
 
         if (item.logo_company) {
-            logoCompanyPaths.push(getUrl(item.logo_company))
+            logoCompanyPaths.push(ExtractPublicId(item.logo_company))
         }
 
         if (item.resume) {
-            resumePaths.push(getUrl(item.resume))
+            resumePaths.push(ExtractPublicId(item.resume))
         }
 
         if (item.transcript) {
-            transcriptPaths.push(getUrl(item.transcript))
+            transcriptPaths.push(ExtractPublicId(item.transcript))
         }
 
     }
 
-    if (logoCompanyPaths.length > 0) {
-        await supabase.storage.from("logo_company").remove(logoCompanyPaths)
-    }
-
-    if (resumePaths.length > 0) {
-        await supabase.storage.from("resume").remove(resumePaths)
-    }
-
-    if (transcriptPaths.length > 0) {
-        await supabase.storage.from("transcript").remove(transcriptPaths)
-    }
+    // logo_company เป็นรูปภาพ ("image") ส่วน resume/transcript เป็นเอกสาร ("raw")
+    await DeleteManyFromCloudinary(logoCompanyPaths, "image")
+    await DeleteManyFromCloudinary(resumePaths, "raw")
+    await DeleteManyFromCloudinary(transcriptPaths, "raw")
 
     const check = await DeletePostModel(owner_id, post_id, role)
     if (check.affectedRows === 0) {
@@ -221,29 +223,20 @@ export const DeleteMemberInPostService = async (member_id, owner_id, post_id) =>
     const resumePaths = []
     const transcriptPaths = []
 
-    const getUrl = (url) => {
-        return url.split('/').pop()
-    }
-
     for (const item of data) {
 
         if (item.resume) {
-            resumePaths.push(getUrl(item.resume))
+            resumePaths.push(ExtractPublicId(item.resume))
         }
 
         if (item.transcript) {
-            transcriptPaths.push(getUrl(item.transcript))
+            transcriptPaths.push(ExtractPublicId(item.transcript))
         }
 
     }
 
-    if (resumePaths.length > 0) {
-        await supabase.storage.from("resume").remove(resumePaths)
-    }
-
-    if (transcriptPaths.length > 0) {
-        await supabase.storage.from("transcript").remove(transcriptPaths)
-    }
+    await DeleteManyFromCloudinary(resumePaths, "raw")
+    await DeleteManyFromCloudinary(transcriptPaths, "raw")
 
     const result = await DeleteMemberInPostModel(member_id, owner_id, post_id)
 

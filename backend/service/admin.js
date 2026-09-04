@@ -1,7 +1,7 @@
 import { CreateUserByAdminModel, DeleteUserByID, EditUserByIDModel, GetUserByAdminModel, GetUserFileUrlsByUserID } from "../models/admin.js"
 import { GetTotalPage, GetUserByEmail } from "../models/auth.js"
 import AppError from "../utils/AppError.js"
-import supabase from "../config/supabase.js"
+import { DeleteManyFromCloudinary, ExtractPublicId } from "../utils/DeleteFromCloudinary.js"
 import bcrypt from "bcryptjs"
 
 export const GetUserByAdminService = async (query = {}) => {
@@ -71,44 +71,31 @@ export const DeleteUserService = async (id) => {
     const resumePaths = []
     const transcriptPaths = []
 
-    const getUrl = (url) => {
-        return url.split('/').pop()
-    }
-
     for (const item of data) {
         if (item.profile) {
-            profilePaths.push(getUrl(item.profile))
+            profilePaths.push(ExtractPublicId(item.profile))
         }
 
         if (item.logo_company) {
-            logoCompanyPaths.push(getUrl(item.logo_company))
+            logoCompanyPaths.push(ExtractPublicId(item.logo_company))
         }
 
         if (item.resume) {
-            resumePaths.push(getUrl(item.resume))
+            resumePaths.push(ExtractPublicId(item.resume))
         }
 
         if (item.transcript) {
-            transcriptPaths.push(getUrl(item.transcript))
+            transcriptPaths.push(ExtractPublicId(item.transcript))
         }
 
     }
 
-    if (profilePaths.length > 0) {
-        await supabase.storage.from("profile").remove(profilePaths)
-    }
-
-    if (logoCompanyPaths.length > 0) {
-        await supabase.storage.from("logo_company").remove(logoCompanyPaths)
-    }
-
-    if (resumePaths.length > 0) {
-        await supabase.storage.from("resume").remove(resumePaths)
-    }
-
-    if (transcriptPaths.length > 0) {
-        await supabase.storage.from("transcript").remove(transcriptPaths)
-    }
+    // profile/logo_company เป็นรูปภาพ ("image") ส่วน resume/transcript
+    // เป็นเอกสาร ("raw")
+    await DeleteManyFromCloudinary(profilePaths, "image")
+    await DeleteManyFromCloudinary(logoCompanyPaths, "image")
+    await DeleteManyFromCloudinary(resumePaths, "raw")
+    await DeleteManyFromCloudinary(transcriptPaths, "raw")
 
     const result = await DeleteUserByID(id)
     if (result.affectedRows === 0) {
