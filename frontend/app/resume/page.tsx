@@ -1193,7 +1193,8 @@ const deadlineText = `${day} ${thaiMonths[month - 1]} ${year + 543}`
       String(currentUserId)
 
   const isAdmin = currentUserRole === "admin"
-  const canEditThisPost = isCreator || isAdmin
+  const isHr = currentUserRole === "hr"
+  const canEditThisPost = isCreator || isAdmin || isHr
 
   return (
     <Link
