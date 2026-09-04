@@ -1353,6 +1353,10 @@ export default function ResumePage() {
     currentUser?.role === "hr" ||
     currentUser?.role === "admin"
 
+  // ผู้ดูแลระบบยังจัดการประกาศทั้งหมดได้ แต่ไม่สามารถสร้างประกาศใหม่
+  const canCreatePosts =
+    currentUser?.role === "hr"
+
   // ──────────────────────────────────────────────
   // Current User — reuses the single /api/me call made in <UserProvider>
   // instead of fetching it again on this page.
@@ -1659,7 +1663,7 @@ export default function ResumePage() {
           {/* Create */}
 
           {!loadingUser &&
-            canManagePosts && (
+            canCreatePosts && (
               <button
                 type="button"
                 onClick={openCreate}
