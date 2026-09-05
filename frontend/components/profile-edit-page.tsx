@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState, useRef } from "react"
-import { Plus, User, Phone, Mail, Check, X } from "lucide-react"
+import { Plus, User, Phone, Mail, Check, X, Loader2 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { updateProfile } from "@/app/actions/profile"
 import { useUser } from "@/contexts/user-context"
@@ -262,6 +262,7 @@ function EditCard({
   onChange,
   onConfirm,
   onCancel,
+  isSubmitting,
 }: {
   draft: ProfileData
   onChange: (
@@ -270,6 +271,7 @@ function EditCard({
   ) => void
   onConfirm: () => void
   onCancel: () => void
+  isSubmitting: boolean
 }) {
   return (
     <div className="flex flex-1 flex-col rounded-3xl border border-[#E8614A]/30 bg-white shadow-xl shadow-orange-100/60">
@@ -347,7 +349,8 @@ function EditCard({
           <button
             type="button"
             onClick={onCancel}
-            className="group flex items-center justify-center gap-2 rounded-xl border-2 border-red-500 bg-white py-3 text-sm font-semibold text-red-500 shadow-sm transition hover:bg-red-500 hover:text-white active:scale-[0.98]"
+            disabled={isSubmitting}
+            className="group flex items-center justify-center gap-2 rounded-xl border-2 border-red-500 bg-white py-3 text-sm font-semibold text-red-500 shadow-sm transition hover:bg-red-500 hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-red-500"
           >
             <X className="h-4 w-4 stroke-[2.5]" />
             ยกเลิก
@@ -356,10 +359,20 @@ function EditCard({
           <button
             type="button"
             onClick={onConfirm}
-            className="group flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-500 bg-emerald-500 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 hover:border-emerald-600 active:scale-[0.98]"
+            disabled={isSubmitting}
+            className="group flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-500 bg-emerald-500 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 hover:border-emerald-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-emerald-500 disabled:hover:border-emerald-500"
           >
-            <Check className="h-4 w-4 stroke-[2.5]" />
-            ยืนยัน
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin stroke-[2.5]" />
+                กำลังบันทึก...
+              </>
+            ) : (
+              <>
+                <Check className="h-4 w-4 stroke-[2.5]" />
+                ยืนยัน
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -417,6 +430,8 @@ export default function ProfileEditPage({
 
   const [isEditing, setIsEditing] = useState(false)
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const [toast, setToast] = useState<{
     msg: string
     type: "success" | "info"
@@ -442,6 +457,10 @@ export default function ProfileEditPage({
   }
 
   const handleConfirm = async () => {
+    if (isSubmitting) return
+
+    setIsSubmitting(true)
+
     try {
       const response = await updateProfile({
         firstname: String(draft.firstName ?? ""),
@@ -459,8 +478,6 @@ export default function ProfileEditPage({
         surname: response.lastname ?? draft.surname,
         phone: String(draft.phone ?? "").replace(/\D/g, "").slice(0, 10),
         email: response.email ?? draft.email,
-        // Use the persisted Supabase public URL, not the temporary data-URL
-        // preview, so the avatar remains visible after a refresh.
         avatarUrl: response.icon ?? draft.avatarUrl,
         avatarFile: null,
       })
@@ -484,6 +501,8 @@ export default function ProfileEditPage({
         "บันทึกไม่สำเร็จ",
         "info"
       )
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -602,6 +621,7 @@ export default function ProfileEditPage({
                   onChange={handleChange}
                   onConfirm={handleConfirm}
                   onCancel={handleCancel}
+                  isSubmitting={isSubmitting}
                 />
               </div>
             </>

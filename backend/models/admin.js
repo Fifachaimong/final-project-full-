@@ -58,9 +58,18 @@ export const GetUserFileUrlsByUserID = async (id) => {
         WHERE m.user_id = ?
     `, [id])
 
+    const [applicantsOfOwnedPostsResult] = await db.query(`
+        SELECT r.resume_url AS resume, r.transcript_url AS transcript
+        FROM posts p
+        JOIN members m ON m.post_id = p.id
+        JOIN resume r ON r.member_id = m.id
+        WHERE p.owner_id = ?
+    `, [id])
+
     return [
         ...profileResult,
         ...postsResult,
         ...applicationsResult,
+        ...applicantsOfOwnedPostsResult,
     ]
 }
