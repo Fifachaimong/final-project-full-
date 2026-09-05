@@ -9,14 +9,14 @@ import { CreatePost, DeleteMemberInPost, DeletePost, EditPost, GetMember, GetMem
 const router = express.Router()
 
 router.get('/posts', authMiddleware, roleMiddleware('hr'), GetMyPost)
-router.get('/posts/:post_id/members', authMiddleware, roleMiddleware('hr', 'admin'), GetMember)
-router.get('/members/:id/profile/', authMiddleware, roleMiddleware('hr', 'admin'), GetProfileByMember)
-router.get('/posts/:post_id/members/:id', authMiddleware, roleMiddleware('hr', 'admin'), GetMemberResumeResult)
-router.post('/posts', authMiddleware, roleMiddleware('hr', 'admin'), upload.single('icon'), ValidateBody(createPostSchema), CreatePost)
+router.get('/posts/:post_id/members', authMiddleware, roleMiddleware('hr'), GetMember)
+router.get('/members/:id/profile/', authMiddleware, roleMiddleware('hr'), GetProfileByMember)
+router.get('/posts/:post_id/members/:id', authMiddleware, roleMiddleware('hr'), GetMemberResumeResult)
+router.post('/posts', authMiddleware, roleMiddleware('hr'), upload.single('icon'), ValidateBody(createPostSchema), CreatePost)
 router.put('/posts/:id', authMiddleware, roleMiddleware('hr', 'admin'), upload.single('icon'), ValidateBody(editPostSchema), EditPost)
-router.put('/posts/:post_id/members/:id', authMiddleware, roleMiddleware('hr', 'admin'), ValidateBody(updateCandidateStatusSchema), UpdateCandidateStatus)
+router.put('/posts/:post_id/members/:id', authMiddleware, roleMiddleware('hr'), ValidateBody(updateCandidateStatusSchema), UpdateCandidateStatus)
 router.delete('/posts/:id', authMiddleware, roleMiddleware('hr', 'admin'), DeletePost)
-router.delete('/posts/:post_id/members/:id', authMiddleware, roleMiddleware('hr', 'admin'), DeleteMemberInPost)
+router.delete('/posts/:post_id/members/:id', authMiddleware, roleMiddleware('hr'), DeleteMemberInPost)
 
 export default router
 
