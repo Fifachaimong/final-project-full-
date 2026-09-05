@@ -37,8 +37,8 @@ export const GetPostFileUrlsByOwnerAndPostID = async (owner_id, post_id, role) =
     let query = `
         SELECT p.icon AS logo_company, r.resume_url AS resume, r.transcript_url AS transcript
         FROM posts p
-        JOIN members m ON m.post_id = p.id
-        JOIN resume r ON r.member_id = m.id
+        LEFT JOIN members m ON m.post_id = p.id
+        LEFT JOIN resume r ON r.member_id = m.id
         WHERE p.id = ?
     `
 

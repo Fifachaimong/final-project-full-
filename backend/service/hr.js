@@ -30,8 +30,6 @@ export const EditPostService = async (data, owner_id, post_id, file, role) => {
     let oldIconUrl = null
 
     if (file) {
-        // ดึงโลโก้เก่าไว้ก่อน จะได้รู้ว่าต้องลบอันไหนทิ้งหลังอัปโหลดใหม่
-        // สำเร็จ (ถ้าไม่มีการอัปโหลดไฟล์ใหม่ ก็ไม่ต้องยุ่งกับโลโก้เดิมเลย)
         const currentPost = await GetPostByIDModel(post_id)
         oldIconUrl = currentPost?.icon ?? null
 
@@ -51,8 +49,6 @@ export const EditPostService = async (data, owner_id, post_id, file, role) => {
         throw new AppError('Post not found', 404)
     }
 
-    // อัปเดต DB สำเร็จแล้วค่อยลบโลโก้เก่าทิ้ง (ทำหลังบันทึกสำเร็จเสมอ กัน
-    // กรณี DB อัปเดตล้มเหลวแล้วดันลบโลโก้เก่าที่ยังใช้อยู่จริงไปแล้ว)
     if (oldIconUrl) {
         const oldPublicId = ExtractPublicId(oldIconUrl)
 
@@ -89,7 +85,6 @@ export const DeletePostService = async (owner_id, post_id, role) => {
 
     }
 
-    // logo_company เป็นรูปภาพ ("image") ส่วน resume/transcript เป็นเอกสาร ("raw")
     await DeleteManyFromCloudinary(logoCompanyPaths, "image")
     await DeleteManyFromCloudinary(resumePaths, "raw")
     await DeleteManyFromCloudinary(transcriptPaths, "raw")

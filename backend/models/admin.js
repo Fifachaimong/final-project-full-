@@ -39,14 +39,28 @@ export const EditUserByIDModel = async (data) => {
 }
 
 export const GetUserFileUrlsByUserID = async (id) => {
-    const [result] = await db.query(`
-        SELECT u.icon AS profile, p.icon AS logo_company, r.resume_url AS resume, r.transcript_url AS transcript
-        FROM users u
-        JOIN members m ON m.user_id = u.id
-        JOIN posts p ON p.owner_id = u.id
-        JOIN resume r ON r.member_id = m.id
-        WHERE u.id = ?
-    `,[id])
+    const [profileResult] = await db.query(`
+        SELECT icon AS profile
+        FROM users
+        WHERE id = ?
+    `, [id])
 
-    return result
+    const [postsResult] = await db.query(`
+        SELECT icon AS logo_company
+        FROM posts
+        WHERE owner_id = ?
+    `, [id])
+
+    const [applicationsResult] = await db.query(`
+        SELECT r.resume_url AS resume, r.transcript_url AS transcript
+        FROM members m
+        JOIN resume r ON r.member_id = m.id
+        WHERE m.user_id = ?
+    `, [id])
+
+    return [
+        ...profileResult,
+        ...postsResult,
+        ...applicationsResult,
+    ]
 }

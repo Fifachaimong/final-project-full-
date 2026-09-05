@@ -90,8 +90,6 @@ export const DeleteUserService = async (id) => {
 
     }
 
-    // profile/logo_company เป็นรูปภาพ ("image") ส่วน resume/transcript
-    // เป็นเอกสาร ("raw")
     await DeleteManyFromCloudinary(profilePaths, "image")
     await DeleteManyFromCloudinary(logoCompanyPaths, "image")
     await DeleteManyFromCloudinary(resumePaths, "raw")

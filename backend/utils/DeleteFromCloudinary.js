@@ -12,7 +12,6 @@ export const ExtractPublicId = (url) => {
   return withoutExt;
 };
 
-
 export const DeleteManyFromCloudinary = async (
   publicIds,
   resourceType = "image"
