@@ -110,6 +110,13 @@ export function Navbar() {
             เกี่ยวกับเรา
           </Link>
 
+          <Link
+            href="/guide"
+            className={linkClass(isActive("/guide"))}
+          >
+            คู่มือใช้งาน
+          </Link>
+
         </nav>
 
         {/* Auth buttons (guest) or user avatar (logged in) — Top Right */}
