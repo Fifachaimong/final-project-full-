@@ -305,7 +305,7 @@ function validateDocumentFile(file: File): string | null {
       : false)
 
   if (!validType) {
-    return "รองรับเฉพาะไฟล์ PDF, DOC และ DOCX"
+    return "รองรับเฉพาะไฟล์ PDF"
   }
 
   const maxSize = 10 * 1024 * 1024
@@ -585,7 +585,7 @@ function ApplyDialog({
 
               <span className="truncate">
                 {resumeFile?.name ||
-                  "เลือกไฟล์ PDF, DOC, DOCX"}
+                  "เลือกไฟล์ PDF"}
               </span>
             </button>
 
@@ -617,7 +617,7 @@ function ApplyDialog({
 
               <span className="truncate">
                 {transcriptFile?.name ||
-                  "เลือกไฟล์ PDF, DOC, DOCX"}
+                  "เลือกไฟล์ PDF"}
               </span>
             </button>
 
