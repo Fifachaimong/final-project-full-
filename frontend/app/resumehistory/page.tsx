@@ -219,7 +219,7 @@ export default function Page() {
 
                       {application.ai_reason?.trim() && (
                         <div className="col-span-2 border-t border-border pt-3 text-sm leading-6 text-muted-foreground">
-                          <span className="font-medium text-foreground">เหตุผลจาก AI:</span>{' '}
+                          <span className="font-medium text-foreground">จุดเด่น-จุดด้อยของเรซูเม่ (AI)  :</span>{' '}
                           {application.ai_reason.trim()}
                         </div>
                       )}

@@ -68,10 +68,12 @@ function ScoreCard({
   label,
   value,
   icon: Icon,
+  suffix = "",
 }: {
   label: string
   value: number | null
   icon: React.ElementType
+  suffix?: string
 }) {
   return (
     <div className="group flex items-center gap-4 rounded-2xl border border-border bg-card px-5 py-4 shadow-sm transition-shadow hover:shadow-md">
@@ -85,7 +87,7 @@ function ScoreCard({
         </span>
 
         <span className="text-2xl font-bold leading-none text-foreground">
-          {value ?? "-"}
+          {value !== null ? `${value}${suffix}` : "-"}
         </span>
       </div>
     </div>
@@ -208,7 +210,6 @@ function StatusActions({
       </div>
 
       <div className="flex items-center gap-3">
-        {/* กดเปลี่ยนได้ตลอด แม้ตัดสินไปแล้ว เผื่อ HR กดพลาด — ปุ่มที่ตรงกับสถานะปัจจุบันจะเข้มกว่าเพื่อบอกว่าเลือกอันนี้อยู่ */}
         <button
           type="button"
           disabled={submitting}
@@ -293,9 +294,13 @@ function StatusConfirmDialog({
           </div>
 
           <div>
-            <h2 id="status-confirm-title" className="text-base font-bold text-foreground">
+            <h2
+              id="status-confirm-title"
+              className="text-base font-bold text-foreground"
+            >
               {title}
             </h2>
+
             <p className="mt-1 text-sm text-muted-foreground">
               {description}
             </p>
@@ -354,6 +359,7 @@ function ProfileHeader({
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             ชื่อ
           </p>
+
           <p className="mt-0.5 text-sm font-semibold text-foreground">
             {profile.user_firstname ?? "-"}
           </p>
@@ -363,6 +369,7 @@ function ProfileHeader({
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             นามสกุล
           </p>
+
           <p className="mt-0.5 text-sm font-semibold text-foreground">
             {profile.user_lastname ?? "-"}
           </p>
@@ -372,9 +379,13 @@ function ProfileHeader({
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             เบอร์โทร
           </p>
+
           <p className="mt-0.5 text-sm font-semibold text-foreground">
             {profile.user_phone
-              ? profile.user_phone.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3")
+              ? profile.user_phone.replace(
+                  /(\d{3})(\d{3})(\d{4})/,
+                  "$1-$2-$3"
+                )
               : "-"}
           </p>
         </div>
@@ -383,6 +394,7 @@ function ProfileHeader({
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             อีเมล
           </p>
+
           <p className="mt-0.5 text-sm font-semibold text-foreground">
             {profile.user_email ?? "-"}
           </p>
@@ -400,8 +412,6 @@ export default function MemberDetailPage() {
 
   const router = useRouter()
 
-  // Auth/role check reuses the single /api/me call made in <UserProvider>
-  // instead of fetching it again just for this page's permission gate.
   const { user, loading: checkingAuth } = useUser()
 
   const [resume, setResume] =
@@ -471,6 +481,7 @@ export default function MemberDetailPage() {
             credentials: "include",
             cache: "no-store",
           }),
+
           fetch(profileApiUrl, {
             method: "GET",
             credentials: "include",
@@ -505,8 +516,6 @@ export default function MemberDetailPage() {
           )
         }
 
-        // โปรไฟล์ (ชื่อ/นามสกุล/เบอร์โทร/อีเมล) ไม่ใช่ตัวบล็อกหลัก
-        // ถ้าโหลดไม่สำเร็จ ให้ปล่อยเป็น null และแสดงผลวิเคราะห์ resume ต่อไปได้
         const profileResult = profileRes.ok
           ? await profileRes.json().catch(() => null)
           : null
@@ -558,8 +567,11 @@ export default function MemberDetailPage() {
   ): Promise<boolean> {
     if (!post_id || !member_id || updatingStatus) return false
 
-    // ไม่มี guard ว่าต้องเป็น pending เท่านั้น — HR เปลี่ยนใจ/แก้ที่กดพลาดได้ทุกเมื่อ
-    if (resume?.status?.trim().toLowerCase() === newStatus) return false
+    if (
+      resume?.status?.trim().toLowerCase() === newStatus
+    ) {
+      return false
+    }
 
     setUpdatingStatus(true)
     setActionError(null)
@@ -591,7 +603,9 @@ export default function MemberDetailPage() {
       }
 
       setResume((prev) =>
-        prev ? { ...prev, status: newStatus } : prev
+        prev
+          ? { ...prev, status: newStatus }
+          : prev
       )
 
       return true
@@ -696,7 +710,6 @@ export default function MemberDetailPage() {
 
         <ProfileHeader profile={profile} />
 
-        {/* กรอบหลักรวมทุก section เป็นชิ้นเดียว ให้ดูเป็นการ์ดเดียวที่ทันสมัยแทนหลายกล่องแยก */}
         <div className="overflow-hidden rounded-3xl border border-border bg-card/80 shadow-sm shadow-black/[0.03] backdrop-blur-sm">
           <div className="relative overflow-hidden border-b border-border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-6 sm:px-8">
             <div className="flex items-center gap-3">
@@ -723,14 +736,19 @@ export default function MemberDetailPage() {
               />
 
               <ScoreCard
-                label="Storytelling Score"
+                label="ระดับการเล่าเรื่อง (AI)"
                 value={resume.storytelling_score}
                 icon={BookOpenText}
               />
 
               <ScoreCard
-                label="Overall Confidence"
-                value={resume.overall_confidence}
+                label="ความเชื่อมั่นโดยรวม (AI)"
+                value={
+                  resume.overall_confidence !== null
+                    ? resume.overall_confidence * 100
+                    : null
+                }
+                suffix="%"
                 icon={ShieldCheck}
               />
             </div>
@@ -765,7 +783,7 @@ export default function MemberDetailPage() {
                 <Star className="h-4 w-4 text-muted-foreground" />
 
                 <h2 className="text-sm font-semibold text-foreground">
-                  จุดเด่นเฉพาะตัว
+                  ความเหมาะสมกับตำแหน่งงาน (AI)
                 </h2>
               </div>
 
@@ -817,8 +835,12 @@ export default function MemberDetailPage() {
             <StatusActions
               status={resume.status}
               submitting={updatingStatus}
-              onApprove={() => setPendingStatus("approved")}
-              onReject={() => setPendingStatus("rejected")}
+              onApprove={() =>
+                setPendingStatus("approved")
+              }
+              onReject={() =>
+                setPendingStatus("rejected")
+              }
             />
           </div>
         </div>
@@ -831,9 +853,14 @@ export default function MemberDetailPage() {
         onConfirm={async () => {
           if (!pendingStatus) return
 
-          const updated = await handleUpdateStatus(pendingStatus)
+          const updated =
+            await handleUpdateStatus(
+              pendingStatus
+            )
 
-          if (updated) setPendingStatus(null)
+          if (updated) {
+            setPendingStatus(null)
+          }
         }}
       />
     </main>

@@ -207,7 +207,7 @@ function ResumeHistoryExample() {
               </div>
 
               <div className="basis-full border-t border-border pt-2.5 text-xs leading-5 text-muted-foreground">
-                <span className="font-medium text-foreground">เหตุผลจาก AI:</span> {item.reason}
+                <span className="font-medium text-foreground">จุดเด่น-จุดด้อยของเรซูเม่ (AI)  :</span> {item.reason}
               </div>
             </div>
           )
@@ -273,7 +273,7 @@ function HrApplicantViewExample() {
               </span>
 
               <div className="basis-full rounded-lg bg-muted/50 px-3 py-2 text-xs leading-5 text-muted-foreground">
-                <span className="font-medium text-foreground">เหตุผลจาก AI:</span> {a.reason}
+                <span className="font-medium text-foreground">จุดเด่น-จุดด้อยของเรซูเม่ (AI)  :</span> {a.reason}
               </div>
             </div>
           )

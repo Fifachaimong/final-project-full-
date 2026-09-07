@@ -22,7 +22,7 @@ interface Applicant {
   user_firstname: string
   user_lastname: string
   ai_score: number | null
-  ai_reason: string | null
+  faculty_match: string | null
   status: string | null
 }
 
@@ -251,10 +251,10 @@ function ApplicantRow({
           {getStatusStyle(applicant.status).label}
         </span>
 
-        {applicant.ai_reason?.trim() && (
+        {applicant.faculty_match?.trim() && (
           <p className="basis-full border-t border-border pt-2 text-xs leading-5 text-muted-foreground">
-            <span className="font-medium text-foreground">เหตุผลจาก AI:</span>{' '}
-            {applicant.ai_reason.trim()}
+            <span className="font-medium text-foreground">ความสอดคล้องกับสาขา/คณะ :</span>{' '}
+            {applicant.faculty_match.trim()}
           </p>
         )}
       </Link>
