@@ -27,7 +27,6 @@ interface MemberResume {
   storytelling_score: number | null
   overall_confidence: number | null
   skills: string[] | string | null
-  ai_reason: string | null
   faculty_match: string | null
   specific_strengths: string | null
   status: string | null
@@ -693,22 +692,6 @@ export default function MemberDetailPage() {
 
               <p className="whitespace-pre-wrap rounded-xl bg-muted/40 p-4 text-sm leading-relaxed text-foreground">
                 {resume.faculty_match}
-              </p>
-            </div>
-          )}
-
-          {resume.ai_reason && (
-            <div className="border-b border-border px-6 py-6 sm:px-8">
-              <div className="mb-3 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-muted-foreground" />
-
-                <h2 className="text-sm font-semibold text-foreground">
-                  เหตุผลจาก AI
-                </h2>
-              </div>
-
-              <p className="whitespace-pre-wrap rounded-xl bg-muted/40 p-4 text-sm leading-relaxed text-foreground">
-                {resume.ai_reason}
               </p>
             </div>
           )}

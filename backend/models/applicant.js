@@ -85,5 +85,5 @@ export const GetMyApplicationResultModel = async (id) => {
         WHERE m.user_id = ?
     `,[ id ])
 
-    return result[0]
+    return result
 }

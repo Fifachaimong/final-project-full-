@@ -83,8 +83,6 @@ export const ApplyResumeService = async (
         resume.originalname
     );
 
-    console.log("show public url")
-    console.log(resumeUpload.publicUrl)
     const transcriptUpload = await UploadToCloudinary(
         transcript.buffer,
         transcript.mimetype,
@@ -92,7 +90,6 @@ export const ApplyResumeService = async (
         transcript.originalname
     );
 
-    console.log(post.description)
     const aiResult = await axios.post(
         "https://duckling-hangup-resistant.ngrok-free.dev/analyze",
         {
@@ -105,10 +102,6 @@ export const ApplyResumeService = async (
 
     console.log("=== FULL AI RESULT ===");
     console.log(JSON.stringify(aiResult.data, null, 2));
-
-    console.log("=== EXTRACTION INFO ===");
-    console.log("Method:", aiResult.data.text_extraction_method);
-    console.log("Warning:", aiResult.data.text_extraction_warning);
 
     const memberResult = await CreateMember(
         userId,
@@ -127,9 +120,6 @@ export const ApplyResumeService = async (
         ai_reason : ${aiResult.data.ai_reason}
         overall_confidence : ${aiResult.data.overall_confidence}
     `.trim();
-
-    console.log("=== ANALYSIS STRING TO SAVE ===");
-    console.log(analysis);  
 
     
     await CreateResume(
