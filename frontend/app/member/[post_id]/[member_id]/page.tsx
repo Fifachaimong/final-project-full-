@@ -243,6 +243,95 @@ function StatusActions({
   )
 }
 
+function StatusConfirmDialog({
+  status,
+  submitting,
+  onClose,
+  onConfirm,
+}: {
+  status: "approved" | "rejected" | null
+  submitting: boolean
+  onClose: () => void
+  onConfirm: () => void
+}) {
+  if (!status) return null
+
+  const isApproved = status === "approved"
+  const Icon = isApproved ? CheckCircle2 : XCircle
+  const title = isApproved
+    ? "ยืนยันการคัดเลือกผู้สมัคร?"
+    : "ยืนยันการไม่คัดเลือกผู้สมัคร?"
+  const description = isApproved
+    ? "ผู้สมัครจะได้รับสถานะผ่านการคัดเลือก"
+    : "ผู้สมัครจะได้รับสถานะไม่ผ่านการคัดเลือก"
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      role="presentation"
+      onClick={() => {
+        if (!submitting) onClose()
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="status-confirm-title"
+        className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start gap-3">
+          <div
+            className={
+              "flex h-11 w-11 shrink-0 items-center justify-center rounded-full " +
+              (isApproved
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-rose-100 text-rose-700")
+            }
+          >
+            <Icon className="h-5 w-5" />
+          </div>
+
+          <div>
+            <h2 id="status-confirm-title" className="text-base font-bold text-foreground">
+              {title}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {description}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={onClose}
+            className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            ยกเลิก
+          </button>
+
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={onConfirm}
+            className={
+              "inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60 " +
+              (isApproved
+                ? "bg-emerald-600 hover:bg-emerald-700"
+                : "bg-rose-600 hover:bg-rose-700")
+            }
+          >
+            <Icon className="h-4 w-4" />
+            {submitting ? "กำลังบันทึก..." : "ยืนยัน"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ProfileHeader({
   profile,
 }: {
@@ -332,6 +421,9 @@ export default function MemberDetailPage() {
 
   const [actionError, setActionError] =
     useState<string | null>(null)
+
+  const [pendingStatus, setPendingStatus] =
+    useState<"approved" | "rejected" | null>(null)
 
   const backHref = `/resume/${post_id}`
 
@@ -463,12 +555,11 @@ export default function MemberDetailPage() {
 
   async function handleUpdateStatus(
     newStatus: "approved" | "rejected"
-  ) {
-    if (!post_id || !member_id) return
-    if (updatingStatus) return
+  ): Promise<boolean> {
+    if (!post_id || !member_id || updatingStatus) return false
 
     // ไม่มี guard ว่าต้องเป็น pending เท่านั้น — HR เปลี่ยนใจ/แก้ที่กดพลาดได้ทุกเมื่อ
-    if (resume?.status?.trim().toLowerCase() === newStatus) return
+    if (resume?.status?.trim().toLowerCase() === newStatus) return false
 
     setUpdatingStatus(true)
     setActionError(null)
@@ -502,6 +593,8 @@ export default function MemberDetailPage() {
       setResume((prev) =>
         prev ? { ...prev, status: newStatus } : prev
       )
+
+      return true
     } catch (err) {
       console.error(
         "[Member Detail] Update status error:",
@@ -513,6 +606,8 @@ export default function MemberDetailPage() {
           ? err.message
           : "เกิดข้อผิดพลาด กรุณาลองใหม่"
       )
+
+      return false
     } finally {
       setUpdatingStatus(false)
     }
@@ -722,12 +817,25 @@ export default function MemberDetailPage() {
             <StatusActions
               status={resume.status}
               submitting={updatingStatus}
-              onApprove={() => handleUpdateStatus("approved")}
-              onReject={() => handleUpdateStatus("rejected")}
+              onApprove={() => setPendingStatus("approved")}
+              onReject={() => setPendingStatus("rejected")}
             />
           </div>
         </div>
       </div>
+
+      <StatusConfirmDialog
+        status={pendingStatus}
+        submitting={updatingStatus}
+        onClose={() => setPendingStatus(null)}
+        onConfirm={async () => {
+          if (!pendingStatus) return
+
+          const updated = await handleUpdateStatus(pendingStatus)
+
+          if (updated) setPendingStatus(null)
+        }}
+      />
     </main>
   )
 }
