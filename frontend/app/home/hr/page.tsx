@@ -262,7 +262,7 @@ export default function HomePage() {
                 <div className="rounded-xl border border-border bg-muted/40 p-3">
                   <div className="mb-1.5 flex items-center justify-between text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">
-                      <BrainCircuit className="size-3.5" /> AI score
+                      <BrainCircuit className="size-3.5" /> คะแนนความตรงกับตำแหน่งงาน
                     </span>
                     <span className="font-semibold text-foreground">{example.aiScore}%</span>
                   </div>

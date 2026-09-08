@@ -56,13 +56,14 @@ export const CreateMember = async (userId, postId) => {
 }
 
 
-export const CreateResume = async (memberId, resumeUrl, transcriptUrl, aiScore, skills, storytelling_score, ai_reason, overall_confidence, specific_strengths, faculty_match)=>{
+export const CreateResume = async (data)=>{
+    const { memberId, resumeUrl, transcriptUrl, aiScore, skills, storytelling_score, ai_reason, overall_confidence, specific_strengths, faculty_match,resume_quality_score, recommendation_reason } = data
     const [result] = await db.query(`
         INSERT INTO resume
-        (member_id, resume_url, transcript_url, ai_score, storytelling_score, overall_confidence, skills, ai_reason, specific_strengths, faculty_match)
-        VALUES(? ,? ,? ,? ,? ,? ,? ,? ,? ,?)   
+        (member_id, resume_url, transcript_url, ai_score, storytelling_score, overall_confidence, skills, ai_reason, specific_strengths, faculty_match, resume_quality_score, recommendation_reason)
+        VALUES(? ,? ,? ,? ,? ,? ,? ,? ,? ,? ,? ,?)   
         `,
-        [ memberId, resumeUrl, transcriptUrl, aiScore,  storytelling_score, overall_confidence, skills, ai_reason, specific_strengths, faculty_match]
+        [ memberId, resumeUrl, transcriptUrl, aiScore,  storytelling_score, overall_confidence, skills, ai_reason, specific_strengths, faculty_match, resume_quality_score, recommendation_reason]
     );
 
     return result;
@@ -78,7 +79,7 @@ export const GetDataPostById = async (post_id) => {
 
 export const GetMyApplicationResultModel = async (id) => {
     const [result] = await db.query(`
-        SELECT p.icon, p.title, p.company_name, m.status, r.ai_score, r.ai_reason
+        SELECT p.icon, p.title, p.company_name, m.status, r.resume_quality_score, r.ai_reason
         FROM members m
         JOIN posts p ON p.id = m.post_id
         JOIN resume r ON r.member_id = m.id

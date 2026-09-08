@@ -121,19 +121,22 @@ export const ApplyResumeService = async (
         overall_confidence : ${aiResult.data.overall_confidence}
     `.trim();
 
-    
-    await CreateResume(
-        memberId,
-        resumeUpload.publicUrl,
-        transcriptUpload.publicUrl,
-        aiResult.data.matching_score,
-        `${aiResult.data.skills.hard}`,
-        aiResult.data.storytelling_score,
-        aiResult.data.ai_reason,
-        aiResult.data.overall_confidence,
-        aiResult.data.specific_strengths,
-        aiResult.data.faculty_match
-    );
+    const data = {
+        memberId : memberId,
+        resumeUrl : resumeUpload.publicUrl,
+        transcriptUrl : transcriptUpload.publicUrl,
+        aiScore : aiResult.data.matching_score,
+        skills : `${aiResult.data.skills.hard}`,
+        storytelling_score : aiResult.data.storytelling_score,
+        ai_reason : aiResult.data.ai_reason,
+        overall_confidence : aiResult.data.overall_confidence,
+        specific_strengths : aiResult.data.specific_strengths,
+        faculty_match : aiResult.data.faculty_match,
+        resume_quality_score : aiResult.data.resume_quality_score,
+        recommendation_reason : aiResult.data.recommendation_reason
+    }
+
+    await CreateResume(data);
 
     return {
         message: "Apply resume succeed",

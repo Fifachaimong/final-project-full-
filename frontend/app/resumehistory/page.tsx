@@ -22,7 +22,7 @@ type Application = {
   title?: string
   company_name?: string
   status?: string
-  ai_score?: number | string
+  resume_quality_score?: number | string
   ai_reason?: string
 }
 
@@ -78,7 +78,7 @@ function normalizeApplications(payload: unknown): Application[] {
   return []
 }
 
-function scoreValue(score: Application['ai_score']) {
+function scoreValue(score: Application['resume_quality_score']) {
   const value = Number(score)
   return Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : null
 }
@@ -140,7 +140,7 @@ export default function Page() {
             ) : (
               <div className="flex flex-col gap-3">
                 {applications.map((application, index) => {
-                  const score = scoreValue(application.ai_score)
+                  const score = scoreValue(application.resume_quality_score)
                   const status = getStatusStyle(application.status)
                   const StatusIcon = status.icon
                   const content = (
@@ -195,7 +195,7 @@ export default function Page() {
                           <div className="mb-2 flex items-center justify-between text-xs">
                             <span className="flex items-center gap-1.5 text-muted-foreground">
                               <BrainCircuit className="size-3.5" />
-                              AI score
+                              คุณภาพการเขียนเรซูเม่
                             </span>
 
                             <strong>

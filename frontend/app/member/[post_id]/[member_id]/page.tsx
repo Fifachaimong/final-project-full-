@@ -29,6 +29,7 @@ interface MemberResume {
   skills: string[] | string | null
   faculty_match: string | null
   specific_strengths: string | null
+  recommendation_reason: string | null
   status: string | null
 }
 
@@ -730,7 +731,7 @@ export default function MemberDetailPage() {
 
             <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
               <ScoreCard
-                label="AI Score"
+                label="คะแนนความตรงกับตำแหน่งงาน"
                 value={resume.ai_score}
                 icon={Gauge}
               />
@@ -745,7 +746,7 @@ export default function MemberDetailPage() {
                 label="ความเชื่อมั่นโดยรวม (AI)"
                 value={
                   resume.overall_confidence !== null
-                    ? resume.overall_confidence * 100
+                    ? Math.round(resume.overall_confidence * 100)
                     : null
                 }
                 suffix="%"
@@ -786,7 +787,6 @@ export default function MemberDetailPage() {
                   ความเหมาะสมกับตำแหน่งงาน (AI)
                 </h2>
               </div>
-
               <p className="whitespace-pre-wrap rounded-xl bg-muted/40 p-4 text-sm leading-relaxed text-foreground">
                 {resume.specific_strengths}
               </p>
@@ -808,6 +808,23 @@ export default function MemberDetailPage() {
               </p>
             </div>
           )}
+
+          {resume.recommendation_reason && (
+            <div className="border-b border-border px-6 py-6 sm:px-8">
+              <div className="mb-3 flex items-center gap-2">
+                <Star className="h-4 w-4 text-muted-foreground" />
+
+                <h2 className="text-sm font-semibold text-foreground">
+                  คำแนะนำจาก AI
+                </h2>
+              </div>
+
+              <p className="whitespace-pre-wrap rounded-xl bg-muted/40 p-4 text-sm leading-relaxed text-foreground">
+                {resume.recommendation_reason}
+              </p>
+            </div>
+          )}
+
 
           <div className="border-b border-border px-6 py-6 sm:px-8">
             <div className="mb-4 flex items-center gap-2">

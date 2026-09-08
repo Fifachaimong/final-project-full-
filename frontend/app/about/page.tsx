@@ -192,7 +192,7 @@ function ResumeHistoryExample() {
                 <div className="w-24">
                   <div className="mb-1 flex items-center justify-between text-[11px] text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <BrainCircuit className="size-3" /> AI score
+                      <BrainCircuit className="size-3" /> 
                     </span>
                     <span className="font-semibold text-foreground">{item.score}%</span>
                   </div>
@@ -262,7 +262,7 @@ function HrApplicantViewExample() {
               </span>
 
               <div className="shrink-0 text-right">
-                <p className="text-[10px] text-muted-foreground">AI Score</p>
+                <p className="text-[10px] text-muted-foreground">คุณภาพการเขียนเรซูเม่</p>
                 <p className="text-sm font-semibold text-foreground">{a.score.toFixed(2)}</p>
               </div>
 
