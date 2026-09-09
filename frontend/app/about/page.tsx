@@ -27,6 +27,7 @@ type HistoryExample = {
   status: HistoryStatus
   score: number
   reason: string
+  specific_strengths: string
 }
 
 type ApplicantExample = {
@@ -34,56 +35,75 @@ type ApplicantExample = {
   score: number
   status: HistoryStatus
   reason: string
+  specific_strengths: string
 }
 
 /* ---------- ตัวอย่างข้อมูล (mock data สำหรับประกอบคำอธิบายเท่านั้น) ---------- */
 
 const historyExamples: HistoryExample[] = [
   {
-    title: 'Frontend',
-    company: 'บริษัทคนดี',
-    status: 'rejected',
-    score: 23.4,
-    reason: 'ทักษะยังไม่ตรงกับตำแหน่งที่สมัคร',
-  },
-  {
-    title: 'นักศึกษาฝึกงาน Data Analyst',
-    company: 'บริษัท บลูปรินต์ อนาลิติกส์ จำกัด',
-    status: 'approved',
-    score: 91,
-    reason: 'ทักษะและประสบการณ์สอดคล้องกับตำแหน่ง',
-  },
-  {
-    title: 'ผู้ช่วยฝ่ายการตลาด',
-    company: 'ริเวอร์ไลน์ สตูดิโอ',
+    title: 'เจ้าหน้าที่ดูแล Hardware / IT Support',
+    company: 'IT มหาชน',
     status: 'pending',
-    score: 68,
-    reason: 'มีทักษะพื้นฐานตรงตามความต้องการ',
+    score: 56.8,
+    reason:
+      'เรซูเม่ระบุโปรเจกต์และทักษะชัดเจน แต่ขาดการอธิบายผลลัพธ์และตัวเลขวัดความสำเร็จอย่างเป็นรูปธรรม',
+    specific_strengths:
+      'ผู้สมัครมีทักษะการเขียนโปรแกรมและการทำโปรเจกต์ IoT ด้วยภาษา C ร่วมกับ Microcontroller ซึ่งมีความเกี่ยวข้องกับฮาร์ดแวร์เบื้องต้น อย่างไรก็ตาม โปรเจกต์หลักส่วนใหญ่เป็นงาน Backend (ระบบ CSR Management และระบบคัดกรองเรซูเม่ด้วย AI) ซึ่งไม่ตรงกับสายงาน IT Support ที่เน้นการประกอบ PC ซ่อมบำรุง Hardware และการสนับสนุนระบบ Windows หรือ Google Workspace ตามที่ JD ต้องการ',
+  },
+  {
+    title: 'Senior Backend Developer',
+    company: 'หลังบ้านมีมากกว่าที่คิด',
+    status: 'pending',
+    score: 57.8,
+    reason:
+      'เรซูเม่ระบุทักษะและโปรเจกต์ชัดเจน แต่ยังขาดการเล่าปัญหา วิธีดำเนินการ และผลลัพธ์ที่วัดได้',
+    specific_strengths:
+      'ผู้สมัครมีทักษะ JavaScript, Node.js, Express.js, MySQL, Postman, Git และ GitHub ซึ่งตรงกับรายละเอียดงานหลายส่วน และมีโปรเจกต์ CSR Management System กับระบบคัดกรองเรซูเม่อัจฉริยะด้วย AI ที่พัฒนา Backend ด้วย Node.js และ Express.js จึงเกี่ยวข้องโดยตรง รวมถึงโปรเจกต์ IoT ที่แสดงทักษะการเขียนโปรแกรมเพิ่มเติม ทักษะตรงกับรายละเอียดงานประมาณ 55% แต่ยังไม่แสดงประสบการณ์ด้าน Authentication, Authorization, REST API เชิงลึก, Security, Performance, Database Design, Technical Documentation และการดูแลระบบจริง อีกทั้งประสบการณ์ยังอยู่ในระดับนักศึกษาและโปรเจกต์ จึงไม่สอดคล้องกับระดับ Senior Backend Developer',
+  },
+  {
+    title: 'Frontend Developer',
+    company: 'หน้าบ้านยินดีต้อนรับ',
+    status: 'pending',
+    score: 57,
+    reason:
+      'มีการระบุการศึกษา ทักษะ และโปรเจกต์ชัดเจน แต่ยังขาดรายละเอียด Problem → Action → Result และผลลัพธ์ที่วัดได้',
+    specific_strengths:
+      'ผู้สมัครมีพื้นฐาน JavaScript, HTML, CSS, Git/GitHub, Node.js และ Express.js รวมถึงโปรเจกต์ CSR Management System และระบบคัดกรองเรซูเม่อัจฉริยะด้วย AI ซึ่งเกี่ยวข้องกับ Web Application และการเชื่อมต่อ Backend แต่เป็นผลงานฝั่ง Backend มากกว่าฝั่ง Frontend โดยตรง นอกจากนี้ยังไม่แสดงประสบการณ์ React/Vue/Angular, Component, State Management, Responsive UI, CSS Framework, Browser Debugging, Automated Testing หรือการจัดการ Authentication และ Web Security จึงมีทักษะตรงกับ JD ประมาณ 40% และยังไม่เห็นหลักฐานการทำงานร่วมกับ Designer หรือการสร้าง UI จริง',
   },
 ]
 
 const applicantExamples: ApplicantExample[] = [
   {
     name: 'Applicant User',
-    score: 23.4,
-    status: 'rejected',
-    reason: 'ประสบการณ์ยังไม่ครอบคลุมงานที่ระบุ',
+    score: 57.8,
+    status: 'pending',
+    reason:
+      'เรซูเม่ระบุทักษะและโปรเจกต์ชัดเจน แต่ยังขาดการเล่าปัญหา วิธีดำเนินการ และผลลัพธ์ที่วัดได้',
+    specific_strengths:
+      'มีทักษะ JavaScript, Node.js, Express.js, MySQL, Postman, Git และ GitHub ซึ่งตรงกับรายละเอียดงานหลายส่วน รวมถึงมีโปรเจกต์ Backend ที่เกี่ยวข้องโดยตรงกับตำแหน่ง',
   },
   {
     name: 'applicant user',
-    score: 23.4,
-    status: 'approved',
-    reason: 'มีทักษะหลักที่ตรงกับความต้องการ',
+    score: 56.8,
+    status: 'pending',
+    reason:
+      'เรซูเม่ระบุโปรเจกต์และทักษะชัดเจน แต่ขาดการอธิบายผลลัพธ์และตัวเลขวัดความสำเร็จอย่างเป็นรูปธรรม',
+    specific_strengths:
+      'มีทักษะการเขียนโปรแกรมและการทำโปรเจกต์ IoT ด้วยภาษา C ร่วมกับ Microcontroller ซึ่งมีความเกี่ยวข้องกับฮาร์ดแวร์เบื้องต้น แต่ประสบการณ์หลักยังเน้นด้าน Backend มากกว่า IT Support',
   },
   {
     name: 'www asdasd',
-    score: 23.4,
+    score: 57,
     status: 'pending',
-    reason: 'ควรพิจารณารายละเอียดประสบการณ์เพิ่มเติม',
+    reason:
+      'มีการระบุการศึกษา ทักษะ และโปรเจกต์ชัดเจน แต่ยังขาดรายละเอียด Problem → Action → Result และผลลัพธ์ที่วัดได้',
+    specific_strengths:
+      'มีพื้นฐาน JavaScript, HTML, CSS, Git/GitHub และมีประสบการณ์พัฒนา Web Application แต่ผลงานส่วนใหญ่เป็น Backend และยังไม่แสดงประสบการณ์ React/Vue/Angular และการพัฒนา UI โดยตรง',
   },
 ]
 
-/* ---------- สถานะ: ใช้รูปแบบเดียวกับระบบจริง (badge วงรี + ไอคอน + note) ---------- */
+/* ---------- สถานะ: ใช้รูปแบบเดียวกับระบบจริง ---------- */
 
 function getStatusStyle(status: HistoryStatus): {
   label: string
@@ -99,6 +119,7 @@ function getStatusStyle(status: HistoryStatus): {
         emoji: '✅',
         note: 'ขอบคุณสำหรับความสนใจและการสมัครงานกับเรา',
       }
+
     case 'rejected':
       return {
         label: 'ไม่ผ่านการพิจารณา',
@@ -106,6 +127,7 @@ function getStatusStyle(status: HistoryStatus): {
         emoji: '❌',
         note: 'ขอบคุณสำหรับความสนใจและการสมัครงานกับเรา',
       }
+
     case 'pending':
       return {
         label: 'อยู่ระหว่างพิจารณา',
@@ -116,7 +138,7 @@ function getStatusStyle(status: HistoryStatus): {
   }
 }
 
-/* ---------- กรอบ "หน้าจอตัวอย่าง" ใช้ห่อ mockup แต่ละอัน ---------- */
+/* ---------- กรอบหน้าจอตัวอย่าง ---------- */
 
 function PreviewFrame({
   label,
@@ -131,31 +153,43 @@ function PreviewFrame({
         <span className="size-2 rounded-full bg-rose-300" />
         <span className="size-2 rounded-full bg-amber-300" />
         <span className="size-2 rounded-full bg-emerald-300" />
-        <span className="ml-2 text-xs font-medium text-muted-foreground">{label}</span>
+
+        <span className="ml-2 text-xs font-medium text-muted-foreground">
+          {label}
+        </span>
       </div>
+
       <div className="p-4 sm:p-5">{children}</div>
     </div>
   )
 }
 
-/* ---------- ตัวอย่างที่ 1: ประวัติการสมัครของผู้สมัคร (อิงหน้า resumehistory จริง) ---------- */
+/* ---------- ตัวอย่างที่ 1: ประวัติการสมัครของผู้สมัคร ---------- */
 
 function ResumeHistoryExample() {
   return (
     <PreviewFrame label="ตัวอย่าง · ประวัติการสมัคร (มุมมองผู้สมัคร)">
       <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
         <div>
-          <p className="text-sm font-semibold text-foreground">รายการสมัครของฉัน</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">กดที่รายการเพื่อดูประกาศงาน</p>
+          <p className="text-sm font-semibold text-foreground">
+            รายการสมัครของฉัน
+          </p>
+
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            กดที่รายการเพื่อดูประกาศงาน
+          </p>
         </div>
+
         <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
-          <RefreshCw className="size-3.5" /> รีเฟรช
+          <RefreshCw className="size-3.5" />
+          รีเฟรช
         </span>
       </div>
 
       <div className="flex flex-col gap-3">
         {historyExamples.map((item) => {
           const status = getStatusStyle(item.status)
+
           return (
             <div
               key={item.title}
@@ -168,8 +202,13 @@ function ResumeHistoryExample() {
 
               {/* Company + title */}
               <div className="w-28 shrink-0 sm:w-36">
-                <p className="truncate text-sm font-semibold text-foreground">{item.company}</p>
-                <p className="truncate text-xs text-muted-foreground">{item.title}</p>
+                <p className="truncate text-sm font-semibold text-foreground">
+                  {item.company}
+                </p>
+
+                <p className="truncate text-xs text-muted-foreground">
+                  {item.title}
+                </p>
               </div>
 
               {/* Status badge */}
@@ -183,6 +222,7 @@ function ResumeHistoryExample() {
               {status.note && (
                 <p className="hidden min-w-0 flex-1 items-center gap-1.5 truncate text-xs text-muted-foreground md:flex">
                   <Mail className="size-3.5 shrink-0 text-primary" />
+
                   <span className="truncate">{status.note}</span>
                 </p>
               )}
@@ -192,10 +232,14 @@ function ResumeHistoryExample() {
                 <div className="w-24">
                   <div className="mb-1 flex items-center justify-between text-[11px] text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <BrainCircuit className="size-3" /> 
+                      <BrainCircuit className="size-3" />
                     </span>
-                    <span className="font-semibold text-foreground">{item.score}%</span>
+
+                    <span className="font-semibold text-foreground">
+                      {item.score}%
+                    </span>
                   </div>
+
                   <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full rounded-full bg-foreground"
@@ -203,11 +247,25 @@ function ResumeHistoryExample() {
                     />
                   </div>
                 </div>
+
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </div>
 
+              {/* AI analysis */}
               <div className="basis-full border-t border-border pt-2.5 text-xs leading-5 text-muted-foreground">
-                <span className="font-medium text-foreground">จุดเด่น-จุดด้อยของเรซูเม่ (AI)  :</span> {item.reason}
+                <p>
+                  <span className="font-medium text-foreground">
+                    จุดเด่น-จุดด้อยของเรซูเม่ (AI) :
+                  </span>{' '}
+                  {item.reason}
+                </p>
+
+                <p className="mt-1">
+                  <span className="font-medium text-foreground">
+                    ความเหมาะสมกับตำแหน่งงาน :
+                  </span>{' '}
+                  {item.specific_strengths}
+                </p>
               </div>
             </div>
           )
@@ -221,23 +279,26 @@ function ResumeHistoryExample() {
   )
 }
 
-/* ---------- ตัวอย่างที่ 2: มุมมองของ HR ที่เห็นรายชื่อผู้สมัคร (อิงหน้ารายละเอียดประกาศจริง) ---------- */
+/* ---------- ตัวอย่างที่ 2: มุมมองของ HR ---------- */
 
 function HrApplicantViewExample() {
   return (
     <PreviewFrame label="ตัวอย่าง · รายชื่อผู้สมัคร (มุมมอง HR)">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground">
-          นักศึกษาฝึกงานฝ่ายออกแบบ UX/UI — บริษัท คราฟท์ ดีไซน์ จำกัด
+          Senior Backend Developer — บริษัท หลังบ้านมีมากกว่าที่คิด
         </p>
+
         <span className="hidden items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground sm:flex">
-          <Users className="size-3.5" /> {applicantExamples.length} คน
+          <Users className="size-3.5" />
+          {applicantExamples.length} คน
         </span>
       </div>
 
       <div className="flex flex-col gap-2 border-t border-border pt-3">
         {applicantExamples.map((a, index) => {
           const status = getStatusStyle(a.status)
+
           const initials = a.name
             .split(' ')
             .map((part) => part.charAt(0))
@@ -249,31 +310,54 @@ function HrApplicantViewExample() {
               key={`${a.name}-${index}`}
               className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-border px-3 py-2.5 sm:gap-x-4"
             >
+              {/* Number */}
               <span className="w-4 shrink-0 text-center text-xs font-medium text-muted-foreground">
                 {index + 1}
               </span>
 
+              {/* Avatar */}
               <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
                 {initials.toUpperCase()}
               </div>
 
+              {/* Name */}
               <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
                 {a.name}
               </span>
 
+              {/* Score */}
               <div className="shrink-0 text-right">
-                <p className="text-[10px] text-muted-foreground">คุณภาพการเขียนเรซูเม่</p>
-                <p className="text-sm font-semibold text-foreground">{a.score.toFixed(2)}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  คุณภาพการเขียนเรซูเม่
+                </p>
+
+                <p className="text-sm font-semibold text-foreground">
+                  {a.score.toFixed(2)}
+                </p>
               </div>
 
+              {/* Status */}
               <span
                 className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium ${status.className}`}
               >
                 {status.emoji} {status.label}
               </span>
 
+              {/* AI analysis */}
               <div className="basis-full rounded-lg bg-muted/50 px-3 py-2 text-xs leading-5 text-muted-foreground">
-                <span className="font-medium text-foreground">จุดเด่น-จุดด้อยของเรซูเม่ (AI)  :</span> {a.reason}
+                <p>
+                  <span className="font-medium text-foreground">
+                    จุดเด่น-จุดด้อยของเรซูเม่ (AI) :
+                  </span>{' '}
+                  {a.reason}
+                </p>
+
+                <p className="mt-1">
+                  <span className="font-medium text-foreground">
+                    ความเหมาะสมกับตำแหน่งงาน :
+                  </span>{' '}
+                  {a.specific_strengths}
+                </p>
               </div>
             </div>
           )
@@ -321,6 +405,8 @@ const roleCards: RoleCard[] = [
   },
 ]
 
+/* ---------- จุดเด่น ---------- */
+
 type Highlight = {
   icon: LucideIcon
   title: string
@@ -328,9 +414,21 @@ type Highlight = {
 }
 
 const highlights: Highlight[] = [
-  { icon: FileText, title: 'สมัครง่าย ติดตามได้', desc: 'ส่งเรซูเม่และดูสถานะการสมัครแบบเรียลไทม์' },
-  { icon: Gauge, title: 'คะแนนจาก AI', desc: 'วิเคราะห์และให้คะแนนเทียบกับคุณสมบัติที่ต้องการ' },
-  { icon: ShieldCheck, title: 'ลดอคติ เพิ่มความแม่นยำ', desc: 'ช่วย HR ตัดสินใจด้วยข้อมูลที่เป็นระบบ' },
+  {
+    icon: FileText,
+    title: 'สมัครง่าย ติดตามได้',
+    desc: 'ส่งเรซูเม่และดูสถานะการสมัครแบบเรียลไทม์',
+  },
+  {
+    icon: Gauge,
+    title: 'คะแนนจาก AI',
+    desc: 'วิเคราะห์และให้คะแนนเทียบกับคุณสมบัติที่ต้องการ',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'ลดอคติ เพิ่มความแม่นยำ',
+    desc: 'ช่วย HR ตัดสินใจด้วยข้อมูลที่เป็นระบบ',
+  },
 ]
 
 /* ---------- หน้าหลัก: About Us ---------- */
@@ -344,8 +442,10 @@ export default function AboutPage() {
         <section className="mx-auto max-w-5xl px-5 py-14 lg:px-8">
           {/* Hero */}
           <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700">
-            <Sparkles className="size-3.5" /> เกี่ยวกับเรา
+            <Sparkles className="size-3.5" />
+            เกี่ยวกับเรา
           </div>
+
           <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             ResumeAnalysis ระบบวิเคราะห์เรซูเม่ด้วย AI
           </h1>
@@ -357,49 +457,74 @@ export default function AboutPage() {
               ผู้สมัครงานที่ต้องการส่งเรซูเม่และติดตามผลการสมัคร กับฝ่ายทรัพยากรบุคคล
               (HR) ที่ต้องการเครื่องมือช่วยคัดกรองผู้สมัครจำนวนมากให้รวดเร็วและแม่นยำขึ้น
             </p>
+
             <p>
-              แทนที่จะต้องเปิดไฟล์เรซูเม่ทีละฉบับเพื่ออ่านและให้คะแนนด้วยมือ ระบบของเรา
-              จะดึงข้อความจากไฟล์เรซูเม่ วิเคราะห์ทักษะและประสบการณ์ของผู้สมัคร แล้วเทียบ
-              กับคุณสมบัติที่ประกาศรับสมัครงานต้องการ ก่อนสรุปออกมาเป็นคะแนนและคำอธิบาย
-              ที่อ่านเข้าใจง่าย ช่วยให้ HR เห็นภาพรวมผู้สมัครทั้งหมดได้เร็วขึ้น และช่วยลด
-              ความคลาดเคลื่อนหรือความลำเอียงที่อาจเกิดจากการพิจารณาด้วยความรู้สึกล้วน ๆ
+              แทนที่จะต้องเปิดไฟล์เรซูเม่ทีละฉบับเพื่ออ่านและให้คะแนนด้วยมือ
+              ระบบของเราจะดึงข้อความจากไฟล์เรซูเม่ วิเคราะห์ทักษะและประสบการณ์ของผู้สมัคร
+              แล้วเทียบกับคุณสมบัติที่ประกาศรับสมัครงานต้องการ ก่อนสรุปออกมาเป็นคะแนน
+              และคำอธิบายที่อ่านเข้าใจง่าย ช่วยให้ HR เห็นภาพรวมผู้สมัครทั้งหมดได้เร็วขึ้น
+              และช่วยลดความคลาดเคลื่อนหรือความลำเอียงที่อาจเกิดจากการพิจารณาด้วยความรู้สึกล้วน ๆ
             </p>
+
             <p>
-              ระบบแบ่งผู้ใช้งานออกเป็น 3 บทบาท ได้แก่ ผู้ดูแลระบบ (Admin) ที่ดูแลจัดการ
-              บัญชีผู้ใช้ในภาพรวม ฝ่ายทรัพยากรบุคคล (HR) ที่สร้างประกาศรับสมัครงานและ
-              พิจารณาผลผู้สมัคร และผู้สมัครงาน (Applicant) ที่ส่งเรซูเม่และติดตามผลของ
-              ตัวเองได้ตลอดเวลา โดยแต่ละบทบาทจะเห็นเมนูและข้อมูลที่ต่างกันตามสิทธิ์การใช้งาน
+              ระบบแบ่งผู้ใช้งานออกเป็น 3 บทบาท ได้แก่ ผู้ดูแลระบบ (Admin)
+              ที่ดูแลจัดการบัญชีผู้ใช้ในภาพรวม ฝ่ายทรัพยากรบุคคล (HR)
+              ที่สร้างประกาศรับสมัครงานและพิจารณาผลผู้สมัคร และผู้สมัครงาน (Applicant)
+              ที่ส่งเรซูเม่และติดตามผลของตัวเองได้ตลอดเวลา
+              โดยแต่ละบทบาทจะเห็นเมนูและข้อมูลที่ต่างกันตามสิทธิ์การใช้งาน
             </p>
           </div>
 
           {/* จุดเด่นสั้น ๆ */}
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
             {highlights.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="rounded-2xl border border-border bg-card p-4">
+              <div
+                key={title}
+                className="rounded-2xl border border-border bg-card p-4"
+              >
                 <Icon className="mb-2 size-5 text-orange-600" />
-                <p className="text-sm font-semibold text-foreground">{title}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{desc}</p>
+
+                <p className="text-sm font-semibold text-foreground">
+                  {title}
+                </p>
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {desc}
+                </p>
               </div>
             ))}
           </div>
 
           {/* บทบาทผู้ใช้งานในระบบ */}
           <div className="mt-12">
-            <h2 className="text-lg font-semibold text-foreground">ระบบทำงานอย่างไร</h2>
+            <h2 className="text-lg font-semibold text-foreground">
+              ระบบทำงานอย่างไร
+            </h2>
+
             <p className="mt-1 text-sm text-muted-foreground">
               ทุกบทบาทเข้าใช้งานผ่านเว็บไซต์เดียวกัน แต่จะเห็นเมนูและทำสิ่งที่ต่างกัน
             </p>
 
             <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
               {roleCards.map(({ icon: Icon, title, points }) => (
-                <div key={title} className="rounded-2xl border border-border bg-card p-4">
+                <div
+                  key={title}
+                  className="rounded-2xl border border-border bg-card p-4"
+                >
                   <div className="mb-2 flex items-center gap-2">
                     <Icon className="size-4.5 text-orange-600" />
-                    <p className="text-sm font-semibold text-foreground">{title}</p>
+
+                    <p className="text-sm font-semibold text-foreground">
+                      {title}
+                    </p>
                   </div>
+
                   <ul className="space-y-1.5">
                     {points.map((p) => (
-                      <li key={p} className="flex gap-2 text-xs text-muted-foreground">
+                      <li
+                        key={p}
+                        className="flex gap-2 text-xs text-muted-foreground"
+                      >
                         <span className="mt-1.5 size-1 shrink-0 rounded-full bg-orange-400" />
                         {p}
                       </li>
@@ -410,12 +535,17 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* ตัวอย่าง mockup: ประวัติการสมัคร + มุมมอง HR */}
+          {/* ตัวอย่าง mockup */}
           <div className="mt-12">
-            <h2 className="text-lg font-semibold text-foreground">ตัวอย่างหน้าจอจริง</h2>
+            <h2 className="text-lg font-semibold text-foreground">
+              ตัวอย่างหน้าจอจริง
+            </h2>
+
             <p className="mt-1 text-sm text-muted-foreground">
-              ตัวอย่างข้อมูลด้านล่างเป็นข้อมูลจำลอง (mock) เพื่อประกอบการอธิบายเท่านั้น
+              ตัวอย่างข้อมูลด้านล่างเป็นข้อมูลจำลอง (mock)
+              เพื่อประกอบการอธิบายเท่านั้น
             </p>
+
             <div className="mt-5 flex flex-col gap-6">
               <ResumeHistoryExample />
               <HrApplicantViewExample />

@@ -79,7 +79,7 @@ export const GetDataPostById = async (post_id) => {
 
 export const GetMyApplicationResultModel = async (id) => {
     const [result] = await db.query(`
-        SELECT p.icon, p.title, p.company_name, m.status, r.resume_quality_score, r.ai_reason
+        SELECT p.icon, p.title, p.company_name, m.status, r.resume_quality_score, r.ai_reason, r.specific_strengths
         FROM members m
         JOIN posts p ON p.id = m.post_id
         JOIN resume r ON r.member_id = m.id

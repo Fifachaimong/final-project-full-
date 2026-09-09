@@ -24,6 +24,7 @@ type Application = {
   status?: string
   resume_quality_score?: number | string
   ai_reason?: string
+  specific_strengths?: string
 }
 
 function getStatusStyle(status: string | null | undefined): {
@@ -219,12 +220,26 @@ export default function Page() {
 
                       {application.ai_reason?.trim() && (
                         <div className="col-span-2 border-t border-border pt-3 text-sm leading-6 text-muted-foreground">
-                          <span className="font-medium text-foreground">จุดเด่น-จุดด้อยของเรซูเม่ (AI)  :</span>{' '}
-                          {application.ai_reason.trim()}
+                          <p>
+                            <span className="font-medium text-foreground">
+                              จุดเด่น-จุดด้อยของเรซูเม่ (AI) :
+                            </span>{' '}
+                            {application.ai_reason.trim()}
+                          </p>
+
+                          {application.specific_strengths?.trim() && (
+                            <p className="mt-1">
+                              <span className="font-medium text-foreground">
+                                ความเหมาะสมกับตำแหน่งงาน :
+                              </span>{' '}
+                              {application.specific_strengths.trim()}
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
                   )
+
                   return application.post_id ? (
                     <Link key={String(application.post_id)} href={`/resume/${application.post_id}`} className="group rounded-2xl border border-border transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{content}</Link>
                   ) : (
@@ -234,7 +249,11 @@ export default function Page() {
               </div>
             )}
           </div>
-          <div className="mt-5 flex items-center justify-center gap-2 text-xs text-muted-foreground"><ArrowUpRight aria-hidden="true" className="size-3.5" />ข้อมูลอัปเดตจากระบบสมัครงานของคุณ</div>
+
+          <div className="mt-5 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <ArrowUpRight aria-hidden="true" className="size-3.5" />
+            ข้อมูลอัปเดตจากระบบสมัครงานของคุณ
+          </div>
         </section>
       </main>
     </>
