@@ -71,7 +71,7 @@ export const CreateResume = async (data)=>{
 
 export const GetDataPostById = async (post_id) => {
     const [result] = await db.query(`
-        SELECT description, faculty, model_provider FROM posts WHERE id = ?
+        SELECT description, faculty, model_provider, title FROM posts WHERE id = ?
     `,[ post_id ])
 
     return result[0]

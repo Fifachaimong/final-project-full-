@@ -96,7 +96,8 @@ export const ApplyResumeService = async (
             resume_url : resumeUpload.publicUrl,
             job_text : post.description,
             model_provider: post.model_provider,
-            faculty_match: post.faculty
+            faculty_match: post.faculty,
+            job_title : post.title
         }
     );
 
