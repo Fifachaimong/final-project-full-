@@ -28,7 +28,7 @@
 **Backend**
 - [Express.js](https://expressjs.com/) — แยกเลเยอร์ `models/`, `service/`, `controllers/`
 - [MySQL](https://www.mysql.com/) (ผ่าน `mysql2/promise`)
-- [Supabase Storage](https://supabase.com/) — จัดเก็บไฟล์เรซูเม่/Transcript/โลโก้
+- [Cloudinary](https://cloudinary.com/) — จัดเก็บไฟล์เรซูเม่/Transcript/โลโก้
 
 **สถาปัตยกรรม**
 - Next.js API Routes ทำหน้าที่เป็น **thin proxy layer** ส่งต่อ request (พร้อม cookies สำหรับ auth middleware) ไปยัง Express backend
@@ -81,7 +81,7 @@ backend/
 ### สิ่งที่ต้องมี
 - Node.js (แนะนำเวอร์ชัน LTS ล่าสุด)
 - MySQL Server
-- บัญชี [Supabase](https://supabase.com/) สำหรับเก็บไฟล์
+- บัญชี [Cloudinary](https://cloudinary.com/) สำหรับเก็บไฟล์
 
 ### 1. Clone โปรเจกต์
 
@@ -118,12 +118,13 @@ DATABASE_NAME=resume_analysis
 # JWT
 JWT_TOKEN=your_jwt_secret_key
 
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 ```
 
-> ⚠️ ตรวจสอบชื่อ env var ของ Supabase ให้ตรงกับที่ตั้งไว้ใน Supabase Dashboard เสมอ (ใช้ `PUBLISHABLE_KEY` ไม่ใช่ `ANON_KEY`)
+> ⚠️ ตรวจสอบชื่อ env var ของ Cloudinary ให้ตรงกับที่ตั้งไว้ใน Cloudinary Dashboard เสมอ
 
 ### 4. รันโปรเจกต์
 
@@ -183,4 +184,8 @@ Next.js API routes (`/api/*`) ทำหน้าที่ proxy ไปยัง 
 
 ## 📄 License
 
-(พัฒนาขึ้นเพื่อเป็นส่วนหนึ่งของวิชาโครงงานวิศวกรรมซอฟต์แวร์ มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา)
+โปรเจกต์นี้จัดทำขึ้นเพื่อวัตถุประสงค์ทางการศึกษาเท่านั้น
+
+---
+
+พัฒนาขึ้นเพื่อเป็นส่วนหนึ่งของวิชาโครงงานวิศวกรรมซอฟต์แวร์ มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา
