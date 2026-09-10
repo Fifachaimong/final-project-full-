@@ -91,7 +91,7 @@ export const ApplyResumeService = async (
     );
 
     const aiResult = await axios.post(
-        "https://duckling-hangup-resistant.ngrok-free.dev/analyze",
+        "http://localhost:8000/analyze",
         {
             resume_url : resumeUpload.publicUrl,
             job_text : post.description,

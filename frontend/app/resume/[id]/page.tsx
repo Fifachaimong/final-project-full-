@@ -36,6 +36,7 @@ interface Post {
   title: string
   faculty: string
   description: string
+  model_provider?: string | null
   deadline: string
   icon?: string | null
   posts_status: string
@@ -282,14 +283,10 @@ interface ApplyDialogProps {
 
 const RESUME_ALLOWED_TYPES = [
   "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]
 
 const RESUME_ALLOWED_EXTENSIONS = [
   "pdf",
-  "doc",
-  "docx",
 ]
 
 function validateDocumentFile(file: File): string | null {
@@ -305,7 +302,7 @@ function validateDocumentFile(file: File): string | null {
       : false)
 
   if (!validType) {
-    return "รองรับเฉพาะไฟล์ PDF"
+    return "รองรับเฉพาะไฟล์ PDF เท่านั้น"
   }
 
   const maxSize = 10 * 1024 * 1024
@@ -592,7 +589,7 @@ function ApplyDialog({
             <input
               ref={resumeInputRef}
               type="file"
-              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              accept=".pdf,application/pdf"
               className="hidden"
               onChange={handleResumeFile}
             />
@@ -624,7 +621,7 @@ function ApplyDialog({
             <input
               ref={transcriptInputRef}
               type="file"
-              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              accept=".pdf,application/pdf"
               className="hidden"
               onChange={handleTranscriptFile}
             />
@@ -680,6 +677,12 @@ function EditPostDialog({
   onSaved,
   post,
 }: EditDialogProps) {
+  const [companyName, setCompanyName] =
+    useState(post.company_name)
+
+  const [modelProvider, setModelProvider] =
+    useState(post.model_provider ?? "")
+
   const [title, setTitle] =
     useState(post.title)
 
@@ -718,6 +721,8 @@ function EditPostDialog({
     useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    setCompanyName(post.company_name)
+    setModelProvider(post.model_provider ?? "")
     setTitle(post.title)
     setFaculty(post.faculty)
     setDescription(post.description)
@@ -779,9 +784,11 @@ function EditPostDialog({
     e.preventDefault()
 
     if (
+      !companyName.trim() ||
       !title.trim() ||
       !faculty.trim() ||
       !description.trim() ||
+      !modelProvider ||
       !deadline
     ) {
       setError(
@@ -797,6 +804,11 @@ function EditPostDialog({
       const formData = new FormData()
 
       formData.append(
+        "company_name",
+        companyName.trim()
+      )
+
+      formData.append(
         "title",
         title.trim()
       )
@@ -809,6 +821,11 @@ function EditPostDialog({
       formData.append(
         "description",
         description.trim()
+      )
+
+      formData.append(
+        "model_provider",
+        modelProvider
       )
 
       formData.append(
@@ -951,9 +968,14 @@ function EditPostDialog({
 
             <input
               type="text"
-              value={post.company_name}
-              readOnly
-              className="rounded-lg border border-input bg-muted px-3 py-2 text-sm text-muted-foreground focus:outline-none"
+              value={companyName}
+              onChange={(e) =>
+                setCompanyName(e.target.value)
+              }
+              placeholder="เช่น บริษัท ABC จำกัด"
+              required
+              disabled={submitting}
+              className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
             />
           </div>
 
@@ -1011,6 +1033,33 @@ function EditPostDialog({
               rows={3}
               className="resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-card-foreground">
+              Model Provider{" "}
+              <span className="text-destructive">
+                *
+              </span>
+            </label>
+
+            <select
+              value={modelProvider}
+              onChange={(e) =>
+                setModelProvider(e.target.value)
+              }
+              required
+              disabled={submitting}
+              className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+            >
+              <option value="" disabled>
+                เลือก Model Provider
+              </option>
+
+              <option value="gemini">Gemini</option>
+              <option value="openai">OpenAI</option>
+              <option value="claude">Claude</option>
+            </select>
           </div>
 
           <div className="flex flex-col gap-1.5">

@@ -15,7 +15,7 @@ CREATE TABLE users (
     lastname VARCHAR(50) NOT NULL,
     icon TEXT,
     email VARCHAR(50) NOT NULL,
-    phone VARCHAR(15),
+    phone VARCHAR(15) DEFAULT NULL,
     password VARCHAR(255) NOT NULL,
     role ENUM('applicant', 'hr', 'admin') NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -26,6 +26,7 @@ CREATE TABLE users (
     UNIQUE KEY phone (phone)
 
 ) ENGINE=InnoDB
+  AUTO_INCREMENT=45
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_0900_ai_ci;
 
@@ -56,6 +57,7 @@ CREATE TABLE posts (
         ON DELETE CASCADE
 
 ) ENGINE=InnoDB
+  AUTO_INCREMENT=29
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_0900_ai_ci;
 
@@ -87,6 +89,7 @@ CREATE TABLE members (
         ON DELETE CASCADE
 
 ) ENGINE=InnoDB
+  AUTO_INCREMENT=138
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_0900_ai_ci;
 
@@ -106,6 +109,8 @@ CREATE TABLE resume (
     ai_reason TEXT,
     specific_strengths TEXT,
     faculty_match TEXT,
+    resume_quality_score DECIMAL(5,2) DEFAULT NULL,
+    recommendation_reason TEXT,
 
     PRIMARY KEY (member_id),
 

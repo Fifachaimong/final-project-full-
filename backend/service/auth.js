@@ -45,7 +45,7 @@ export const LoginService = async (data) => {
             role : user.role
         },
         process.env.JWT_TOKEN,
-        { expiresIn : '1h' }
+        { expiresIn : '1d' }
     )
 
     return {
