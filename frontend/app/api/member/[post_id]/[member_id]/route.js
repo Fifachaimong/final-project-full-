@@ -27,7 +27,7 @@ export async function GET(request, { params }) {
     const cookie = headerList.get("cookie") ?? ""
 
     const backendUrl =
-      `http://final-project-full.onrender.com/hr/posts/${encodeURIComponent(
+      `https://final-project-full.onrender.com/hr/posts/${encodeURIComponent(
         post_id
       )}/members/${encodeURIComponent(member_id)}`
 
@@ -127,7 +127,7 @@ export async function PUT(request, { params }) {
     const cookie = headerList.get("cookie") ?? ""
 
     const backendUrl =
-      `http://final-project-full.onrender.com/hr/posts/${encodeURIComponent(
+      `https://final-project-full.onrender.com/hr/posts/${encodeURIComponent(
         post_id
       )}/members/${encodeURIComponent(member_id)}`
 
@@ -225,7 +225,7 @@ export async function DELETE(request, { params }) {
     const cookie = headerList.get("cookie") ?? ""
 
     const backendUrl =
-      `http://final-project-full.onrender.com/hr/posts/${encodeURIComponent(
+      `https://final-project-full.onrender.com/hr/posts/${encodeURIComponent(
         post_id
       )}/members/${encodeURIComponent(member_id)}`
 

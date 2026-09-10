@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     })
 
     const response = await fetch(
-      `http://final-project-full.onrender.com/applicant/posts?${backendParams.toString()}`,
+      `https://final-project-full.onrender.com/applicant/posts?${backendParams.toString()}`,
       {
         method: "GET",
         headers: {
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     const formData = await request.formData()
 
     const response = await fetch(
-      "http://final-project-full.onrender.com/hr/posts",
+      "https://final-project-full.onrender.com/hr/posts",
       {
         method: "POST",
         headers: {

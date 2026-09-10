@@ -7,7 +7,7 @@ export async function GET() {
     const cookie = headerList.get("cookie") ?? ""
 
     const response = await fetch(
-      "http://final-project-full.onrender.com/auth/profile",
+      "https://final-project-full.onrender.com/auth/profile",
       {
         method: "GET",
         headers: {

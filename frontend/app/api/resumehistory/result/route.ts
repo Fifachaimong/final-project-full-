@@ -1,7 +1,7 @@
 // app/api/resumehistory/result/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://final-project-full.onrender.com";
+const BACKEND_URL = process.env.BACKEND_URL || "https://final-project-full.onrender.com";
 
 export async function GET(request: NextRequest) {
   try {

@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     })
 
     const response = await fetch(
-      `http://final-project-full.onrender.com/hr/posts?${backendParams.toString()}`,
+      `https://final-project-full.onrender.com/hr/posts?${backendParams.toString()}`,
       {
         method: "GET",
         headers: {
