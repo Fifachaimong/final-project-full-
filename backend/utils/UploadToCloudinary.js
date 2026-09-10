@@ -8,18 +8,27 @@ export const UploadToCloudinary = async (
   fileName
 ) => {
 
-  const parts = fileName.split(".");
-  const extension = parts.length > 1 ? parts.pop() : null;
-  const baseName = parts.join(".") || fileName;
+  const decodedFileName = Buffer.from(fileName, "latin1").toString("utf8");
 
-  const publicId = `${Date.now()}-${baseName}`;
+  const parts = decodedFileName.split(".");
+  const extension = parts.length > 1 ? parts.pop() : null;
+  const baseName = parts.join(".") || decodedFileName;
+
+  const safeBaseName = baseName
+    .normalize("NFC")
+    .replace(/[^a-zA-Z0-9ก-๙_\-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 100);
+
+  const publicId = `${Date.now()}-${safeBaseName || "file"}`;
 
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder,
         public_id: publicId,
-        resource_type: "auto", // Cloudinary auto แยกรูปภาพ/ไฟล์เอกสาร (PDF, DOC ฯลฯ) ให้เอง
+        resource_type: "auto",
         ...(extension ? { format: extension } : {}),
       },
       (error, result) => {
