@@ -85,15 +85,12 @@ export function Navbar() {
 
           {/* แสดงเมนูประกาศงานเฉพาะผู้ใช้ที่เข้าสู่ระบบแล้ว */}
           {user && (
-            <a
+            <Link
               href="/resume"
               className={linkClass(isActive("/resume", true))}
-              onClick={() => {
-                console.log(">>> RESUME CLICKED")
-              }}
             >
               {browseLabel}
-            </a>
+            </Link>
           )}
 
           {user?.role === "admin" && (

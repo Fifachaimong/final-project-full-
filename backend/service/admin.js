@@ -14,7 +14,7 @@ export const GetUserByAdminService = async (query = {}) => {
     limit = limit < 11 && limit > 0 ? limit : 10
     const setoff = (page - 1) * limit 
 
-    filter = ['applicant', 'hr', 'admin'].includes.filter ? filter : null
+    filter = ['applicant', 'hr', 'admin'].includes(filter) ? filter : null
 
     const data = await GetUserByAdminModel(setoff, limit, filter)
 

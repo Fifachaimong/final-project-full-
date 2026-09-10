@@ -101,9 +101,6 @@ export const ApplyResumeService = async (
         }
     );
 
-    console.log("=== FULL AI RESULT ===");
-    console.log(JSON.stringify(aiResult.data, null, 2));
-
     const memberResult = await CreateMember(
         userId,
         postId
