@@ -85,7 +85,7 @@ export function Navbar() {
 
           {/* แสดงเมนูประกาศงานเฉพาะผู้ใช้ที่เข้าสู่ระบบแล้ว */}
           {user && (
-            <Link
+            <a
               href="/resume"
               className={linkClass(isActive("/resume", true))}
               onClick={() => {
@@ -93,8 +93,7 @@ export function Navbar() {
               }}
             >
               {browseLabel}
-            </Link>
-
+            </a>
           )}
 
           {user?.role === "admin" && (
