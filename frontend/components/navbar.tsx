@@ -88,9 +88,13 @@ export function Navbar() {
             <Link
               href="/resume"
               className={linkClass(isActive("/resume", true))}
+              onClick={() => {
+                console.log(">>> RESUME CLICKED")
+              }}
             >
               {browseLabel}
             </Link>
+
           )}
 
           {user?.role === "admin" && (
