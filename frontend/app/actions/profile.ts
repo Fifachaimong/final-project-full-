@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers"
 
-const BACKEND_URL = "http://localhost:5000/auth/profile"
+const BACKEND_URL = "http://final-project-full.onrender.com/auth/profile"
 
 export async function getProfile() {
   const cookieStore = await cookies()

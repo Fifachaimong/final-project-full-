@@ -41,7 +41,7 @@ export async function GET(request, { params }) {
     }
 
     const backendUrl =
-      `http://localhost:5000/hr/posts/${encodeURIComponent(post_id)}/members?${backendParams.toString()}`
+      `http://final-project-full.onrender.com/hr/posts/${encodeURIComponent(post_id)}/members?${backendParams.toString()}`
 
     console.log(
       "[GET /api/members/[post_id]] Backend:",

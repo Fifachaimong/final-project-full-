@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 
-const BACKEND_URL = "http://localhost:5000"
+const BACKEND_URL = "http://final-project-full.onrender.com"
 
 // ──────────────────────────────────────────────
 // GET /api/posts/:id

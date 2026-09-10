@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-const BACKEND_URL = "http://localhost:5000"
+const BACKEND_URL = "http://final-project-full.onrender.com"
 
 export async function POST(request) {
   try {
