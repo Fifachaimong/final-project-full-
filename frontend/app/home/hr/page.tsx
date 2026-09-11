@@ -96,10 +96,10 @@ export default function HomePage() {
     user?.role === "admin"
       ? "/home/admin"
       : user?.role === "hr"
-      ? "/home/hr"
-      : user?.role === "applicant"
-      ? "/home/applicant"
-      : "/";
+        ? "/home/hr"
+        : user?.role === "applicant"
+          ? "/home/applicant"
+          : "/";
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,15 +116,15 @@ export default function HomePage() {
                 ท่านกำลังประสบปัญหาการตรวจเรซูเม่อยู่หรือเปล่า?
               </h1>
               <p className="text-pretty text-lg leading-relaxed text-muted-foreground">
-                แพลตฟอร์มที่ถูกออกแบบมาเพื่อยกระดับกระบวนการสรรหาบุคลากรให้มีประสิทธิภาพมากขึ้น 
-                โดยใช้ปัญญาประดิษฐ์ในการวิเคราะห์ข้อมูลจากเรซูเม่ของผู้สมัครอย่างละเอียด ไม่ว่าจะเป็นทักษะทางเทคนิค ประสบการณ์การทำงาน ประวัติการศึกษา 
+                แพลตฟอร์มที่ถูกออกแบบมาเพื่อยกระดับกระบวนการสรรหาบุคลากรให้มีประสิทธิภาพมากขึ้น
+                โดยใช้ปัญญาประดิษฐ์ในการวิเคราะห์ข้อมูลจากเรซูเม่ของผู้สมัครอย่างละเอียด ไม่ว่าจะเป็นทักษะทางเทคนิค ประสบการณ์การทำงาน ประวัติการศึกษา
                 รวมไปถึงลักษณะการนำเสนอผลงานในรูปแบบ Storytelling เพื่อค้นหาจุดแข็งที่แท้จริงของผู้สมัคร
               </p>
             </div>
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap items-center gap-4">
-              <Link href="/register">
+              <Link href="/resume">
                 <Button
                   size="lg"
                   className="bg-coral px-10 text-white hover:bg-coral/90"
@@ -182,9 +182,8 @@ export default function HomePage() {
           <div className="relative">
             <div
               key={exampleIndex}
-              className={`overflow-hidden rounded-2xl bg-card shadow-2xl ${
-                slideDirection === "right" ? "animate-slide-in-right" : "animate-slide-in-left"
-              }`}
+              className={`overflow-hidden rounded-2xl bg-card shadow-2xl ${slideDirection === "right" ? "animate-slide-in-right" : "animate-slide-in-left"
+                }`}
             >
               {/* Resume Header */}
               <div className="bg-neutral-900 p-6 text-white">
