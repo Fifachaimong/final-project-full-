@@ -21,7 +21,7 @@ export default function RegisterPage() {
     if (!email.trim()) newErrors.email = "กรุณากรอก Email"
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = "รูปแบบ Email ไม่ถูกต้อง"
     if (!password) newErrors.password = "กรุณากรอกรหัสผ่าน"
-    else if (password.length < 6) newErrors.password = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"
+    else if (password.length < 6) newErrors.password = "รหัสผ่านต้องมีตัวเลขอย่างน้อย 5 ตัว และ ต้องมีตัวพิมพ์ใหญ่และตัวพิมพ์เล็กอย่างน้อย 1 ตัว"
     if (!role) newErrors.role = "กรุณาเลือกประเภทบัญชี"
     return newErrors
   }
@@ -222,7 +222,7 @@ export default function RegisterPage() {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="อย่างน้อย 6 ตัวอักษร"
+                      placeholder="สร้างรหัสผ่าน"
                       className={`w-full pl-10 pr-12 py-3 rounded-xl border bg-white text-foreground placeholder:text-muted-foreground text-sm outline-none transition-all
                         focus:border-primary focus:ring-2 focus:ring-primary/20
                         ${errors.password ? "border-destructive" : "border-orange-200"}`}
