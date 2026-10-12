@@ -7,7 +7,60 @@ import { useState, useRef, useEffect } from "react"
 import type { AppUser } from "@/contexts/user-context"
 
 const DEFAULT_AVATAR_URL =
-  "https://gknienyyavpewdiqfpmn.supabase.co/storage/v1/object/public/profile/iconresume.png"
+  "/default-avatar.svg"
+
+// แสดงรูปโปรไฟล์ พร้อม fallback เป็นลำดับ:
+// 1) รูปของผู้ใช้ (user.icon)  2) รูปดีฟอลต์ในโปรเจกต์ (public/default-avatar.svg)  3) ไอคอนรูปคน (inline SVG)
+// ถ้ารูปไหนโหลดไม่ได้ (404 / โปรเจกต์ Supabase ถูก pause / ไฟล์ถูกลบ) จะข้ามไปตัวถัดไป
+// แทนที่จะเหลือเป็นวงกลมว่าง ๆ
+function AvatarImage({
+  icon,
+  alt,
+  size,
+}: {
+  icon: string | null | undefined
+  alt: string
+  size: number
+}) {
+  const [failed, setFailed] = useState<string[]>([])
+
+  const src = [icon, DEFAULT_AVATAR_URL]
+    .filter((url): url is string => Boolean(url))
+    .find((url) => !failed.includes(url))
+
+  if (!src) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          className="h-3/5 w-3/5"
+          aria-label={alt}
+        >
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+        </svg>
+      </div>
+    )
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={size}
+      height={size}
+      unoptimized
+      className="h-full w-full object-cover"
+      onError={() =>
+        setFailed((prev) => (prev.includes(src) ? prev : [...prev, src]))
+      }
+    />
+  )
+}
 
 interface UserAvatarProps {
   // Passed straight from <Navbar/>, which already has it from useUser() —
@@ -34,8 +87,6 @@ export function UserAvatar({ user }: UserAvatarProps) {
     }
   }, [])
 
-  const avatarUrl = user?.icon || DEFAULT_AVATAR_URL
-
   async function handleLogout() {
     try {
       await fetch("/api/logout", {
@@ -61,13 +112,7 @@ export function UserAvatar({ user }: UserAvatarProps) {
         className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 transition-colors hover:bg-muted focus:outline-none"
       >
         <div className="h-9 w-9 overflow-hidden rounded-full ring-2 ring-coral/30">
-          <Image
-            src={avatarUrl}
-            alt={fullName}
-            width={36}
-            height={36}
-            className="h-full w-full object-cover"
-          />
+          <AvatarImage icon={user?.icon} alt={fullName} size={36} />
         </div>
 
         <span className="hidden text-sm font-medium md:block">
@@ -87,13 +132,7 @@ export function UserAvatar({ user }: UserAvatarProps) {
           {/* User info */}
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
             <div className="h-10 w-10 overflow-hidden rounded-full ring-2 ring-coral/30">
-              <Image
-                src={avatarUrl}
-                alt={fullName}
-                width={40}
-                height={40}
-                className="h-full w-full object-cover"
-              />
+              <AvatarImage icon={user?.icon} alt={fullName} size={40} />
             </div>
 
             <div className="min-w-0">
