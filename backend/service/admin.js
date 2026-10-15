@@ -1,4 +1,4 @@
-import { CreateUserByAdminModel, DeleteUserByID, EditUserByIDModel, GetUserByAdminModel, GetUserFileUrlsByUserID } from "../models/admin.js"
+import { ApproveUserModel, CreateUserByAdminModel, DeleteUserByID, EditUserByIDModel, GetTotalUnapprovedUsers, GetUnapprovedUsersModel, GetUserByAdminModel, GetUserFileUrlsByUserID } from "../models/admin.js"
 import { GetTotalPage, GetUserByEmail } from "../models/auth.js"
 import AppError from "../utils/AppError.js"
 import { DeleteManyFromCloudinary, ExtractPublicId } from "../utils/DeleteFromCloudinary.js"
@@ -106,6 +106,33 @@ export const DeleteUserService = async (id) => {
 
 }
 
+export const ApproveUserService = async (id, approve) => {
+    if (approve === 1) {
+        const data = await ApproveUserModel(id, approve)
+        
+        if (data.affectedRows === 0) {
+            throw new AppError('User not found', 404)
+        }
+
+        return {
+            message: "User approved successfully"
+        }
+    }
+
+    else {
+        const data = await DeleteUserByID(id)
+
+        if (data.affectedRows === 0) {
+            throw new AppError('User not found', 404)
+        }
+
+        return {
+            message: "User deleted successfully"
+        }
+    }
+
+}
+
 export const EditUserService = async (id, data) => {
     const { firstname, lastname, phone, role } = data
     let { password } = data
@@ -131,4 +158,37 @@ export const EditUserService = async (id, data) => {
         message : "Edit user succeed"
     }
 
+}
+
+export const GetUnapprovedUsersService = async (query = {}) => {
+    let { page, limit } = query
+
+    page = Number(page)
+    limit = Number(limit)
+
+    page = page > 0 ? page : 1
+    limit = limit < 11 && limit > 0 ? limit : 10
+    const setoff = (page - 1) * limit 
+
+    const data = await GetUnapprovedUsersModel(setoff, limit)
+
+    const total = await GetTotalUnapprovedUsers()
+    const totalPages = Math.ceil(total.total/limit)
+
+    let nextPage = page < totalPages ? page + 1 : null
+    let prevPage = page > 1 ? page - 1 : null
+
+    return {
+        message : 'Get User succeed',
+        data : data,
+        meta : {
+            total : total.total,
+            page,
+            limit,
+            hasnextPage : page < totalPages,
+            hasPrevPage : page > 1,
+            nextPage,
+            prevPage
+        }
+    }
 }

@@ -1,13 +1,13 @@
 import db from "../lib/db.js";
 
 export const CreateUser = async(data) => {
-    const { firstname, lastname, email, password, role } = data
-    const [result] = await db.query('INSERT INTO users(firstname, lastname, email, password, role) VALUES(?, ?, ?, ?, ?)', [firstname, lastname, email, password, role])
+    const { firstname, lastname, email, password, role, approve } = data
+    const [result] = await db.query('INSERT INTO users(firstname, lastname, email, password, role, approve) VALUES(?, ?, ?, ?, ?, ?)', [firstname, lastname, email, password, role, approve])
     return result
 }
 
 export const GetUserByEmail = async(email) => {
-    const [result] = await db.query('SELECT id, role, password FROM users WHERE email = ?', [email])
+    const [result] = await db.query('SELECT id, role, password, approve FROM users WHERE email = ?', [email])
     return result[0]
 }
 
@@ -33,7 +33,7 @@ export const GetTotalPage = async(fromTable) => {
     }
 
     if (fromTable === 'users') {
-        query += 'users'
+        query += 'users WHERE approve = 1'
     }
 
     const [result] = await db.query(query)
