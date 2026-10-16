@@ -56,7 +56,7 @@ export const EditMyProfileModel = async (id, data, icon) => {
 
 export const GetMyProfileModel = async (id) => {
     const [result] = await db.query(
-        `SELECT id, firstname, lastname, icon, email, phone, student_id FROM users WHERE id = ?`,
+        `SELECT id, firstname, lastname, icon, email, phone, student_id, role FROM users WHERE id = ?`,
         [id]
     )
 
