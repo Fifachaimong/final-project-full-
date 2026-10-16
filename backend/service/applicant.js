@@ -4,6 +4,10 @@ import AppError from '../utils/AppError.js'
 import { UploadToCloudinary } from "../utils/UploadToCloudinary.js";
 import axios from "axios"
 
+const AI_SERVICE_URL = (process.env.AI_SERVICE_URL || "https://duckling-hangup-resistant.ngrok-free.dev").replace(/\/+$/, "")
+const AI_SERVICE_TOKEN = process.env.AI_SERVICE_TOKEN
+const AI_TIMEOUT_MS = 180000
+
 export const GetPostService = async (query = {}) => {
     let { page, limit, filter = null } = query
     const { search = null } = query
@@ -13,7 +17,7 @@ export const GetPostService = async (query = {}) => {
 
     page = page > 0 ? page : 1
     limit = limit < 11 && limit > 0 ? limit : 10
-    const setoff = (page - 1) * limit 
+    const setoff = (page - 1) * limit
     const filteCheck = ['open', 'closed']
 
     if (!filteCheck.includes(filter) && filter !== null) {
@@ -41,7 +45,28 @@ export const GetPostService = async (query = {}) => {
             prevPage
         }
     }
-} 
+}
+
+const CallAiService = async (body) => {
+    const headers = {}
+    if (AI_SERVICE_TOKEN) headers["X-AI-Token"] = AI_SERVICE_TOKEN
+
+    try {
+        return await axios.post(`${AI_SERVICE_URL}/analyze`, body, { headers, timeout: AI_TIMEOUT_MS })
+    } catch (err) {
+        const status = err.response?.status
+        console.error("AI service error:", status, err.response?.data || err.message)
+
+        if (status === 401) {
+            throw new AppError("AI service authentication failed. Please contact the administrator.", 503)
+        }
+        if (!err.response || [404, 502, 503, 504].includes(status)) {
+            throw new AppError("AI service is currently unavailable. Please try again later.", 503)
+        }
+        const detail = typeof err.response.data?.detail === "string" ? err.response.data.detail : "AI analysis failed"
+        throw new AppError(detail, status >= 500 ? 502 : 422)
+    }
+}
 
 export const ApplyResumeService = async (
     userId,
@@ -90,16 +115,13 @@ export const ApplyResumeService = async (
         transcript.originalname
     );
 
-    const aiResult = await axios.post(
-        "https://duckling-hangup-resistant.ngrok-free.dev/analyze",
-        {
-            resume_url : resumeUpload.publicUrl,
-            job_text : post.description,
-            model_provider: post.model_provider,
-            faculty_match: post.faculty,
-            job_title : post.title
-        }
-    );
+    const aiResult = await CallAiService({
+        resume_url : resumeUpload.publicUrl,
+        job_text : post.description,
+        model_provider: post.model_provider || undefined,
+        faculty_match: post.faculty,
+        job_title : post.title
+    });
 
     const memberResult = await CreateMember(
         userId,
@@ -113,7 +135,7 @@ export const ApplyResumeService = async (
         : JSON.stringify(aiResult.data.skills?.hard || "");
 
     const analysis = `
-        skills : ${hardSkills} 
+        skills : ${hardSkills}
         Storytelling_score : ${aiResult.data.storytelling_score}
         ai_reason : ${aiResult.data.ai_reason}
         overall_confidence : ${aiResult.data.overall_confidence}
@@ -124,7 +146,7 @@ export const ApplyResumeService = async (
         resumeUrl : resumeUpload.publicUrl,
         transcriptUrl : transcriptUpload.publicUrl,
         aiScore : aiResult.data.matching_score,
-        skills : `${aiResult.data.skills.hard}`,
+        skills : `${aiResult.data.skills?.hard ?? ""}`,
         storytelling_score : aiResult.data.storytelling_score,
         ai_reason : aiResult.data.ai_reason,
         overall_confidence : aiResult.data.overall_confidence,
@@ -150,4 +172,4 @@ export const GetMyApplicationResultService = async (id) => {
         message : 'Get my application',
         data : data
     }
-}   
+}
