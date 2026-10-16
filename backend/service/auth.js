@@ -18,8 +18,7 @@ export const RegisterService = async (data) => {
         lastname,
         email,
         password : hashpassword,
-        role,
-        approve : role === 'hr' ? 0 : 1
+        role
     }
 
     await CreateUser(NewData)
@@ -33,10 +32,6 @@ export const LoginService = async (data) => {
     const user = await GetUserByEmail(email)
     if (!user) {
         throw new AppError('Incorrect email or password.', 401)
-    }
-
-    if (!user.approve) {
-        throw new AppError('Your account has not been approved yet.', 401)
     }
 
     const check = await bcrypt.compare(password, user.password)

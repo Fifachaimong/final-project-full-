@@ -1,17 +1,13 @@
 import db from "../lib/db.js"
 
 export const GetUserByAdminModel = async(setoff, limit, filter) => {    
-    let query = 'SELECT id, firstname, lastname, email, role, created_at FROM users'
+    let query = 'SELECT id, firstname, lastname, email, role, student_id, created_at FROM users'
 
     const value = []
 
     if (filter) {
-        query += ' WHERE role = ? AND approve = 1'
+        query += ' WHERE role = ?'
         value.push(filter)
-    }
-
-    else {
-        query += ' WHERE approve = 1'
     }
 
     query += ' LIMIT ? OFFSET ?'
@@ -76,33 +72,4 @@ export const GetUserFileUrlsByUserID = async (id) => {
         ...applicationsResult,
         ...applicantsOfOwnedPostsResult,
     ]
-}
-
-export const ApproveUserModel = async (id, approve) => {
-    const [result] = await db.query(`
-        UPDATE users
-        SET approve = ?
-        WHERE id = ?
-    `,[approve, id])
-
-    return result
-}
-
-export const GetUnapprovedUsersModel = async (setoff, limit) => {
-    let query = 'SELECT id, firstname, lastname, email, role, created_at FROM users WHERE approve = 0'
-
-    const value = []
-
-    query += ' LIMIT ? OFFSET ?'
-    value.push(limit, setoff)
-
-    const [result] = await db.query(query, value)
-    
-    return result
-}
-
-export const GetTotalUnapprovedUsers = async() => {
-    const [result] = await db.query('SELECT COUNT(*) AS total FROM users WHERE approve = 0')
-
-    return result[0]
 }

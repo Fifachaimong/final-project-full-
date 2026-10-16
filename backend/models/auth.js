@@ -1,13 +1,13 @@
 import db from "../lib/db.js";
 
 export const CreateUser = async(data) => {
-    const { firstname, lastname, email, password, role, approve } = data
-    const [result] = await db.query('INSERT INTO users(firstname, lastname, email, password, role, approve) VALUES(?, ?, ?, ?, ?, ?)', [firstname, lastname, email, password, role, approve])
+    const { firstname, lastname, email, password, role } = data
+    const [result] = await db.query('INSERT INTO users(firstname, lastname, email, password, role) VALUES(?, ?, ?, ?, ?)', [firstname, lastname, email, password, role])
     return result
 }
 
 export const GetUserByEmail = async(email) => {
-    const [result] = await db.query('SELECT id, role, password, approve FROM users WHERE email = ?', [email])
+    const [result] = await db.query('SELECT id, role, password FROM users WHERE email = ?', [email])
     return result[0]
 }
 
@@ -33,7 +33,7 @@ export const GetTotalPage = async(fromTable) => {
     }
 
     if (fromTable === 'users') {
-        query += 'users WHERE approve = 1'
+        query += 'users'
     }
 
     const [result] = await db.query(query)
@@ -42,13 +42,13 @@ export const GetTotalPage = async(fromTable) => {
 }
 
 export const EditMyProfileModel = async (id, data, icon) => {
-    const { firstname, lastname, phone } = data
+    const { firstname, lastname, phone, student_id } = data
     const [result] = await db.query(`
         UPDATE users 
         SET firstname = COALESCE(?, firstname), lastname = COALESCE(?, lastname), 
-            phone = COALESCE(?, phone), icon = COALESCE(?, icon)
+            phone = COALESCE(?, phone), icon = COALESCE(?, icon), student_id = COALESCE(?, student_id)
         WHERE id = ?
-        `,[ firstname, lastname, phone, icon, id ]
+        `,[ firstname, lastname, phone, icon, student_id, id ]
     )
 
     return result
@@ -56,7 +56,7 @@ export const EditMyProfileModel = async (id, data, icon) => {
 
 export const GetMyProfileModel = async (id) => {
     const [result] = await db.query(
-        `SELECT id, firstname, lastname, icon, email, phone, role FROM users WHERE id = ?`,
+        `SELECT id, firstname, lastname, icon, email, phone, student_id FROM users WHERE id = ?`,
         [id]
     )
 

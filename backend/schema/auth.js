@@ -40,7 +40,7 @@ const registerSchema = {
         ]
     },
     role: {
-        type: ['applicant', 'hr'],
+        type: ['applicant'],
         required: false,
         default: 'applicant'
     }
@@ -85,6 +85,16 @@ const editMyProfileSchema = {
             {
                 check: (value) => /^[0-9]{10}$/.test(value),
                 message: 'หมายเลขโทรศัพท์ต้องเป็นตัวเลข 10 หลักเท่านั้น'
+            }
+        ]
+    },
+    student_id: {
+        type: 'string',
+        required: false,
+        validate: [
+            {
+                check: (value) => /^[0-9]{11}-[0-9]$/.test(value),
+                message: 'รหัสนักศึกษาต้องเป็นตัวเลข 11 หลัก ตามด้วยเครื่องหมาย - และตัวเลข 1 หลัก'
             }
         ]
     }

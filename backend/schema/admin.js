@@ -93,11 +93,4 @@ const editUserSchema = {
     }
 }
 
-const ApproveUserSchema = {
-    approval : {
-        type : [0, 1],
-        required : true,
-    }
-}
-
-export { createUserSchema, editUserSchema, ApproveUserSchema }
+export { createUserSchema, editUserSchema }

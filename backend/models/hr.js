@@ -99,7 +99,7 @@ export const GetMyPostModel = async(owner_id, setoff, limit, search) => {
 
 export const GetMemberModel = async(owner_id, post_id, setoff, limit, filter) => {
     let query = `
-        SELECT u.id AS user_id, u.firstname AS user_firstname, u.lastname AS user_lastname, r.ai_score, r.faculty_match, m.status
+        SELECT u.id AS user_id, u.firstname AS user_firstname, u.lastname AS user_lastname, r.ai_score, r.faculty_match, m.status, u.student_id
         FROM posts p 
         JOIN members m ON m.post_id = p.id
         JOIN users u ON m.user_id = u.id
@@ -164,7 +164,7 @@ export const GetMemberTotalCount = async(owner_id, post_id, filter) => {
 
 export const GetProfileByMemberModel = async(member_id, owner_id) => {
     const [result] = await db.query(`
-        SELECT u.id AS user_id , u.firstname AS user_firstname, u.lastname AS user_lastname, u.email AS user_email, u.phone AS user_phone
+        SELECT u.id AS user_id , u.firstname AS user_firstname, u.lastname AS user_lastname, u.email AS user_email, u.phone AS user_phone, u.student_id AS student_id
         FROM posts p 
         JOIN members m ON m.post_id = p.id
         JOIN users u ON m.user_id = u.id

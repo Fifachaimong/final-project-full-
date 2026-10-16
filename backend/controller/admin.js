@@ -1,5 +1,5 @@
 import asyncHandler from "express-async-handler"
-import { ApproveUserService, CreateUserByAdminService, DeleteUserService, EditUserService, GetUnapprovedUsersService, GetUserByAdminService } from "../service/admin.js"
+import { CreateUserByAdminService, DeleteUserService, EditUserService, GetUserByAdminService } from "../service/admin.js"
 
 
 export const GetUserByAdmin = asyncHandler(async (req, res) => {
@@ -18,17 +18,7 @@ export const DeleteUser = asyncHandler(async (req, res) => {
     res.status(200).json(result)
 })
 
-export const ApproveUser = asyncHandler(async (req, res) => {
-    const result = await ApproveUserService(req.params.id, req.body.approval)
-    res.status(200).json(result)
-})
-
 export const EditUser = asyncHandler(async (req, res) => {
     const result = await EditUserService(req.params.id, req.body)
-    res.status(200).json(result)
-})
-
-export const GetUnapprovedUsers = asyncHandler(async (req, res) => {
-    const result = await GetUnapprovedUsersService(req.query)
     res.status(200).json(result)
 })
