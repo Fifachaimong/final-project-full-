@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState, useRef } from "react"
-import { Plus, User, Phone, Mail, Check, X, Loader2 } from "lucide-react"
+import { Plus, User, Phone, Mail, Hash, Check, X, Loader2 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { updateProfile } from "@/app/actions/profile"
 import { useUser } from "@/contexts/user-context"
@@ -13,6 +13,7 @@ interface ProfileData {
   firstName: string
   surname: string
   phone: string
+  studentId: string
   email: string
   avatarUrl: string | null
   avatarFile: File | null
@@ -223,6 +224,12 @@ function ViewCard({
           />
         </div>
 
+        <DisplayField
+          label="รหัสนักศึกษา"
+          value={data.studentId}
+          icon={<Hash className="h-3 w-3" />}
+        />
+
         <div className="grid grid-cols-2 gap-4">
           <DisplayField
             label="โทรศัพท์"
@@ -343,6 +350,16 @@ function EditCard({
           />
         </div>
 
+        <InputField
+          label="รหัสนักศึกษา"
+          value={draft.studentId}
+          onChange={(v) => onChange("studentId", formatStudentId(v))}
+          placeholder="66543206040-8"
+          icon={<Hash className="h-3 w-3" />}
+          maxLength={13}
+        />
+        <p className="-mt-3 text-xs text-slate-400">รูปแบบ: 00000000000-0</p>
+
         <div className="flex-1" />
 
         <div className="mt-2 grid grid-cols-2 gap-3">
@@ -396,6 +413,11 @@ const formatPhone = (value: string) => {
   )}-${digits.slice(6)}`
 }
 
+const formatStudentId = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 12)
+  return digits.length > 11 ? `${digits.slice(0, 11)}-${digits.slice(11)}` : digits
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 interface ProfileEditPageProps {
@@ -405,6 +427,7 @@ interface ProfileEditPageProps {
     lastname: string | null
     email: string | null
     phone: string | null
+    student_id: string | null
     icon: string | null
   } | null
 }
@@ -419,6 +442,7 @@ export default function ProfileEditPage({
     firstName: initialProfile?.firstname ?? "",
     surname: initialProfile?.lastname ?? "",
     phone: initialProfile?.phone ?? "",
+    studentId: initialProfile?.student_id ?? "",
     email: initialProfile?.email ?? "",
     avatarUrl: initialProfile?.icon ?? null,
     avatarFile: null,
@@ -466,6 +490,7 @@ export default function ProfileEditPage({
         firstname: String(draft.firstName ?? ""),
         lastname: String(draft.surname ?? ""),
         phone: String(draft.phone ?? "").replace(/\D/g, "").slice(0, 10),
+        student_id: draft.studentId,
         avatarFile: draft.avatarFile,
       })
 
@@ -477,6 +502,7 @@ export default function ProfileEditPage({
         firstName: response.firstname ?? draft.firstName,
         surname: response.lastname ?? draft.surname,
         phone: String(draft.phone ?? "").replace(/\D/g, "").slice(0, 10),
+        studentId: response.student_id ?? draft.studentId,
         email: response.email ?? draft.email,
         avatarUrl: response.icon ?? draft.avatarUrl,
         avatarFile: null,

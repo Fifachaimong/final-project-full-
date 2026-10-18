@@ -49,7 +49,8 @@ export function Navbar() {
 
   return (
     <header className="border-b border-border">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+        <div className="flex items-center justify-between">
 
         {/* Logo */}
         <Link
@@ -139,7 +140,35 @@ export function Navbar() {
             </>
           )}
         </div>
+        </div>
 
+        {/* Mobile navigation: the desktop navigation is hidden below md. */}
+        <nav aria-label="เมนูหลัก" className="mt-3 flex flex-wrap items-center gap-2 md:hidden">
+          <Link href={homeLink} className={linkClass(isActive(homeLink))}>
+            หน้าหลัก
+          </Link>
+          {user && (
+            <Link href="/resume" className={linkClass(isActive("/resume", true))}>
+              {browseLabel}
+            </Link>
+          )}
+          {user?.role === "admin" && (
+            <Link href="/application" className={linkClass(isActive("/application"))}>
+              จัดการผู้ใช้งาน
+            </Link>
+          )}
+          <Link href="/about" className={linkClass(isActive("/about"))}>
+            เกี่ยวกับเรา
+          </Link>
+          <Link href="/guide" className={linkClass(isActive("/guide"))}>
+            คู่มือใช้งาน
+          </Link>
+          {!user && (
+            <Link href="/login" className={linkClass(isActive("/login"))}>
+              เข้าสู่ระบบ
+            </Link>
+          )}
+        </nav>
       </div>
     </header>
   )

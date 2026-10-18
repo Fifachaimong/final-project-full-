@@ -2,14 +2,14 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { UserRound, Briefcase, Eye, EyeOff, Lock, Mail, User } from "lucide-react"
+import { Briefcase, Eye, EyeOff, Lock, Mail, User } from "lucide-react"
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [role, setRole] = useState("")
+  const role = "Applicant"
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [submitted, setSubmitted] = useState(false)
@@ -22,7 +22,6 @@ export default function RegisterPage() {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = "รูปแบบ Email ไม่ถูกต้อง"
     if (!password) newErrors.password = "กรุณากรอกรหัสผ่าน"
     else if (password.length < 6) newErrors.password = "รหัสผ่านต้องมีตัวเลขอย่างน้อย 5 ตัว และ ต้องมีตัวพิมพ์ใหญ่และตัวพิมพ์เล็กอย่างน้อย 1 ตัว"
-    if (!role) newErrors.role = "กรุณาเลือกประเภทบัญชี"
     return newErrors
   }
 
@@ -39,7 +38,7 @@ export default function RegisterPage() {
     setErrors({})
 
     try {
-      const dbRole = role === "HR" ? "hr" : "applicant"
+      const dbRole = "applicant"
 
       const response = await fetch("/api/register", {
         method: "POST",
@@ -237,55 +236,6 @@ export default function RegisterPage() {
                     </button>
                   </div>
                   {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
-                </div>
-
-                {/* Role Selection */}
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">ประเภทบัญชี</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* HR */}
-                    <button
-                      type="button"
-                      onClick={() => setRole("HR")}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all cursor-pointer
-                        ${role === "HR"
-                          ? "border-primary bg-orange-50 shadow-md shadow-primary/15"
-                          : "border-orange-100 bg-white hover:border-primary/40 hover:bg-orange-50/50"
-                        }`}
-                    >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all
-                        ${role === "HR" ? "bg-primary text-white" : "bg-orange-100 text-muted-foreground"}`}>
-                        <Briefcase className="w-5 h-5" />
-                      </div>
-                      <div className="text-center">
-                        <p className={`text-sm font-bold ${role === "HR" ? "text-primary" : "text-foreground"}`}>HR</p>
-                        <p className="text-xs text-muted-foreground leading-relaxed">ผู้จัดการงาน</p>
-                      </div>
-                      {role === "HR" && <span className="w-2 h-2 rounded-full bg-primary" />}
-                    </button>
-
-                    {/* Applicant */}
-                    <button
-                      type="button"
-                      onClick={() => setRole("Applicant")}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all cursor-pointer
-                        ${role === "Applicant"
-                          ? "border-primary bg-orange-50 shadow-md shadow-primary/15"
-                          : "border-orange-100 bg-white hover:border-primary/40 hover:bg-orange-50/50"
-                        }`}
-                    >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all
-                        ${role === "Applicant" ? "bg-primary text-white" : "bg-orange-100 text-muted-foreground"}`}>
-                        <UserRound className="w-5 h-5" />
-                      </div>
-                      <div className="text-center">
-                        <p className={`text-sm font-bold ${role === "Applicant" ? "text-primary" : "text-foreground"}`}>Applicant</p>
-                        <p className="text-xs text-muted-foreground leading-relaxed">ผู้สมัครงาน</p>
-                      </div>
-                      {role === "Applicant" && <span className="w-2 h-2 rounded-full bg-primary" />}
-                    </button>
-                  </div>
-                  {errors.role && <p className="text-xs text-destructive">{errors.role}</p>}
                 </div>
 
                 {/* Submit */}

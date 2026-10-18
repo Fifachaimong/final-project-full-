@@ -33,6 +33,7 @@ export async function updateProfile(data: {
   firstname: string
   lastname: string
   phone: string
+  student_id: string
   avatarFile?: File | null
 }) {
   const cookieStore = await cookies()
@@ -47,6 +48,7 @@ export async function updateProfile(data: {
   formData.append("firstname", data.firstname)
   formData.append("lastname", data.lastname)
   formData.append("phone", data.phone)
+  formData.append("student_id", data.student_id)
 
   // The backend route uses upload.single("icon"), so this field name must
   // remain "icon". Without it, req.file is empty and no profile URL is saved.

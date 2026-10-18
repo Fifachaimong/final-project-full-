@@ -31,11 +31,12 @@ interface Member {
   firstname: string
   lastname: string | null
   email: string
+  student_id: string | null
   role: string
   created_at: string
 }
 
-type SortKey = "id" | "firstname" | "email" | "role" | "created_at"
+type SortKey = "id" | "firstname" | "student_id" | "email" | "role" | "created_at"
 
 interface MembersMeta {
   total: number
@@ -564,6 +565,7 @@ export default function AdminMembersPage() {
                       [
                         { key: "id", label: "ID", w: "w-16" },
                         { key: "firstname", label: "Name" },
+                        { key: "student_id", label: "Student ID" },
                         { key: "email", label: "Email" },
                         { key: "role", label: "Role", w: "w-28" },
                         { key: "created_at", label: "Created", w: "w-44" },
@@ -589,7 +591,7 @@ export default function AdminMembersPage() {
                   {isLoading ? (
                     Array.from({ length: 4 }).map((_, i) => (
                       <tr key={i} className="border-b border-border last:border-0">
-                        {Array.from({ length: 6 }).map((_, j) => (
+                        {Array.from({ length: 7 }).map((_, j) => (
                           <td key={j} className="px-4 py-3">
                             <div className="h-4 animate-pulse rounded bg-muted" />
                           </td>
@@ -598,7 +600,7 @@ export default function AdminMembersPage() {
                     ))
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                      <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
                         No members found
                       </td>
                     </tr>
@@ -621,6 +623,7 @@ export default function AdminMembersPage() {
                               </p>
                             </div>
                           </td>
+                          <td className="px-4 py-3 font-mono text-muted-foreground">{member.student_id || "-"}</td>
                           <td className="px-4 py-3 text-muted-foreground">{member.email}</td>
                           <td className="px-4 py-3">
                             <span

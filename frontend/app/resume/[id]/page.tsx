@@ -21,6 +21,7 @@ interface Applicant {
   user_id: string
   user_firstname: string
   user_lastname: string
+  student_id: string | null
   ai_score: number | null
   faculty_match: string | null
   status: string | null
@@ -231,6 +232,9 @@ function ApplicantRow({
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="truncate text-sm font-medium text-foreground">
           {applicant.user_firstname} {applicant.user_lastname}
+        </span>
+        <span className="text-xs text-muted-foreground">
+          รหัสนักศึกษา: {applicant.student_id || "ไม่ระบุ"}
         </span>
 
       </div>
