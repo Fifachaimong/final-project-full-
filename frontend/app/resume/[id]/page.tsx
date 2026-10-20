@@ -293,14 +293,6 @@ const RESUME_ALLOWED_EXTENSIONS = [
   "pdf",
 ]
 
-const MAX_TOTAL_UPLOAD_BYTES = 4 * 1024 * 1024
-
-const formatMB = (bytes: number) =>
-  (bytes / (1024 * 1024)).toFixed(1)
-
-const TOTAL_SIZE_ERROR =
-  "ขนาดไฟล์ Resume และ Transcript รวมกันต้องไม่เกิน 4 MB กรุณาบีบอัดไฟล์ PDF ก่อนอัปโหลด"
-
 function validateDocumentFile(file: File): string | null {
   const extension = file.name
     .split(".")
@@ -317,8 +309,10 @@ function validateDocumentFile(file: File): string | null {
     return "รองรับเฉพาะไฟล์ PDF เท่านั้น"
   }
 
-  if (file.size > MAX_TOTAL_UPLOAD_BYTES) {
-    return "ไฟล์ต้องมีขนาดไม่เกิน 4 MB กรุณาบีบอัดไฟล์ PDF ก่อนอัปโหลด"
+  const maxSize = 10 * 1024 * 1024
+
+  if (file.size > maxSize) {
+    return "ไฟล์ต้องมีขนาดไม่เกิน 10 MB"
   }
 
   return null
@@ -386,12 +380,6 @@ function ApplyDialog({
       return
     }
 
-    if (file.size + (transcriptFile?.size ?? 0) > MAX_TOTAL_UPLOAD_BYTES) {
-      setError(TOTAL_SIZE_ERROR)
-      e.target.value = ""
-      return
-    }
-
     setError("")
     setResumeFile(file)
   }
@@ -408,12 +396,6 @@ function ApplyDialog({
 
     if (validationError) {
       setError(validationError)
-      e.target.value = ""
-      return
-    }
-
-    if (file.size + (resumeFile?.size ?? 0) > MAX_TOTAL_UPLOAD_BYTES) {
-      setError(TOTAL_SIZE_ERROR)
       e.target.value = ""
       return
     }
@@ -436,11 +418,6 @@ function ApplyDialog({
 
     if (!resumeFile) {
       setError("กรุณาแนบไฟล์ Resume")
-      return
-    }
-
-    if (resumeFile.size + (transcriptFile?.size ?? 0) > MAX_TOTAL_UPLOAD_BYTES) {
-      setError(TOTAL_SIZE_ERROR)
       return
     }
 
@@ -511,11 +488,6 @@ function ApplyDialog({
         setError(
           "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่"
         )
-        return
-      }
-
-      if (res.status === 413) {
-        setError(TOTAL_SIZE_ERROR)
         return
       }
 
@@ -658,15 +630,6 @@ function ApplyDialog({
               onChange={handleTranscriptFile}
             />
           </div>
-
-          <p className="text-xs text-muted-foreground">
-            ไฟล์ PDF ทั้งสองรวมกันไม่เกิน 4 MB (ตอนนี้{" "}
-            {formatMB(
-              (resumeFile?.size ?? 0) +
-                (transcriptFile?.size ?? 0)
-            )}{" "}
-            MB)
-          </p>
 
           {error && (
             <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -1438,14 +1401,11 @@ export default function PostDetailPage() {
   const toggleStatusFilter = (
     status: "approved" | "rejected" | "pending"
   ) => {
-    // เปลี่ยน filter + รีเซ็ตหน้าเป็น 1 ใน batch เดียว
-    // เพื่อให้ fetchApplicants ยิงแค่รอบเดียว
     setStatusFilters((prev) =>
       prev.includes(status)
         ? prev.filter((s) => s !== status)
         : [...prev, status]
     )
-    setApplicantsPage(1)
   }
   const { id } =
     useParams<{ id: string }>()
@@ -1752,9 +1712,11 @@ export default function PostDetailPage() {
     statusFilters,
   ])
 
-  // การรีเซ็ตหน้ากลับเป็น 1 ตอนเปลี่ยน filter ทำใน toggleStatusFilter
-  // และปุ่มล้างตัวกรองแล้ว (batch เดียวกับ setStatusFilters) ไม่ใช้ effect
-  // แยกอีก เพราะจะทำให้ fetchApplicants ยิงซ้ำ 2 รอบ
+  // ติ๊ก/ยกเลิกติ๊กสถานะแล้วรีเซ็ตกลับไปหน้า 1 เสมอ กันกรณีอยู่หน้า 3
+  // แล้ว filter ใหม่มีแค่ 1 หน้า ทำให้ค้างอยู่หน้าว่าง ๆ
+  useEffect(() => {
+    setApplicantsPage(1)
+  }, [statusFilters])
 
   const handleApplied =
     () => {
@@ -2143,10 +2105,7 @@ export default function PostDetailPage() {
 
                           <button
                             type="button"
-                            onClick={() => {
-                              setStatusFilters([])
-                              setApplicantsPage(1)
-                            }}
+                            onClick={() => setStatusFilters([])}
                             className="w-full rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                           >
                             ล้างตัวกรองทั้งหมด
