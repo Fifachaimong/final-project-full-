@@ -3,15 +3,11 @@ import { headers } from "next/headers"
 
 const BACKEND_URL = "https://final-project-full.onrender.com"
 
-// ──────────────────────────────────────────────
-// POST /api/apply/:postId
-// สมัครงาน (apply) — proxy ไปที่ POST /apply/:postId
-// รองรับ multipart/form-data: resume + transcript
-// ──────────────────────────────────────────────
+export const maxDuration = 60
 
 export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ postId: string }> }
+  request,
+  { params }
 ) {
   try {
     const { postId } = await params
@@ -30,23 +26,34 @@ export async function POST(
     const headerList = await headers()
     const cookie = headerList.get("cookie") ?? ""
 
-    const formData = await request.formData()
+    const isJson = (
+      request.headers.get("content-type") ?? ""
+    ).includes("application/json")
+
+    const body = isJson
+      ? await request.text()
+      : await request.formData()
 
     const response = await fetch(
       `${BACKEND_URL}/applicant/apply/${encodeURIComponent(postId)}`,
       {
         method: "POST",
-        headers: {
-          Cookie: cookie,
-        },
-        body: formData,
+        headers: isJson
+          ? {
+              Cookie: cookie,
+              "Content-Type": "application/json",
+            }
+          : {
+              Cookie: cookie,
+            },
+        body,
         cache: "no-store",
       }
     )
 
     const text = await response.text()
 
-    let data: unknown = null
+    let data = null
 
     try {
       data = text ? JSON.parse(text) : null

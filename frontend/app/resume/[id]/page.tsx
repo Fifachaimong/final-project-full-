@@ -293,6 +293,79 @@ const RESUME_ALLOWED_EXTENSIONS = [
   "pdf",
 ]
 
+// ไฟล์ถูกอัปโหลดตรงไป Cloudinary (ไม่ผ่าน Vercel) จึงใช้เพดานเดียวกับหลังบ้าน
+// คือไฟล์ละ 5 MB (หลังบ้านตรวจซ้ำอีกครั้งหลังอัปโหลดเสร็จ)
+const MAX_FILE_BYTES = 5 * 1024 * 1024
+
+interface UploadSignature {
+  api_key: string
+  timestamp: number
+  signature: string
+  public_id: string
+  allowed_formats: string
+  upload_url: string
+}
+
+type DocumentType = "resume" | "transcript"
+
+// อัปโหลดเอกสาร 1 ไฟล์ไป Cloudinary โดยตรง แล้วคืนค่า public_id
+//  1) ขอลายเซ็นจากหลังบ้าน (request เล็ก ๆ ผ่าน /api/upload-signature)
+//  2) ส่งไฟล์ไป Cloudinary เอง ไม่ผ่าน Vercel/Render
+async function uploadDocumentToCloudinary(
+  file: File,
+  type: DocumentType
+): Promise<string> {
+  const signRes = await fetch("/api/upload-signature", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type,
+      filename: file.name,
+      size: file.size,
+    }),
+  })
+
+  const signData = await signRes.json().catch(() => null)
+
+  if (signRes.status === 401) {
+    throw new Error("เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่")
+  }
+
+  if (!signRes.ok || !signData?.data) {
+    throw new Error(
+      signData?.message ?? "ขออนุญาตอัปโหลดไฟล์ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
+    )
+  }
+
+  const sig = signData.data as UploadSignature
+
+  // ต้องส่งค่าที่เซ็นไว้ครบตรงตัว ไม่งั้น Cloudinary จะปฏิเสธ
+  const form = new FormData()
+  form.append("file", file)
+  form.append("api_key", sig.api_key)
+  form.append("timestamp", String(sig.timestamp))
+  form.append("signature", sig.signature)
+  form.append("public_id", sig.public_id)
+  form.append("allowed_formats", sig.allowed_formats)
+
+  const uploadRes = await fetch(sig.upload_url, {
+    method: "POST",
+    body: form,
+  })
+
+  const uploadData = await uploadRes.json().catch(() => null)
+
+  if (!uploadRes.ok) {
+    throw new Error(
+      uploadData?.error?.message ??
+        "อัปโหลดไฟล์ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
+    )
+  }
+
+  return uploadData?.public_id ?? sig.public_id
+}
+
 function validateDocumentFile(file: File): string | null {
   const extension = file.name
     .split(".")
@@ -309,10 +382,8 @@ function validateDocumentFile(file: File): string | null {
     return "รองรับเฉพาะไฟล์ PDF เท่านั้น"
   }
 
-  const maxSize = 10 * 1024 * 1024
-
-  if (file.size > maxSize) {
-    return "ไฟล์ต้องมีขนาดไม่เกิน 10 MB"
+  if (file.size > MAX_FILE_BYTES) {
+    return "ไฟล์ต้องมีขนาดไม่เกิน 5 MB"
   }
 
   return null
@@ -334,6 +405,16 @@ function ApplyDialog({
   const [submitting, setSubmitting] =
     useState(false)
 
+  // อยู่ขั้นไหนตอนกดส่ง (ใช้แสดงข้อความบนปุ่ม)
+  const [stage, setStage] =
+    useState<"uploading" | "analyzing">("uploading")
+
+  // จำไฟล์ที่อัปโหลดขึ้น Cloudinary สำเร็จแล้ว ถ้าขั้นหลังพัง (เช่น AI ล่ม)
+  // กดส่งซ้ำได้โดยไม่ต้องอัปโหลดใหม่ (เทียบด้วยตัว File ที่เลือกไว้)
+  const uploadedRef = useRef<
+    Partial<Record<DocumentType, { file: File; id: string }>>
+  >({})
+
   const [error, setError] =
     useState("")
 
@@ -347,6 +428,7 @@ function ApplyDialog({
     setResumeFile(null)
     setTranscriptFile(null)
     setError("")
+    uploadedRef.current = {}
 
     if (resumeInputRef.current) {
       resumeInputRef.current.value = ""
@@ -421,45 +503,52 @@ function ApplyDialog({
       return
     }
 
+    if (!transcriptFile) {
+      setError("กรุณาแนบไฟล์ Transcript")
+      return
+    }
+
     setSubmitting(true)
+    setStage("uploading")
     setError("")
 
     try {
-      const formData = new FormData()
+      // อัปโหลดสองไฟล์พร้อมกันไป Cloudinary (ข้ามไฟล์ที่เคยอัปโหลดสำเร็จแล้ว)
+      const ensureUploaded = async (
+        type: DocumentType,
+        file: File
+      ) => {
+        const cached = uploadedRef.current[type]
 
-      formData.append(
-        "name",
-        currentUser.name
-      )
+        if (cached && cached.file === file) {
+          return cached.id
+        }
 
-      formData.append(
-        "lastname",
-        currentUser.lastname
-      )
+        const id = await uploadDocumentToCloudinary(file, type)
 
-      formData.append(
-        "email",
-        currentUser.email
-      )
+        uploadedRef.current[type] = { file, id }
 
-      formData.append(
-        "resume",
-        resumeFile
-      )
-
-      if (transcriptFile) {
-        formData.append(
-          "transcript",
-          transcriptFile
-        )
+        return id
       }
 
+      const [resumeId, transcriptId] = await Promise.all([
+        ensureUploaded("resume", resumeFile),
+        ensureUploaded("transcript", transcriptFile),
+      ])
+
+      setStage("analyzing")
+
+      // ส่งแค่ public_id เป็น JSON เล็ก ๆ — ไม่ติดเพดานขนาด request ของ Vercel
       const res = await fetch(
         `/api/apply/${encodeURIComponent(postId)}`,
         {
           method: "POST",
           credentials: "include",
-          body: formData,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            resume_public_id: resumeId,
+            transcript_public_id: transcriptId,
+          }),
         }
       )
 
@@ -467,6 +556,7 @@ function ApplyDialog({
         await res.json().catch(() => null)
 
       if (res.status === 409) {
+        uploadedRef.current = {}
         setError(
           data?.message ??
             data?.error ??
@@ -475,7 +565,10 @@ function ApplyDialog({
         return
       }
 
-      if (res.status === 400) {
+      // ไฟล์ไม่ผ่านการตรวจของหลังบ้าน (ใหญ่เกิน/ไม่ใช่ PDF/หาไฟล์ไม่เจอ)
+      // หลังบ้านลบไฟล์นั้นทิ้งแล้ว ต้องอัปโหลดใหม่
+      if (res.status === 400 || res.status === 413) {
+        uploadedRef.current = {}
         setError(
           data?.message ??
             data?.error ??
@@ -631,6 +724,10 @@ function ApplyDialog({
             />
           </div>
 
+          <p className="text-xs text-muted-foreground">
+            รองรับไฟล์ PDF ขนาดไม่เกิน 5 MB ต่อไฟล์
+          </p>
+
           {error && (
             <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error}
@@ -658,7 +755,9 @@ function ApplyDialog({
               <Send className="h-3.5 w-3.5" />
 
               {submitting
-                ? "กำลังส่ง..."
+                ? stage === "uploading"
+                  ? "กำลังอัปโหลดไฟล์..."
+                  : "กำลังวิเคราะห์ใบสมัคร..."
                 : "ส่งใบสมัคร"}
             </button>
           </div>
@@ -1401,11 +1500,14 @@ export default function PostDetailPage() {
   const toggleStatusFilter = (
     status: "approved" | "rejected" | "pending"
   ) => {
+    // เปลี่ยน filter + รีเซ็ตหน้าเป็น 1 ใน batch เดียว
+    // เพื่อให้ fetchApplicants ยิงแค่รอบเดียว
     setStatusFilters((prev) =>
       prev.includes(status)
         ? prev.filter((s) => s !== status)
         : [...prev, status]
     )
+    setApplicantsPage(1)
   }
   const { id } =
     useParams<{ id: string }>()
@@ -1712,11 +1814,9 @@ export default function PostDetailPage() {
     statusFilters,
   ])
 
-  // ติ๊ก/ยกเลิกติ๊กสถานะแล้วรีเซ็ตกลับไปหน้า 1 เสมอ กันกรณีอยู่หน้า 3
-  // แล้ว filter ใหม่มีแค่ 1 หน้า ทำให้ค้างอยู่หน้าว่าง ๆ
-  useEffect(() => {
-    setApplicantsPage(1)
-  }, [statusFilters])
+  // การรีเซ็ตหน้ากลับเป็น 1 ตอนเปลี่ยน filter ทำใน toggleStatusFilter
+  // และปุ่มล้างตัวกรองแล้ว (batch เดียวกับ setStatusFilters) ไม่ใช้ effect
+  // แยกอีก เพราะจะทำให้ fetchApplicants ยิงซ้ำ 2 รอบ
 
   const handleApplied =
     () => {
@@ -2105,7 +2205,10 @@ export default function PostDetailPage() {
 
                           <button
                             type="button"
-                            onClick={() => setStatusFilters([])}
+                            onClick={() => {
+                              setStatusFilters([])
+                              setApplicantsPage(1)
+                            }}
                             className="w-full rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                           >
                             ล้างตัวกรองทั้งหมด

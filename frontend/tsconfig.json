@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "app/api/posts/route.js", "app/api/auth/routs.js"  ],
+, "app/api/posts/route.js", "app/api/auth/routs.js", "app/api/apply/[postId]/route.js"  ],
   "exclude": ["node_modules"]
 }
