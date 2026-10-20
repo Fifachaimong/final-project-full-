@@ -1,5 +1,5 @@
 import asyncHandler from "express-async-handler"
-import { ApplyResumeService, GetMyApplicationResultService, GetPostService } from "../service/applicant.js"
+import { ApplyResumeService, CreateUploadSignatureService, GetMyApplicationResultService, GetPostService } from "../service/applicant.js"
 
 export const GetPost = asyncHandler(async (req, res) => {
     const result = await GetPostService(req.query)
@@ -7,8 +7,13 @@ export const GetPost = asyncHandler(async (req, res) => {
 })
 
 export const ApplyResume = asyncHandler(async (req, res) => {
-    const result = await ApplyResumeService( req.user.id, req.params.postId, req.files )
+    const result = await ApplyResumeService( req.user.id, req.params.postId, req.files, req.body )
     res.status(201).json(result)
+})
+
+export const CreateUploadSignature = asyncHandler(async (req, res) => {
+    const result = await CreateUploadSignatureService(req.user.id, req.body)
+    res.status(200).json(result)
 })
 
 export const GetMyApplicationResult = asyncHandler(async (req, res) => {

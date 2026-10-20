@@ -55,6 +55,16 @@ export const CreateMember = async (userId, postId) => {
     return result;
 }
 
+export const IsUploadUrlUsed = async (resumeUrl, transcriptUrl) => {
+    const [result] = await db.query(
+        `SELECT member_id FROM resume
+         WHERE resume_url IN (?, ?) OR transcript_url IN (?, ?)
+         LIMIT 1`,
+        [resumeUrl, transcriptUrl, resumeUrl, transcriptUrl]
+    )
+
+    return result.length > 0
+}
 
 export const CreateResume = async (data)=>{
     const { memberId, resumeUrl, transcriptUrl, aiScore, skills, storytelling_score, ai_reason, overall_confidence, specific_strengths, faculty_match,resume_quality_score, recommendation_reason } = data
