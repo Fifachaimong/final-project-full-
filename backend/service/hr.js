@@ -2,7 +2,7 @@ import { CreatePostModel, DeleteMemberInPostModel, DeletePostModel, EditPostMode
 import { GetPostByIDModel } from "../models/auth.js";
 import AppError from "../utils/AppError.js";
 import { UploadToCloudinary } from "../utils/UploadToCloudinary.js";
-import { DeleteManyFromCloudinary, ExtractPublicId } from "../utils/DeleteFromCloudinary.js";
+import { DeleteByUrls } from "../utils/DeleteFromCloudinary.js";
 
 export const CreatePostService = async (id, data, file) => {
     let icon = null
@@ -50,11 +50,7 @@ export const EditPostService = async (data, owner_id, post_id, file, role) => {
     }
 
     if (oldIconUrl) {
-        const oldPublicId = ExtractPublicId(oldIconUrl)
-
-        if (oldPublicId) {
-            await DeleteManyFromCloudinary([oldPublicId], "image")
-        }
+        await DeleteByUrls([oldIconUrl])
     }
 
     return {
@@ -65,29 +61,13 @@ export const EditPostService = async (data, owner_id, post_id, file, role) => {
 export const DeletePostService = async (owner_id, post_id, role) => {
     const data = await GetPostFileUrlsByOwnerAndPostID(owner_id, post_id, role)
 
-    const logoCompanyPaths = []
-    const resumePaths = []
-    const transcriptPaths = []
-
-    for (const item of data) {
-
-        if (item.logo_company) {
-            logoCompanyPaths.push(ExtractPublicId(item.logo_company))
-        }
-
-        if (item.resume) {
-            resumePaths.push(ExtractPublicId(item.resume))
-        }
-
-        if (item.transcript) {
-            transcriptPaths.push(ExtractPublicId(item.transcript))
-        }
-
-    }
-
-    await DeleteManyFromCloudinary(logoCompanyPaths, "image")
-    await DeleteManyFromCloudinary(resumePaths, "raw")
-    await DeleteManyFromCloudinary(transcriptPaths, "raw")
+    await DeleteByUrls(
+        data.flatMap((item) => [
+            item.logo_company,
+            item.resume,
+            item.transcript
+        ])
+    )
 
     const check = await DeletePostModel(owner_id, post_id, role)
     if (check.affectedRows === 0) {
@@ -215,23 +195,12 @@ export const UpdateCandidateStatusService = async (member_status, member_id, own
 export const DeleteMemberInPostService = async (member_id, owner_id, post_id) => {
     const data = await GetMemberFileUrlsByOwnerAndPostID(member_id, owner_id, post_id)
 
-    const resumePaths = []
-    const transcriptPaths = []
-
-    for (const item of data) {
-
-        if (item.resume) {
-            resumePaths.push(ExtractPublicId(item.resume))
-        }
-
-        if (item.transcript) {
-            transcriptPaths.push(ExtractPublicId(item.transcript))
-        }
-
-    }
-
-    await DeleteManyFromCloudinary(resumePaths, "raw")
-    await DeleteManyFromCloudinary(transcriptPaths, "raw")
+    await DeleteByUrls(
+        data.flatMap((item) => [
+            item.resume,
+            item.transcript
+        ])
+    )
 
     const result = await DeleteMemberInPostModel(member_id, owner_id, post_id)
 

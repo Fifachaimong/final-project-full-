@@ -3,7 +3,7 @@ import { CreateUser, EditMyProfileModel, GetMyProfileModel, GetPostByIDModel, Ge
 import AppError from '../utils/AppError.js'
 import jwt from 'jsonwebtoken'
 import { UploadToCloudinary } from "../utils/UploadToCloudinary.js";
-import { DeleteManyFromCloudinary, ExtractPublicId } from "../utils/DeleteFromCloudinary.js";
+import { DeleteByUrls } from "../utils/DeleteFromCloudinary.js";
 
 export const RegisterService = async (data) => {
     const { firstname, lastname, email, password, role } = data
@@ -94,11 +94,7 @@ export const EditMyProfileService = async (id, data, file) => {
     }
 
     if (oldIconUrl) {
-        const oldPublicId = ExtractPublicId(oldIconUrl)
-
-        if (oldPublicId) {
-            await DeleteManyFromCloudinary([oldPublicId], "image")
-        }
+        await DeleteByUrls([oldIconUrl])
     }
 
     const updatedProfile = await GetMyProfileModel(id)

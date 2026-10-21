@@ -1,7 +1,7 @@
 import { CreateUserByAdminModel, DeleteUserByID, EditUserByIDModel, GetUserByAdminModel, GetUserFileUrlsByUserID } from "../models/admin.js"
 import { GetTotalPage, GetUserByEmail } from "../models/auth.js"
 import AppError from "../utils/AppError.js"
-import { DeleteManyFromCloudinary, ExtractPublicId } from "../utils/DeleteFromCloudinary.js"
+import { DeleteByUrls } from "../utils/DeleteFromCloudinary.js"
 import bcrypt from "bcryptjs"
 
 export const GetUserByAdminService = async (query = {}) => {
@@ -66,34 +66,14 @@ export const CreateUserByAdminService = async (data) => {
 export const DeleteUserService = async (id) => {
     const data = await GetUserFileUrlsByUserID(id)
 
-    const profilePaths = []
-    const logoCompanyPaths = []
-    const resumePaths = []
-    const transcriptPaths = []
-
-    for (const item of data) {
-        if (item.profile) {
-            profilePaths.push(ExtractPublicId(item.profile))
-        }
-
-        if (item.logo_company) {
-            logoCompanyPaths.push(ExtractPublicId(item.logo_company))
-        }
-
-        if (item.resume) {
-            resumePaths.push(ExtractPublicId(item.resume))
-        }
-
-        if (item.transcript) {
-            transcriptPaths.push(ExtractPublicId(item.transcript))
-        }
-
-    }
-
-    await DeleteManyFromCloudinary(profilePaths, "image")
-    await DeleteManyFromCloudinary(logoCompanyPaths, "image")
-    await DeleteManyFromCloudinary(resumePaths, "raw")
-    await DeleteManyFromCloudinary(transcriptPaths, "raw")
+    await DeleteByUrls(
+        data.flatMap((item) => [
+            item.profile,
+            item.logo_company,
+            item.resume,
+            item.transcript
+        ])
+    )
 
     const result = await DeleteUserByID(id)
     if (result.affectedRows === 0) {
