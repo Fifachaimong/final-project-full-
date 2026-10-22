@@ -101,20 +101,34 @@ function DisplayField({
   label,
   value,
   icon,
+  muted = false,
 }: {
   label: string
   value: string
   icon: React.ReactNode
+  // muted = ค่าที่แก้ไขไม่ได้ (หน้าตาแบบช่องที่ถูก disable)
+  muted?: boolean
 }) {
   return (
-    <div className="space-y-1.5">
+    // min-w-0: ให้ช่องหดตามคอลัมน์ของ grid ได้ ไม่ถูกข้อความยาว ๆ ดันกว้างจนล้น
+    <div className="min-w-0 space-y-1.5">
       <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
         {icon}
         {label}
       </label>
 
-      <div className="flex h-10 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700">
-        {value || (
+      {/* min-h แทน h: ช่องสูงขึ้นอัตโนมัติเมื่อข้อความยาวจนต้องขึ้นบรรทัดใหม่ */}
+      <div
+        className={`flex min-h-[2.5rem] items-center rounded-lg border px-3 py-2 text-sm ${
+          muted
+            ? "cursor-not-allowed border-slate-300 bg-slate-100 text-slate-500"
+            : "border-slate-200 bg-slate-50 text-slate-700"
+        }`}
+      >
+        {value ? (
+          // break-all: อีเมลไม่มีช่องว่าง ต้องยอมตัดกลางคำเมื่อยาวเกินช่อง
+          <span className="min-w-0 break-all">{value}</span>
+        ) : (
           <span className="text-slate-300 italic">
             ไม่ระบุ
           </span>
@@ -146,7 +160,7 @@ function InputField({
   maxLength?: number
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="min-w-0 space-y-1.5">
       <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
         {icon}
         {label}
@@ -202,7 +216,7 @@ function ViewCard({
           </p>
 
           {data.email && (
-            <p className="mt-0.5 text-xs text-slate-400">
+            <p className="mt-0.5 break-all px-2 text-xs text-slate-400">
               {data.email}
             </p>
           )}
@@ -224,13 +238,13 @@ function ViewCard({
           />
         </div>
 
-        <DisplayField
-          label="รหัสนักศึกษา"
-          value={data.studentId}
-          icon={<Hash className="h-3 w-3" />}
-        />
-
         <div className="grid grid-cols-2 gap-4">
+          <DisplayField
+            label="รหัสนักศึกษา"
+            value={data.studentId}
+            icon={<Hash className="h-3 w-3" />}
+          />
+
           <DisplayField
             label="โทรศัพท์"
             value={
@@ -240,13 +254,14 @@ function ViewCard({
             }
             icon={<Phone className="h-3 w-3" />}
           />
-
-          <DisplayField
-            label="อีเมล"
-            value={data.email}
-            icon={<Mail className="h-3 w-3" />}
-          />
         </div>
+
+        {/* อีเมลยาวได้ จึงให้เต็มแถว */}
+        <DisplayField
+          label="อีเมล"
+          value={data.email}
+          icon={<Mail className="h-3 w-3" />}
+        />
 
         <div className="flex-1" />
 
@@ -340,25 +355,25 @@ function EditCard({
           />
 
           <InputField
-            label="อีเมล"
-            value={draft.email}
-            onChange={(v) => onChange("email", v)}
-            placeholder="email@example.com"
-            icon={<Mail className="h-3 w-3" />}
-            type="text"
-            disabled
+            label="รหัสนักศึกษา"
+            value={draft.studentId}
+            onChange={(v) => onChange("studentId", formatStudentId(v))}
+            placeholder="66543206040-8"
+            icon={<Hash className="h-3 w-3" />}
+            maxLength={13}
           />
         </div>
+        <p className="-mt-3 text-xs text-slate-400">
+          รูปแบบรหัสนักศึกษา: 00000000000-0
+        </p>
 
-        <InputField
-          label="รหัสนักศึกษา"
-          value={draft.studentId}
-          onChange={(v) => onChange("studentId", formatStudentId(v))}
-          placeholder="66543206040-8"
-          icon={<Hash className="h-3 w-3" />}
-          maxLength={13}
+        {/* อีเมลแก้ไขไม่ได้ — แสดงเป็นช่องอ่านอย่างเดียวที่ขึ้นบรรทัดใหม่ได้ ไม่ถูกตัดท้าย */}
+        <DisplayField
+          label="อีเมล"
+          value={draft.email}
+          icon={<Mail className="h-3 w-3" />}
+          muted
         />
-        <p className="-mt-3 text-xs text-slate-400">รูปแบบ: 00000000000-0</p>
 
         <div className="flex-1" />
 
