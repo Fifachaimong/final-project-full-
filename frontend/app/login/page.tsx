@@ -54,10 +54,6 @@ export default function LoginPage() {
     if (res.ok) {
       const data: LoginResponse = await res.json()
 
-      // Refresh the shared UserProvider context now that the auth cookie
-      // is set, so Navbar/UserAvatar show the logged-in user immediately
-      // on the page we redirect to, instead of them firing their own
-      // /api/me call on mount.
       await refetchUser()
 
       if (data.role === "hr") {
@@ -139,17 +135,9 @@ export default function LoginPage() {
 
               {/* Password */}
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="password" className="text-sm font-semibold text-foreground">
-                    รหัสผ่าน
-                  </label>
-                  <button
-                    type="button"
-                    className="text-xs font-medium text-primary hover:underline transition-colors"
-                  >
-                    ลืมรหัสผ่าน?
-                  </button>
-                </div>
+                <label htmlFor="password" className="text-sm font-semibold text-foreground">
+                  รหัสผ่าน
+                </label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
@@ -211,7 +199,7 @@ export default function LoginPage() {
           <p className="text-center text-xs text-muted-foreground mt-6 leading-relaxed">
             ระบบนี้ใช้สำหรับบุคลากรที่ได้รับอนุญาตเท่านั้น
             <br />
-            หากมีปัญหาในการเข้าสู่ระบบ กรุณาติดต่อผู้ดูแลระบบ
+            หากลืมรหัสผ่านหรือมีปัญหาในการเข้าสู่ระบบ กรุณาติดต่อผู้ดูแลระบบ
           </p>
         </div>
       </main>
