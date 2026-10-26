@@ -5,6 +5,7 @@ import { useState, useRef } from "react"
 import { Plus, User, Phone, Mail, Hash, Check, X, Loader2 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { updateProfile } from "@/app/actions/profile"
+import { ChangePasswordCard } from "@/components/change-password-card"
 import { useUser } from "@/contexts/user-context"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -667,6 +668,14 @@ export default function ProfileEditPage({
               </div>
             </>
           )}
+        </div>
+
+        {/* เปลี่ยนรหัสผ่าน */}
+        <div className="mx-auto mt-6 w-full max-w-sm">
+          <ChangePasswordCard
+            email={saved.email}
+            onSuccess={(msg) => showToast(msg, "success")}
+          />
         </div>
       </main>
     </div>

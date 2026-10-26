@@ -1,3 +1,9 @@
+// กติกาความซับซ้อนของรหัสผ่าน — ใช้ร่วมกันตอนสมัครและตอนเปลี่ยนรหัสผ่าน
+const passwordComplexity = {
+    check: (value) => /^(?=(?:.*[0-9]){5,})(?=.*[a-z])(?=.*[A-Z]).+$/.test(value),
+    message: 'รหัสผ่านต้องมีตัวเลขอย่างน้อย 5 ตัว และต้องมีตัวพิมพ์ใหญ่และตัวพิมพ์เล็กอย่างน้อย 1 ตัว'
+}
+
 const registerSchema = {
     firstname: {
         type: 'string',
@@ -32,12 +38,7 @@ const registerSchema = {
     password: {
         type: 'string',
         required: true,
-        validate: [
-            {
-                check: (value) => /^(?=(?:.*[0-9]){5,})(?=.*[a-z])(?=.*[A-Z]).+$/.test(value),
-                message: 'รหัสผ่านต้องมีตัวเลขอย่างน้อย 5 ตัว และต้องมีตัวพิมพ์ใหญ่และตัวพิมพ์เล็กอย่างน้อย 1 ตัว'
-            }
-        ]
+        validate: [passwordComplexity]
     },
     role: {
         type: ['applicant'],
@@ -100,4 +101,22 @@ const editMyProfileSchema = {
     }
 }
 
-export { registerSchema, loginSchema, editMyProfileSchema }
+const changePasswordSchema = {
+    current_password: {
+        type: 'string',
+        required: true
+    },
+    new_password: {
+        type: 'string',
+        required: true,
+        validate: [
+            passwordComplexity,
+            {
+                check: (value) => Buffer.byteLength(value, 'utf8') <= 72,
+                message: 'รหัสผ่านยาวเกินไป (สูงสุด 72 ไบต์ โดยตัวอักษรไทยนับตัวละ 3 ไบต์)'
+            }
+        ]
+    }
+}
+
+export { registerSchema, loginSchema, editMyProfileSchema, changePasswordSchema }

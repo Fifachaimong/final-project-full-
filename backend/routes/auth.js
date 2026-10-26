@@ -1,6 +1,6 @@
 import express from "express";
-import { EditMyProfile, GetMyProfile, GetPostByID, Login, Register } from "../controller/auth.js";
-import { registerSchema, loginSchema, editMyProfileSchema } from "../schema/auth.js";
+import { ChangePassword, EditMyProfile, GetMyProfile, GetPostByID, Login, Register } from "../controller/auth.js";
+import { registerSchema, loginSchema, editMyProfileSchema, changePasswordSchema } from "../schema/auth.js";
 import { ValidateBody } from "../middleware/validate.js";
 import roleMiddleware from "../middleware/role.js";
 import upload from "../middleware/upload.js";
@@ -11,6 +11,7 @@ const router = express.Router()
 router.post('/register', ValidateBody(registerSchema), Register)
 router.post('/login', ValidateBody(loginSchema), Login)
 router.put('/profile', authMiddleware, roleMiddleware('applicant', 'hr', 'admin'), upload.single('icon'), ValidateBody(editMyProfileSchema), EditMyProfile)
+router.put('/password', authMiddleware, roleMiddleware('applicant', 'hr', 'admin'), ValidateBody(changePasswordSchema), ChangePassword)
 router.get('/posts/:id', authMiddleware, roleMiddleware('applicant', 'hr', 'admin'), GetPostByID)
 router.get('/profile', authMiddleware, roleMiddleware('applicant', 'hr', 'admin'), GetMyProfile)
 
@@ -296,4 +297,40 @@ export default router
  *           application/json:
  *             example:
  *               message: "Internal server error"
+ */
+
+/**
+ * @swagger
+ * /auth/password:
+ *   put:
+ *     summary: Change my password
+ *     description: >
+ *       Change the password of the logged-in user. The current password must be
+ *       correct and the new password must follow the same rules as registration
+ *       (at least 5 digits, one uppercase and one lowercase letter, max 72 bytes)
+ *       and differ from the current one.
+ *     tags:
+ *       - auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - current_password
+ *               - new_password
+ *             properties:
+ *               current_password:
+ *                 type: string
+ *               new_password:
+ *                 type: string
+ *                 example: "Abc12345"
+ *     responses:
+ *       200:
+ *         description: Password changed
+ *       400:
+ *         description: Wrong current password, weak new password, or same as current
+ *       401:
+ *         description: Not logged in
  */

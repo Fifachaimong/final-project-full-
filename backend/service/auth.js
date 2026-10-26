@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs"
-import { CreateUser, EditMyProfileModel, GetMyProfileModel, GetPostByIDModel, GetUserByEmail } from "../models/auth.js"
+import { CreateUser, EditMyProfileModel, GetMyProfileModel, GetPasswordHashByID, GetPostByIDModel, GetUserByEmail, UpdatePasswordByID } from "../models/auth.js"
 import AppError from '../utils/AppError.js'
 import jwt from 'jsonwebtoken'
 import { UploadToCloudinary } from "../utils/UploadToCloudinary.js";
@@ -52,6 +52,34 @@ export const LoginService = async (data) => {
         message : 'Login succeed',
         token : token,
         role : user.role
+    }
+}
+
+export const ChangePasswordService = async (id, data) => {
+    const { current_password, new_password } = data
+
+    const currentHash = await GetPasswordHashByID(id)
+
+    if (!currentHash) {
+        throw new AppError('User not found', 404)
+    }
+
+    // ใช้ 400 ไม่ใช่ 401 เพราะ 401 ฝั่งหน้าบ้านถือว่า "เซสชันหมดอายุ"
+    const isCurrentCorrect = await bcrypt.compare(current_password, currentHash)
+    if (!isCurrentCorrect) {
+        throw new AppError('รหัสผ่านปัจจุบันไม่ถูกต้อง', 400, 'current_password')
+    }
+
+    const isSamePassword = await bcrypt.compare(new_password, currentHash)
+    if (isSamePassword) {
+        throw new AppError('รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านปัจจุบัน', 400, 'new_password')
+    }
+
+    const hashedPassword = await bcrypt.hash(new_password, 10)
+    await UpdatePasswordByID(id, hashedPassword)
+
+    return {
+        message : 'Change password succeed'
     }
 }
 

@@ -11,6 +11,16 @@ export const GetUserByEmail = async(email) => {
     return result[0]
 }
 
+export const GetPasswordHashByID = async (id) => {
+    const [result] = await db.query('SELECT password FROM users WHERE id = ?', [id])
+    return result[0]?.password
+}
+
+export const UpdatePasswordByID = async (id, hashedPassword) => {
+    const [result] = await db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, id])
+    return result
+}
+
 export const GetPostByIDModel = async (post_id) => {
     const [result] = await db.query(`
         SELECT posts.id, posts.owner_id, posts.title, posts.company_name, posts.faculty,

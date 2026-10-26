@@ -1,5 +1,5 @@
 import asyncHandler from "express-async-handler"
-import { EditMyProfileService, GetMyProfileService, GetPostByIDService, LoginService, RegisterService } from "../service/auth.js"
+import { ChangePasswordService, EditMyProfileService, GetMyProfileService, GetPostByIDService, LoginService, RegisterService } from "../service/auth.js"
 
 
 export const Register = asyncHandler(async(req, res) => {
@@ -39,5 +39,10 @@ export const EditMyProfile = asyncHandler(async (req, res) => {
 
 export const GetMyProfile = asyncHandler(async (req, res) => {
     const result = await GetMyProfileService(req.user.id)
+    res.status(200).json(result)
+})
+
+export const ChangePassword = asyncHandler(async (req, res) => {
+    const result = await ChangePasswordService(req.user.id, req.body)
     res.status(200).json(result)
 })
