@@ -1,5 +1,7 @@
-import { NextResponse } from "next/server"
+﻿import { NextResponse } from "next/server"
 import { headers } from "next/headers"
+
+const BACKEND_URL = process.env.BACKEND_URL
 
 export async function GET(request, { params }) {
   try {
@@ -27,7 +29,7 @@ export async function GET(request, { params }) {
     const cookie = headerList.get("cookie") ?? ""
 
     const backendUrl =
-      `https://final-project-full.onrender.com/hr/posts/${encodeURIComponent(
+      `${BACKEND_URL}/hr/posts/${encodeURIComponent(
         post_id
       )}/members/${encodeURIComponent(member_id)}`
 
@@ -127,7 +129,7 @@ export async function PUT(request, { params }) {
     const cookie = headerList.get("cookie") ?? ""
 
     const backendUrl =
-      `https://final-project-full.onrender.com/hr/posts/${encodeURIComponent(
+      `${BACKEND_URL}/hr/posts/${encodeURIComponent(
         post_id
       )}/members/${encodeURIComponent(member_id)}`
 
@@ -225,7 +227,7 @@ export async function DELETE(request, { params }) {
     const cookie = headerList.get("cookie") ?? ""
 
     const backendUrl =
-      `https://final-project-full.onrender.com/hr/posts/${encodeURIComponent(
+      `${BACKEND_URL}/hr/posts/${encodeURIComponent(
         post_id
       )}/members/${encodeURIComponent(member_id)}`
 
@@ -294,3 +296,5 @@ export async function DELETE(request, { params }) {
     )
   }
 }
+
+

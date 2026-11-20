@@ -1,5 +1,7 @@
-import { NextResponse } from "next/server"
+﻿import { NextResponse } from "next/server"
 import { headers } from "next/headers"
+
+const BACKEND_URL = process.env.BACKEND_URL
 
 export async function GET(request, { params }) {
   try {
@@ -41,7 +43,7 @@ export async function GET(request, { params }) {
     }
 
     const backendUrl =
-      `https://final-project-full.onrender.com/hr/posts/${encodeURIComponent(post_id)}/members?${backendParams.toString()}`
+      `${BACKEND_URL}/hr/posts/${encodeURIComponent(post_id)}/members?${backendParams.toString()}`
 
     console.log(
       "[GET /api/members/[post_id]] Backend:",
@@ -108,3 +110,5 @@ export async function GET(request, { params }) {
     )
   }
 }
+
+

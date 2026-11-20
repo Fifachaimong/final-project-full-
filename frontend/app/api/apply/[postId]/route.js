@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 
-const BACKEND_URL = "https://final-project-full.onrender.com"
+const BACKEND_URL = process.env.BACKEND_URL
 
 export const maxDuration = 60
 

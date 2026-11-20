@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server"
+﻿import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 
-export async function GET(request: Request) {
+const BACKEND_URL = process.env.BACKEND_URL
+
+export async function GET(request) {
   try {
     const headerList = await headers()
     const cookie = headerList.get("cookie") ?? ""
@@ -19,7 +21,7 @@ export async function GET(request: Request) {
     })
 
     const response = await fetch(
-      `https://final-project-full.onrender.com/hr/posts?${backendParams.toString()}`,
+      `${BACKEND_URL}/hr/posts?${backendParams.toString()}`,
       {
         method: "GET",
         headers: {
@@ -61,3 +63,6 @@ export async function GET(request: Request) {
     )
   }
 }
+
+
+

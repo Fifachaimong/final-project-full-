@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server"
+﻿import { NextResponse } from "next/server"
 
-const BACKEND_URL = "https://final-project-full.onrender.com"
+const BACKEND_URL = process.env.BACKEND_URL
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  req,
+  { params }
 ) {
   const { id } = await params
 
@@ -27,7 +27,7 @@ export async function GET(
     console.error("[API] /api/members/profile/[id] error:", err)
 
     return NextResponse.json(
-      { message: "เกิดข้อผิดพลาด กรุณาลองใหม่" },
+      { message: "เน€เธเธดเธ”เธเนเธญเธเธดเธ”เธเธฅเธฒเธ” เธเธฃเธธเธ“เธฒเธฅเธญเธเนเธซเธกเน" },
       { status: 500 }
     )
   }

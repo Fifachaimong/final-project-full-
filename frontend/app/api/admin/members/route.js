@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server"
+﻿import { NextResponse } from "next/server"
 
-const BACKEND_URL = "https://final-project-full.onrender.com"
+const BACKEND_URL = process.env.BACKEND_URL
 
-export async function GET(request: NextRequest) {
+export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
 

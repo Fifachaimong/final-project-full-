@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server"
+﻿import { NextResponse } from "next/server"
 
-const BACKEND_URL = "https://final-project-full.onrender.com"
+const BACKEND_URL = process.env.BACKEND_URL
 
 // GET single member
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  request,
+  { params }
 ) {
   const { id } = await params
 
@@ -35,8 +35,8 @@ export async function GET(
 
 // PUT update member
 export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  request,
+  { params }
 ) {
   const { id } = await params
 
@@ -70,8 +70,8 @@ export async function PUT(
 
 // DELETE member
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  request,
+  { params }
 ) {
   const { id } = await params
 
