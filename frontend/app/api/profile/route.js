@@ -1,106 +1,60 @@
-import pool from "@/lib/db";
 import { NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 
-const secret = new TextEncoder().encode(process.env.JWT_TOKEN);
+const BACKEND_URL = process.env.BACKEND_URL;
 
-// =======================
-// GET Profile
-// =======================
-export async function GET(req) {
+async function forwardResponse(backendResponse) {
+  const text = await backendResponse.text();
+  let data = null;
+
   try {
-    const token = req.cookies.get("token")?.value;
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = null;
+  }
 
-    if (!token) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+  return NextResponse.json(
+    data ?? { message: "Invalid backend response" },
+    { status: backendResponse.status }
+  );
+}
 
-    const { payload } = await jwtVerify(token, secret);
+async function proxyProfile(request) {
+  const headers = {
+    Cookie: request.headers.get("cookie") ?? "",
+  };
 
-    const result = await pool.query(
-      `
-      SELECT
-        id,
-        name,
-        lastname,
-        email,
-        role_id,
-        created_at
-      FROM users
-      WHERE id = $1
-      `,
-      [payload.id]
-    );
+  if (request.method === "PUT") {
+    headers["Content-Type"] = request.headers.get("content-type") ?? "application/json";
+  }
 
-    if (result.rows.length === 0) {
-      return NextResponse.json(
-        { message: "User not found" },
-        { status: 404 }
-      );
-    }
+  const backendResponse = await fetch(`${BACKEND_URL}/auth/profile`, {
+    method: request.method,
+    headers,
+    body: request.method === "PUT" ? await request.text() : undefined,
+  });
 
-    return NextResponse.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
+  return forwardResponse(backendResponse);
+}
 
+export async function GET(request) {
+  try {
+    return await proxyProfile(request);
+  } catch (error) {
+    console.error("GET /api/profile error:", error);
     return NextResponse.json(
-      { message: "Server Error" },
+      { message: "Cannot connect to backend" },
       { status: 500 }
     );
   }
 }
 
-// =======================
-// UPDATE Profile
-// =======================
-export async function PUT(req) {
+export async function PUT(request) {
   try {
-    const token = req.cookies.get("token")?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const { payload } = await jwtVerify(token, secret);
-
-    const body = await req.json();
-
-    const result = await pool.query(
-      `
-      UPDATE users
-      SET
-        name = $1,
-        lastname = $2,
-        email = $3
-      WHERE id = $4
-      RETURNING
-        id,
-        name,
-        lastname,
-        email,
-        role_id,
-        created_at
-      `,
-      [
-        body.firstName,
-        body.surname,
-        body.email,
-        payload.id,
-      ]
-    );
-
-    return NextResponse.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-
+    return await proxyProfile(request);
+  } catch (error) {
+    console.error("PUT /api/profile error:", error);
     return NextResponse.json(
-      { message: "Server Error" },
+      { message: "Cannot connect to backend" },
       { status: 500 }
     );
   }

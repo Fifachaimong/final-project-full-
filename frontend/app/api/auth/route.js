@@ -1,77 +1,51 @@
-import pool from "@/lib/db";
 import { NextResponse } from "next/server";
-import { SignJWT } from "jose";
 
-const secret = new TextEncoder().encode(process.env.JWT_TOKEN);
+const BACKEND_URL = process.env.BACKEND_URL;
 
-export async function POST(req) {
+async function forwardResponse(backendResponse) {
+  const text = await backendResponse.text();
+  let data = null;
+
   try {
-    const formData = await req.formData();
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = null;
+  }
 
-    const email = formData.get("email");
-    const password = formData.get("password");
+  const response = NextResponse.json(
+    data ?? { message: "Invalid backend response" },
+    { status: backendResponse.status }
+  );
 
-    const result = await pool.query(
-      `
-      SELECT
-        users.id,
-        users.name,
-        users.lastname,
-        users.email,
-        users.role_id,
-        roles.role_name AS role
-      FROM users
-      JOIN roles
-        ON users.role_id = roles.id
-      WHERE users.email = $1
-        AND users.password = $2
-      `,
-      [email, password]
-    );
+  const setCookie = backendResponse.headers.get("set-cookie");
+  if (setCookie) response.headers.set("set-cookie", setCookie);
 
-    if (result.rows.length === 0) {
-      return NextResponse.json(
-        { message: "Login failed" },
-        { status: 401 }
-      );
+  return response;
+}
+
+export async function POST(request) {
+  try {
+    const contentType = request.headers.get("content-type") ?? "";
+    let body;
+
+    if (contentType.includes("application/json")) {
+      body = await request.text();
+    } else {
+      const formData = await request.formData();
+      body = JSON.stringify(Object.fromEntries(formData.entries()));
     }
 
-    const user = result.rows[0];
-
-    const token = await new SignJWT({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-    })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime("1d")
-      .sign(secret);
-
-    const response = NextResponse.json({
-      id: user.id,
-      name: user.name,
-      lastname: user.lastname,
-      email: user.email,
-      role_id: user.role_id,
-      role: user.role,
+    const backendResponse = await fetch(`${BACKEND_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
     });
 
-    response.cookies.set({
-      name: "token",
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24,
-    });
-
-    return response;
+    return forwardResponse(backendResponse);
   } catch (error) {
-    console.error(error);
+    console.error("POST /api/auth error:", error);
     return NextResponse.json(
-      { message: "Server error" },
+      { message: "Cannot connect to backend" },
       { status: 500 }
     );
   }
