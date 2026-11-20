@@ -190,7 +190,7 @@ export default function HomePage() {
                 <div className="flex items-start gap-4">
                   <div className="h-16 w-16 overflow-hidden rounded-full bg-neutral-700">
                     <Image
-                      src="https://gknienyyavpewdiqfpmn.supabase.co/storage/v1/object/public/profile/iconresume.png"
+                      src="/default-avatar.svg"
                       alt="Profile"
                       width={64}
                       height={64}
