@@ -2,7 +2,8 @@
 
 import { cookies } from "next/headers"
 
-const BACKEND_URL = "https://final-project-full.onrender.com/auth/profile"
+const BACKEND_BASE_URL = process.env.BACKEND_URL
+const PROFILE_URL = `${BACKEND_BASE_URL}/auth/profile`
 
 export async function getProfile() {
   const cookieStore = await cookies()
@@ -12,7 +13,7 @@ export async function getProfile() {
     throw new Error("Unauthorized")
   }
 
-  const response = await fetch(BACKEND_URL, {
+  const response = await fetch(PROFILE_URL, {
     method: "GET",
     headers: {
       Cookie: `token=${token}`,
@@ -48,7 +49,9 @@ export async function updateProfile(data: {
   formData.append("firstname", data.firstname)
   formData.append("lastname", data.lastname)
   formData.append("phone", data.phone)
-  formData.append("student_id", data.student_id)
+  if (data.student_id?.trim()) {
+    formData.append("student_id", data.student_id.trim())
+  }
 
   // The backend route uses upload.single("icon"), so this field name must
   // remain "icon". Without it, req.file is empty and no profile URL is saved.
@@ -56,7 +59,7 @@ export async function updateProfile(data: {
     formData.append("icon", data.avatarFile, data.avatarFile.name)
   }
 
-  const response = await fetch(BACKEND_URL, {
+  const response = await fetch(PROFILE_URL, {
     method: "PUT",
     headers: {
       Cookie: `token=${token}`,
@@ -74,7 +77,7 @@ export async function updateProfile(data: {
   return result.data ?? result
 }
 
-const PASSWORD_URL = "https://final-project-full.onrender.com/auth/password"
+const PASSWORD_URL = `${BACKEND_BASE_URL}/auth/password`
 
 // คืนเป็นค่า (ไม่โยน error) เพราะ Next.js ซ่อนข้อความ error ของ server action บน production
 // ทำให้ผู้ใช้ไม่เห็นว่า "รหัสผ่านปัจจุบันไม่ถูกต้อง" ถ้าใช้ throw
