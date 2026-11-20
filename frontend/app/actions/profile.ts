@@ -30,18 +30,22 @@ export async function getProfile() {
   return result.data ?? result
 }
 
+type UpdateProfileResult =
+  | { success: true; data: any }
+  | { success: false; message: string; field?: string | null }
+
 export async function updateProfile(data: {
   firstname: string
   lastname: string
   phone: string
   student_id: string
   avatarFile?: File | null
-}) {
+}): Promise<UpdateProfileResult> {
   const cookieStore = await cookies()
   const token = cookieStore.get("token")?.value
 
   if (!token) {
-    throw new Error("Unauthorized")
+    return { success: false, message: "Unauthorized" }
   }
 
   const formData = new FormData()
@@ -71,10 +75,14 @@ export async function updateProfile(data: {
   const result = await response.json()
 
   if (!response.ok) {
-    throw new Error(result?.message || "Update profile failed")
+    return {
+      success: false,
+      message: result?.message || "Update profile failed",
+      field: result?.field,
+    }
   }
 
-  return result.data ?? result
+  return { success: true, data: result.data ?? result }
 }
 
 const PASSWORD_URL = `${BACKEND_BASE_URL}/auth/password`

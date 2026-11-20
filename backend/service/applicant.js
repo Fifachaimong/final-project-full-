@@ -3,6 +3,7 @@ import { GetTotalPage } from "../models/auth.js";
 import AppError from '../utils/AppError.js'
 import { UploadToCloudinary } from "../utils/UploadToCloudinary.js";
 import { CreateUploadSignature, DeleteAssets, ResolveDirectUpload } from "../utils/DirectUpload.js";
+import db from "../lib/db.js";
 import axios from "axios"
 
 const AI_SERVICE_URL = (process.env.AI_SERVICE_URL || "https://duckling-hangup-resistant.ngrok-free.dev").replace(/\/+$/, "")
@@ -189,13 +190,6 @@ export const ApplyResumeService = async (
             job_title : post.title
         });
 
-        const memberResult = await CreateMember(
-            userId,
-            postId
-        );
-
-        const memberId = memberResult.insertId;
-
         const hardSkills = Array.isArray(aiResult.data.skills?.hard)
             ? aiResult.data.skills.hard.join(", ")
             : JSON.stringify(aiResult.data.skills?.hard || "");
@@ -207,8 +201,7 @@ export const ApplyResumeService = async (
             overall_confidence : ${aiResult.data.overall_confidence}
         `.trim();
 
-        const data = {
-            memberId : memberId,
+        const resumeData = {
             resumeUrl : uploaded.resumeUrl,
             transcriptUrl : uploaded.transcriptUrl,
             aiScore : aiResult.data.matching_score,
@@ -222,7 +215,37 @@ export const ApplyResumeService = async (
             recommendation_reason : aiResult.data.recommendation_reason
         }
 
-        await CreateResume(data);
+        const connection = await db.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            const memberResult = await CreateMember(
+                connection,
+                userId,
+                postId
+            );
+
+            await CreateResume(connection, {
+                ...resumeData,
+                memberId: memberResult.insertId,
+            });
+
+            await connection.commit();
+        } catch (transactionError) {
+            try {
+                await connection.rollback();
+            } catch (rollbackError) {
+                console.error("Resume application rollback failed:", rollbackError);
+            }
+
+            if (transactionError.code === "ER_DUP_ENTRY") {
+                throw new AppError("คุณสมัครตำแหน่งนี้ไปแล้ว", 409);
+            }
+
+            throw transactionError;
+        } finally {
+            connection.release();
+        }
 
         return {
             message: "Apply resume succeed",

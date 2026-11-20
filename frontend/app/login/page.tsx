@@ -19,6 +19,7 @@ interface LoginResponse {
 
 interface LoginErrorResponse {
   message: string
+  field?: string | null
 }
 
 export default function LoginPage() {
@@ -29,6 +30,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
   e.preventDefault()
@@ -37,6 +39,7 @@ export default function LoginPage() {
 
   setLoading(true)
   setError("")
+  setFieldErrors({})
 
   try {
     const res = await fetch("/api/login", {
@@ -67,11 +70,15 @@ export default function LoginPage() {
         router.refresh()
       }
     } else {
-      const _data: LoginErrorResponse = await res
+      const data: LoginErrorResponse = await res
         .json()
         .catch(() => ({ message: "" }))
 
-      setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง")
+      if (data.field === "email" || data.field === "password") {
+        setFieldErrors({ [data.field]: data.message })
+      } else {
+        setError(data.message || "อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง")
+      }
     }
   } catch (error) {
     console.error("LOGIN ERROR:", error)
@@ -125,12 +132,17 @@ export default function LoginPage() {
                     name="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      setFieldErrors((prev) => ({ ...prev, email: "" }))
+                    }}
                     placeholder="example@email.com"
                     required
+                    aria-invalid={Boolean(fieldErrors.email)}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-orange-200 bg-white text-foreground placeholder:text-muted-foreground text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
+                {fieldErrors.email && <p className="text-xs text-destructive">{fieldErrors.email}</p>}
               </div>
 
               {/* Password */}
@@ -145,9 +157,13 @@ export default function LoginPage() {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      setFieldErrors((prev) => ({ ...prev, password: "" }))
+                    }}
                     placeholder="••••••••"
                     required
+                    aria-invalid={Boolean(fieldErrors.password)}
                     className="w-full pl-10 pr-12 py-3 rounded-xl border border-orange-200 bg-white text-foreground placeholder:text-muted-foreground text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                   <button
@@ -159,6 +175,7 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                {fieldErrors.password && <p className="text-xs text-destructive">{fieldErrors.password}</p>}
               </div>
 
               {/* Error banner */}

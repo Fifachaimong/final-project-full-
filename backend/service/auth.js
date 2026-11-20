@@ -9,7 +9,7 @@ export const RegisterService = async (data) => {
     const { firstname, lastname, email, password, role } = data
     const user = await GetUserByEmail(email)
     if (user) {
-        throw new AppError('This email is already in use', 409)
+        throw new AppError('อีเมลนี้ถูกใช้งานแล้ว', 409, 'email')
     }
 
     const hashpassword = await bcrypt.hash(password, 10)
@@ -31,12 +31,12 @@ export const LoginService = async (data) => {
     const { email, password } = data
     const user = await GetUserByEmail(email)
     if (!user) {
-        throw new AppError('Incorrect email or password.', 401)
+        throw new AppError('อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง', 401)
     }
 
     const check = await bcrypt.compare(password, user.password)
     if (!check) {
-        throw new AppError('Incorrect email or password.', 401)
+        throw new AppError('อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง', 401)
     }
 
     const token = jwt.sign(

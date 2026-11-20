@@ -43,7 +43,7 @@ export const CreateUserByAdminService = async (data) => {
     const { firstname, lastname, email, password, role } = data
     const user = await GetUserByEmail(email)
     if (user) {
-        throw new AppError('This email is already in use', 409)
+        throw new AppError('อีเมลนี้ถูกใช้งานแล้ว', 409, 'email')
     }
 
     const hashpassword = await bcrypt.hash(password, 10)

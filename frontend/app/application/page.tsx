@@ -87,15 +87,17 @@ function InputField({
   label,
   required,
   hint,
+  error,
   ...props
 }: React.InputHTMLAttributes<HTMLInputElement> & {
   label: string
   required?: boolean
   hint?: string
+  error?: string
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <label htmlFor={props.name} className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         {label}
         {required && <span className="ml-0.5 text-destructive">*</span>}
         {hint && <span className="ml-1 normal-case font-normal text-muted-foreground/70">{hint}</span>}
@@ -103,8 +105,10 @@ function InputField({
       <input
         {...props}
         required={required}
-        className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
+        aria-invalid={Boolean(error)}
+        className={`rounded-lg border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 ${error ? "border-destructive focus:ring-destructive/20" : "border-input focus:border-ring focus:ring-ring/30"}`}
       />
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   )
 }
@@ -134,6 +138,7 @@ function MemberForm({
   const [form, setForm] = useState({ firstname: "", lastname: "", email: "", password: "", role: "applicant" })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (member) {
@@ -146,12 +151,14 @@ function MemberForm({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
+    setFieldErrors({})
     const payload: Record<string, unknown> = {
       firstname: form.firstname,
       lastname: form.lastname || null,
@@ -172,7 +179,15 @@ function MemberForm({
         body: JSON.stringify(payload),
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? "Something went wrong"); return }
+      if (!res.ok) {
+        const field = data.field
+        if (["firstname", "lastname", "email", "password", "role"].includes(field)) {
+          setFieldErrors({ [field]: data.message ?? "Invalid value" })
+        } else {
+          setError(data.message ?? data.error ?? "Something went wrong")
+        }
+        return
+      }
       onSaved()
     } catch {
       setError("Network error")
@@ -195,8 +210,8 @@ function MemberForm({
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
-            <InputField label="First name" name="firstname" value={form.firstname} onChange={handleChange} required placeholder="John" />
-            <InputField label="Last name" name="lastname" value={form.lastname} onChange={handleChange} placeholder="Doe" />
+            <InputField label="First name" name="firstname" value={form.firstname} onChange={handleChange} required placeholder="John" error={fieldErrors.firstname} />
+            <InputField label="Last name" name="lastname" value={form.lastname} onChange={handleChange} placeholder="Doe" error={fieldErrors.lastname} />
           </div>
 
           <InputField
@@ -208,6 +223,7 @@ function MemberForm({
             required
             readOnly={isEdit}
             placeholder="john@example.com"
+            error={fieldErrors.email}
           />
 
           <InputField
@@ -219,6 +235,7 @@ function MemberForm({
             required={!isEdit}
             placeholder="••••••••"
             hint={isEdit ? "(leave blank to keep)" : undefined}
+            error={fieldErrors.password}
           />
 
           <div className="flex flex-col gap-1.5">
@@ -229,12 +246,14 @@ function MemberForm({
               name="role"
               value={form.role}
               onChange={handleChange}
-              className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
+              aria-invalid={Boolean(fieldErrors.role)}
+              className={`rounded-lg border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 ${fieldErrors.role ? "border-destructive focus:ring-destructive/20" : "border-input focus:border-ring focus:ring-ring/30"}`}
             >
               {Object.entries(ROLES).map(([id, r]) => (
                 <option key={id} value={id}>{r.label}</option>
               ))}
             </select>
+            {fieldErrors.role && <p className="text-xs text-destructive">{fieldErrors.role}</p>}
           </div>
 
           {error && (

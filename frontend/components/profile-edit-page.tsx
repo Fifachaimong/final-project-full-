@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState, useRef } from "react"
-import { Plus, User, Phone, Mail, Hash, Check, X, Loader2 } from "lucide-react"
+import { Plus, User, Phone, Mail, Hash, Check, X, Loader2, Info } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import { updateProfile } from "@/app/actions/profile"
 import { ChangePasswordCard } from "@/components/change-password-card"
@@ -150,6 +150,7 @@ function InputField({
   type = "text",
   disabled = false,
   maxLength,
+  error,
 }: {
   label: string
   value: string
@@ -159,6 +160,7 @@ function InputField({
   type?: string
   disabled?: boolean
   maxLength?: number
+  error?: string
 }) {
   return (
     <div className="min-w-0 space-y-1.5">
@@ -174,11 +176,15 @@ function InputField({
         maxLength={maxLength}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`h-10 w-full rounded-lg border px-3 text-sm shadow-sm outline-none transition ${disabled
+        aria-invalid={Boolean(error)}
+        className={`h-10 w-full rounded-lg border px-3 text-sm shadow-sm outline-none transition ${error
+          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
+          : disabled
           ? "cursor-not-allowed bg-slate-100 text-slate-500"
           : "border-slate-300 bg-white text-slate-800 focus:border-[#E8614A] focus:ring-2 focus:ring-[#E8614A]/20"
           }`}
       />
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   )
 }
@@ -282,12 +288,14 @@ function ViewCard({
 
 function EditCard({
   draft,
+  fieldErrors,
   onChange,
   onConfirm,
   onCancel,
   isSubmitting,
 }: {
   draft: ProfileData
+  fieldErrors: Record<string, string>
   onChange: (
     field: keyof ProfileData,
     value: string | File | null
@@ -329,6 +337,7 @@ function EditCard({
             label="ชื่อ"
             value={draft.firstName}
             onChange={(v) => onChange("firstName", v)}
+            error={fieldErrors.firstname}
             placeholder="ชื่อจริง"
             icon={<User className="h-3 w-3" />}
           />
@@ -337,6 +346,7 @@ function EditCard({
             label="นามสกุล"
             value={draft.surname}
             onChange={(v) => onChange("surname", v)}
+            error={fieldErrors.lastname}
             placeholder="นามสกุล"
             icon={<User className="h-3 w-3" />}
           />
@@ -346,6 +356,7 @@ function EditCard({
           <InputField
             label="โทรศัพท์"
             value={formatPhone(draft.phone)}
+            error={fieldErrors.phone}
             onChange={(v) =>
               onChange("phone", v.replace(/\D/g, "").slice(0, 10))
             }
@@ -359,6 +370,7 @@ function EditCard({
             label="รหัสนักศึกษา"
             value={draft.studentId}
             onChange={(v) => onChange("studentId", formatStudentId(v))}
+            error={fieldErrors.student_id}
             placeholder="66543206040-8"
             icon={<Hash className="h-3 w-3" />}
             maxLength={13}
@@ -471,6 +483,7 @@ export default function ProfileEditPage({
   const [isEditing, setIsEditing] = useState(false)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const [toast, setToast] = useState<{
     msg: string
@@ -481,6 +494,17 @@ export default function ProfileEditPage({
     field: keyof ProfileData,
     value: string | File | null
   ) => {
+    const backendField: Partial<Record<keyof ProfileData, string>> = {
+      firstName: "firstname",
+      surname: "lastname",
+      phone: "phone",
+      studentId: "student_id",
+    }
+    const errorField = backendField[field]
+    if (errorField) {
+      setFieldErrors((prev) => ({ ...prev, [errorField]: "" }))
+    }
+
     setDraft((prev) => ({
       ...prev,
       [field]: value,
@@ -488,6 +512,7 @@ export default function ProfileEditPage({
   }
 
   const handleEdit = () => {
+    setFieldErrors({})
     setDraft({
       ...saved,
       avatarFile: null,
@@ -502,13 +527,24 @@ export default function ProfileEditPage({
     setIsSubmitting(true)
 
     try {
-      const response = await updateProfile({
+      const result = await updateProfile({
         firstname: String(draft.firstName ?? ""),
         lastname: String(draft.surname ?? ""),
         phone: String(draft.phone ?? "").replace(/\D/g, "").slice(0, 10),
         student_id: draft.studentId,
         avatarFile: draft.avatarFile,
       })
+
+      if (!result.success) {
+        if (["firstname", "lastname", "phone", "student_id"].includes(result.field ?? "")) {
+          setFieldErrors({ [result.field!]: result.message })
+        } else {
+          showToast(result.message, "info")
+        }
+        return
+      }
+
+      const response = result.data
 
       if (!response) {
         throw new Error("บันทึกไม่สำเร็จ")
@@ -540,7 +576,7 @@ export default function ProfileEditPage({
       )
 
       showToast(
-        "บันทึกไม่สำเร็จ",
+        err instanceof Error ? err.message : "บันทึกไม่สำเร็จ",
         "info"
       )
     } finally {
@@ -586,7 +622,7 @@ export default function ProfileEditPage({
         <div
           role="status"
           aria-live="polite"
-          className={`fixed right-6 top-20 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-white shadow-lg transition-all ${toast.type === "success"
+          className={`fixed bottom-6 left-1/2 z-50 flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-2 rounded-xl px-5 py-3 text-sm font-medium text-white shadow-xl transition-all ${toast.type === "success"
             ? "bg-emerald-500"
             : "bg-slate-600"
             }`}
@@ -594,7 +630,7 @@ export default function ProfileEditPage({
           {toast.type === "success" ? (
             <Check className="h-4 w-4" />
           ) : (
-            <X className="h-4 w-4" />
+            <Info className="h-4 w-4" />
           )}
 
           {toast.msg}
@@ -660,6 +696,7 @@ export default function ProfileEditPage({
               <div className="flex flex-1">
                 <EditCard
                   draft={draft}
+                  fieldErrors={fieldErrors}
                   onChange={handleChange}
                   onConfirm={handleConfirm}
                   onCancel={handleCancel}

@@ -194,6 +194,7 @@ function PostDialog({
   const [submitting, setSubmitting] = useState(false)
   const [loadingPost, setLoadingPost] = useState(false)
   const [error, setError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const fileInputRef =
     useRef<HTMLInputElement>(null)
@@ -215,6 +216,7 @@ function PostDialog({
     setIconPreview(null)
     setSelectedFile(null)
     setError("")
+    setFieldErrors({})
 
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
@@ -240,6 +242,7 @@ function PostDialog({
       // EDIT
       setLoadingPost(true)
       setError("")
+      setFieldErrors({})
 
       try {
         const res = await fetch(
@@ -403,6 +406,7 @@ function PostDialog({
 
     setSubmitting(true)
     setError("")
+    setFieldErrors({})
 
     try {
       // ────────────────────────────────────────
@@ -515,6 +519,11 @@ function PostDialog({
         }
 
         if (!res.ok) {
+          if (["company_name", "title", "faculty", "description", "model_provider", "deadline", "posts_status"].includes(result?.field)) {
+            setFieldErrors({ [result.field]: result.message || "Invalid value" })
+            return
+          }
+
           throw new Error(
             result?.message ||
               result?.error ||
@@ -616,6 +625,11 @@ function PostDialog({
         }
 
         if (!res.ok) {
+          if (["company_name", "title", "faculty", "description", "model_provider", "deadline", "posts_status"].includes(result?.field)) {
+            setFieldErrors({ [result.field]: result.message || "Invalid value" })
+            return
+          }
+
           throw new Error(
             result?.message ||
               result?.error ||
@@ -750,15 +764,14 @@ function PostDialog({
                 type="text"
                 value={companyName}
                 onChange={(e) =>
-                  setCompanyName(
-                    e.target.value
-                  )
+                  (setCompanyName(e.target.value), setFieldErrors((prev) => ({ ...prev, company_name: "" })))
                 }
                 placeholder="เช่น บริษัท ABC จำกัด"
                 required
                 disabled={submitting}
                 className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
               />
+              {fieldErrors.company_name && <p className="text-xs text-destructive">{fieldErrors.company_name}</p>}
             </div>
 
             {/* Title */}
@@ -775,13 +788,14 @@ function PostDialog({
                 type="text"
                 value={title}
                 onChange={(e) =>
-                  setTitle(e.target.value)
+                  (setTitle(e.target.value), setFieldErrors((prev) => ({ ...prev, title: "" })))
                 }
                 placeholder="เช่น Software Developer"
                 required
                 disabled={submitting}
                 className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
               />
+              {fieldErrors.title && <p className="text-xs text-destructive">{fieldErrors.title}</p>}
             </div>
 
             {/* Faculty */}
@@ -798,15 +812,14 @@ function PostDialog({
                 type="text"
                 value={faculty}
                 onChange={(e) =>
-                  setFaculty(
-                    e.target.value
-                  )
+                  (setFaculty(e.target.value), setFieldErrors((prev) => ({ ...prev, faculty: "" })))
                 }
                 placeholder="เช่น คณะวิศวกรรมศาสตร์"
                 required
                 disabled={submitting}
                 className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
               />
+              {fieldErrors.faculty && <p className="text-xs text-destructive">{fieldErrors.faculty}</p>}
             </div>
 
             {/* Description */}
@@ -822,9 +835,7 @@ function PostDialog({
               <textarea
                 value={description}
                 onChange={(e) =>
-                  setDescription(
-                    e.target.value
-                  )
+                  (setDescription(e.target.value), setFieldErrors((prev) => ({ ...prev, description: "" })))
                 }
                 rows={4}
                 placeholder="อธิบายลักษณะงาน คุณสมบัติ ฯลฯ"
@@ -832,6 +843,7 @@ function PostDialog({
                 disabled={submitting}
                 className="resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
               />
+              {fieldErrors.description && <p className="text-xs text-destructive">{fieldErrors.description}</p>}
             </div>
 
             {/* Model Provider */}
@@ -844,7 +856,7 @@ function PostDialog({
               <div className="relative group">
                 <select
                   value={modelProvider}
-                  onChange={(e) => setModelProvider(e.target.value)}
+                  onChange={(e) => (setModelProvider(e.target.value), setFieldErrors((prev) => ({ ...prev, model_provider: "" })))}
                   required
                   disabled={submitting}
                   className="
@@ -931,6 +943,7 @@ function PostDialog({
                   </svg>
                 </div>
               </div>
+              {fieldErrors.model_provider && <p className="text-xs text-destructive">{fieldErrors.model_provider}</p>}
 
               <p className="text-xs text-muted-foreground transition-opacity duration-300">
                 เลือก AI Model Provider ที่ต้องการใช้งาน
@@ -951,14 +964,13 @@ function PostDialog({
                 type="date"
                 value={deadline}
                 onChange={(e) =>
-                  setDeadline(
-                    e.target.value
-                  )
+                  (setDeadline(e.target.value), setFieldErrors((prev) => ({ ...prev, deadline: "" })))
                 }
                 required
                 disabled={submitting}
                 className="rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
               />
+              {fieldErrors.deadline && <p className="text-xs text-destructive">{fieldErrors.deadline}</p>}
 
               <p className="text-xs text-muted-foreground">
                 หากกำหนดวันปิดรับสมัครผ่านไปแล้ว

@@ -102,6 +102,7 @@ export async function POST(request) {
             data?.message ||
             data?.error ||
             `Backend error (${response.status})`,
+          field: data?.field ?? null,
         },
         { status: response.status }
       )

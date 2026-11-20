@@ -41,7 +41,7 @@ export const BuildPublicId = (type, userId, fileName) => {
 
 export const CreateUploadSignature = (userId, { type, filename } = {}) => {
     if (!DOCUMENT_FOLDERS[type]) {
-        throw new AppError("type must be resume or transcript", 400, "type");
+        throw new AppError("ประเภทไฟล์ไม่ถูกต้อง กรุณาเลือก Resume หรือ Transcript", 400, "type");
     }
 
     const { cloud_name, api_key, api_secret } = cloudinary.config();

@@ -46,8 +46,8 @@ export const GetMemberByUserAndPost = async (userId, postId) => {
     return result[0];
 }
 
-export const CreateMember = async (userId, postId) => {
-    const [result] = await db.query(
+export const CreateMember = async (connection, userId, postId) => {
+    const [result] = await connection.query(
         "INSERT INTO members(user_id, post_id, status) VALUES(?, ?, 'pending')",
         [userId, Number(postId)]
     )
@@ -66,9 +66,9 @@ export const IsUploadUrlUsed = async (resumeUrl, transcriptUrl) => {
     return result.length > 0
 }
 
-export const CreateResume = async (data)=>{
+export const CreateResume = async (connection, data)=>{
     const { memberId, resumeUrl, transcriptUrl, aiScore, skills, storytelling_score, ai_reason, overall_confidence, specific_strengths, faculty_match,resume_quality_score, recommendation_reason } = data
-    const [result] = await db.query(`
+    const [result] = await connection.query(`
         INSERT INTO resume
         (member_id, resume_url, transcript_url, ai_score, storytelling_score, overall_confidence, skills, ai_reason, specific_strengths, faculty_match, resume_quality_score, recommendation_reason)
         VALUES(? ,? ,? ,? ,? ,? ,? ,? ,? ,? ,? ,?)   
